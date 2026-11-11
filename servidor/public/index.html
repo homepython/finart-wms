@@ -21,13 +21,13 @@
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
-    body { background-color: var(--bg-page); color: var(--text-main); padding: 28px 16px; line-height: 1.4; }
+    body { background-color: var(--bg-page); color: var(--text-main); padding: 24px 16px; line-height: 1.4; }
     .container { max-width: 1020px; margin: 0 auto; }
 
     header {
       display: flex; justify-content: space-between; align-items: center;
       background: var(--bg-card); padding: 16px 24px; border-radius: 10px;
-      border: 1px solid var(--border); box-shadow: 0 1px 3px rgba(0,0,0,0.03); margin-bottom: 18px;
+      border: 1px solid var(--border); box-shadow: 0 1px 3px rgba(0,0,0,0.03); margin-bottom: 16px;
       flex-wrap: wrap; gap: 12px;
     }
     .brand-area { display: flex; align-items: center; gap: 12px; }
@@ -41,15 +41,6 @@
       color: var(--success); background: var(--success-bg); padding: 6px 12px; border-radius: 20px;
     }
     .dot { width: 8px; height: 8px; background: var(--success); border-radius: 50%; }
-
-    .summary-bar { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 18px; }
-    .summary-item {
-      background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px;
-      padding: 14px 20px; display: flex; justify-content: space-between; align-items: center;
-    }
-    .summary-item span { font-size: 13px; font-weight: 600; color: var(--text-muted); }
-    .summary-item strong { font-size: 22px; font-weight: 800; color: var(--text-main); }
-    .summary-item.destaque strong { color: var(--success); }
 
     .toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; gap: 12px; flex-wrap: wrap; }
     .tabs { display: flex; background: #e2e8f0; padding: 4px; border-radius: 8px; gap: 4px; }
@@ -111,7 +102,7 @@
         <div class="brand-logo">FINART</div>
         <div class="brand-title">
           <h1>Controle de Paletes e Saldos</h1>
-          <span>Servidor Online: finart-wms.onrender.com</span>
+          <span>Sincronização Instantânea Online</span>
         </div>
       </div>
       <div class="header-actions">
@@ -120,21 +111,6 @@
         <button class="btn-primary" onclick="abrirModalNovo()">+ Lançar Palete</button>
       </div>
     </header>
-
-    <div class="summary-bar">
-      <div class="summary-item">
-        <span>Paletes Bipados</span>
-        <strong id="card-paletes">0</strong>
-      </div>
-      <div class="summary-item">
-        <span>Total Caixas / Sacaria</span>
-        <strong id="card-volumes">0</strong>
-      </div>
-      <div class="summary-item destaque">
-        <span>Saldo Total (Peças)</span>
-        <strong id="card-pecas">0</strong>
-      </div>
-    </div>
 
     <div class="toolbar">
       <div class="tabs">
@@ -158,8 +134,8 @@
       <h3 id="modal-titulo">Lançar Palete - FINART</h3>
       <input type="hidden" id="edit-id" />
       <div class="form-group">
-        <label>Leitura Rápida da Etiqueta (Ex: FR-12588;0065801;220)</label>
-        <input type="text" id="edit-barcode" placeholder="Cole ou bipe o código aqui..." oninput="preencherPorBarcode(this.value)" />
+        <label>Leitura Rápida (Opcional)</label>
+        <input type="text" id="edit-barcode" placeholder="Cole código ou dados da etiqueta..." oninput="preencherPorBarcode(this.value)" />
       </div>
       <div class="form-group">
         <label>Cliente</label>
@@ -203,7 +179,6 @@
   </div>
 
   <script>
-    // Usa automaticamente o seu servidor https://finart-wms.onrender.com quando aberto fora do servidor local
     const API_BASE = window.location.protocol.startsWith('http')
       ? ''
       : 'https://finart-wms.onrender.com';
@@ -220,22 +195,13 @@
 
     async function carregarDashboard() {
       try {
-        const res = await fetch(`${API_BASE}/api/dashboard`);
+        // cache: 'no-store' + timestamp impede o celular de congelar os dados antigos
+        const res = await fetch(`${API_BASE}/api/dashboard?t=${Date.now()}`, {
+          cache: 'no-store'
+        });
         const { consolidado, historico } = await res.json();
         consolidadoCache = consolidado;
         historicoCache = historico;
-
-        let totalPaletes = 0, totalVolumes = 0, totalPecas = 0;
-        consolidado.forEach(r => {
-          totalPaletes += r.total_paletes;
-          totalVolumes += r.total_caixas_ou_sacaria;
-          totalPecas += r.saldo_total_pecas;
-        });
-
-        document.getElementById('card-paletes').innerText = totalPaletes.toLocaleString('pt-BR');
-        document.getElementById('card-volumes').innerText = totalVolumes.toLocaleString('pt-BR');
-        document.getElementById('card-pecas').innerText = totalPecas.toLocaleString('pt-BR');
-
         renderizarListas();
       } catch (e) {
         console.error('Erro ao buscar dados:', e);
@@ -295,7 +261,7 @@
                 <span class="tag tag-lote">Lote: ${item.lote}</span>
                 <span class="tag tag-item">${item.item}</span>
               </div>
-              <div class="produto-desc">${item.produto} • ${new Date(item.data_hora).toLocaleString('pt-BR')}</div>
+              <div class="produto-desc">${item.produto} ${item.volume_etiqueta ? `• Vol: ${item.volume_etiqueta}` : ''} • ${new Date(item.data_hora).toLocaleString('pt-BR')}</div>
             </div>
             <div class="row-metrics">
               <div class="metric-box"><small>Caixas/Sacos</small><strong>${item.qtd_volumes_palete}</strong></div>
@@ -312,7 +278,7 @@
     }
 
     async function preencherPorBarcode(codigo) {
-      if (!codigo.includes(';')) return;
+      if (!codigo || codigo.length < 4) return;
       const res = await fetch(`${API_BASE}/api/interpretar-bipe`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -400,9 +366,23 @@
       carregarDashboard();
     }
 
-    const stream = new EventSource(`${API_BASE}/api/stream`);
-    stream.onmessage = () => carregarDashboard();
+    // Conexão SSE + Sincronização contínua para celular (atualiza sem precisar fechar o app)
+    function conectarStream() {
+      const stream = new EventSource(`${API_BASE}/api/stream`);
+      stream.onmessage = () => carregarDashboard();
+      stream.onerror = () => {
+        stream.close();
+        setTimeout(conectarStream, 2000);
+      };
+    }
 
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) carregarDashboard();
+    });
+    window.addEventListener('focus', carregarDashboard);
+    setInterval(carregarDashboard, 1500);
+
+    conectarStream();
     carregarDashboard();
   </script>
 </body>

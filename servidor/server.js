@@ -105,48 +105,112 @@ function calcularPadraoPalete(cliente = '', item = '') {
   return 20;
 }
 
-// 1. INTERPRETAR BIPE DA ETIQUETA
+// 1. INTERPRETAR ETIQUETA COMPLETA (OCR / QR CODE EM 1º PLANO + CÓDIGO DE BARRAS EM 2º PLANO)
 app.post('/api/interpretar-bipe', (req, res) => {
-  const { codigoLido } = req.body;
-  if (!codigoLido) return res.status(400).json({ erro: 'Código vazio' });
+  const { codigoLido, textoEtiqueta } = req.body;
+  const entrada = (textoEtiqueta || codigoLido || '').trim();
 
-  const partes = codigoLido.trim().split(';');
-  if (partes.length < 3) {
-    return res.status(400).json({
-      erro: 'Formato inválido. Bipe o código de barras inferior (ITEM;LOTE;QTD).'
-    });
-  }
+  if (!entrada) return res.status(400).json({ erro: 'Nenhuma informação recebida.' });
 
-  const item = partes[0].trim();
-  const loteBruto = partes[1].trim();
-  const qtdPorVolume = parseInt(partes[2].trim(), 10) || 0;
+  // Caso 1 (2º Plano): Código de barras inferior no formato ITEM;LOTE;QTD (ex: FR-12588;0065801;220)
+  if (entrada.includes(';') && !entrada.toUpperCase().includes('CLIENTE')) {
+    const partes = entrada.split(';');
+    const item = (partes[0] || '').trim();
+    const loteBruto = (partes[1] || '').trim();
+    const qtdPorVolume = parseInt((partes[2] || '0').trim(), 10) || 0;
 
-  const pedido = loteBruto.length > 1 ? loteBruto.slice(0, -1) : loteBruto;
-  const loteFormatado = loteBruto.length > 1
-    ? `${loteBruto.slice(0, -1)}.${loteBruto.slice(-1)}`
-    : loteBruto;
+    const pedido = loteBruto.length > 1 ? loteBruto.slice(0, -1) : loteBruto;
+    const loteFormatado = loteBruto.length > 1
+      ? `${loteBruto.slice(0, -1)}.${loteBruto.slice(-1)}`
+      : loteBruto;
 
-  db.get(`SELECT * FROM catalogo_itens WHERE item = ?`, [item], (err, row) => {
-    if (err) return res.status(500).json({ erro: err.message });
-
-    const cliente = row ? row.cliente : 'OUTROS CLIENTES';
-    const produto = row ? row.produto : `PRODUTO ITEM ${item}`;
-    const tipoEmbalagem = row ? row.tipo_embalagem : 'CAIXA';
-    const padraoVolumes = row ? row.padrao_volumes_palete : calcularPadraoPalete(cliente, item);
-
-    res.json({
+    return buscarNoCatalogoEResponder({
       item,
       pedido,
       lote: loteFormatado,
+      qtdPorVolume,
+      clienteLido: '',
+      produtoLido: '',
+      volumeLido: ''
+    }, res);
+  }
+
+  // Caso 2 (1º Plano): Leitura completa da etiqueta (OCR ou QR Code com os campos da etiqueta)
+  const textoLimpo = entrada.replace(/\r/g, '');
+
+  const matchPedido = textoLimpo.match(/PEDIDO[:\s]*([0-9]{4,8})/i);
+  const matchCliente = textoLimpo.match(/CLIENTE[:\s]*([^\n]+)/i);
+  const matchItem = textoLimpo.match(/ITEM[:\s]*([A-Z0-9\-]+)/i) || textoLimpo.match(/\b(FR-\d+|PT-\d+|\d{6})\b/i);
+  const matchProduto = textoLimpo.match(/PRODUTO[:\s]*([^\n]+(?:\n(?!(?:QTD|LOTE|VALIDADE|VOLUME))[^\n]+)*)/i);
+  const matchQtd = textoLimpo.match(/QTD[:\s]*([0-9]{1,5})/i);
+  const matchLote = textoLimpo.match(/LOTE[:\s]*([0-9]+\.[0-9]+|[0-9]{5,8})/i);
+  const matchVolume = textoLimpo.match(/(\d{3}\s*\/\s*\d{3})/);
+
+  // Também verifica se o próprio texto contém a linha auxiliar FR-12588;0065801;220
+  const matchBarcodeAux = textoLimpo.match(/([A-Z0-9\-]+);(\d+);(\d+)/i);
+
+  const item = matchItem ? matchItem[1].trim().toUpperCase() : (matchBarcodeAux ? matchBarcodeAux[1].toUpperCase() : '');
+  let pedido = matchPedido ? matchPedido[1].trim() : '';
+  let lote = matchLote ? matchLote[1].trim() : '';
+  let qtdPorVolume = matchQtd ? parseInt(matchQtd[1].trim(), 10) : (matchBarcodeAux ? parseInt(matchBarcodeAux[3], 10) : 0);
+
+  if (!lote && matchBarcodeAux) {
+    const lb = matchBarcodeAux[2];
+    pedido = pedido || lb.slice(0, -1);
+    lote = `${lb.slice(0, -1)}.${lb.slice(-1)}`;
+  }
+  if (!lote && pedido) lote = `${pedido}.1`;
+  if (!pedido && lote) pedido = lote.split('.')[0];
+
+  const clienteLido = matchCliente ? matchCliente[1].trim().toUpperCase() : '';
+  const produtoLido = matchProduto ? matchProduto[1].replace(/\s+/g, ' ').trim().toUpperCase() : '';
+  const volumeLido = matchVolume ? matchVolume[1].replace(/\s+/g, '') : '';
+
+  buscarNoCatalogoEResponder({
+    item,
+    pedido,
+    lote,
+    qtdPorVolume,
+    clienteLido,
+    produtoLido,
+    volumeLido
+  }, res);
+});
+
+function buscarNoCatalogoEResponder(dados, res) {
+  db.get(`SELECT * FROM catalogo_itens WHERE item = ?`, [dados.item], (err, row) => {
+    if (err) return res.status(500).json({ erro: err.message });
+
+    const cliente = dados.clienteLido || (row ? row.cliente : 'DEVINTEX COSMETICOS');
+    const produto = dados.produtoLido || (row ? row.produto : `PRODUTO ${dados.item}`);
+    const itemFinal = dados.item || 'ITEM-MANUAL';
+
+    // Regra inteligente: Pote 1000g Redondo Devintex = 22 | Devintex Padrão = 15 | Outros = 20
+    let padraoVolumes = 20;
+    if (cliente.includes('DEVINTEX') && (itemFinal === 'PT-7908' || produto.includes('1000 GRS') || produto.includes('REDONDO'))) {
+      padraoVolumes = 22;
+    } else if (cliente.includes('DEVINTEX')) {
+      padraoVolumes = 15;
+    } else if (row) {
+      padraoVolumes = row.padrao_volumes_palete;
+    }
+
+    const tipoEmbalagem = padraoVolumes === 22 ? 'SACARIA' : 'CAIXA';
+
+    res.json({
+      item: itemFinal,
+      pedido: dados.pedido,
+      lote: dados.lote,
       cliente,
       produto,
       tipoEmbalagem,
-      qtd_pecas_por_volume: qtdPorVolume,
+      volume_etiqueta: dados.volumeLido,
+      qtd_pecas_por_volume: dados.qtdPorVolume,
       qtd_volumes_sugerida: padraoVolumes,
-      saldo_previsto: qtdPorVolume * padraoVolumes
+      saldo_previsto: dados.qtdPorVolume * padraoVolumes
     });
   });
-});
+}
 
 // 2. SALVAR PALETE E ATUALIZAR INSTANTANEAMENTE
 app.post('/api/paletes', (req, res) => {
