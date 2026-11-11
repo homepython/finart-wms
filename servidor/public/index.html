@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>FINART - Controle de Estoque</title>
+  <title>FINART - Controle de Paletes e Saldos</title>
   <style>
     :root {
       --bg-page: #f4f6f8;
@@ -20,78 +20,360 @@
       --danger: #dc2626;
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
-    body { background-color: var(--bg-page); color: var(--text-main); padding: 24px 16px; line-height: 1.4; }
-    .container { max-width: 1020px; margin: 0 auto; }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-page);
+      color: var(--text-main);
+      padding: 24px 16px;
+      line-height: 1.4;
+    }
+
+    .container {
+      max-width: 1020px;
+      margin: 0 auto;
+    }
 
     header {
-      display: flex; justify-content: space-between; align-items: center;
-      background: var(--bg-card); padding: 16px 24px; border-radius: 10px;
-      border: 1px solid var(--border); box-shadow: 0 1px 3px rgba(0,0,0,0.03); margin-bottom: 16px;
-      flex-wrap: wrap; gap: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--bg-card);
+      padding: 16px 24px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+      gap: 12px;
     }
-    .brand-area { display: flex; align-items: center; gap: 12px; }
-    .brand-logo { background: var(--primary); color: #fff; font-weight: 800; font-size: 18px; padding: 6px 14px; border-radius: 6px; letter-spacing: 1.5px; }
-    .brand-title h1 { font-size: 17px; font-weight: 700; color: var(--text-main); }
-    .brand-title span { font-size: 12px; color: var(--text-muted); }
-    .header-actions { display: flex; align-items: center; gap: 10px; }
+
+    .brand-area {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-logo {
+      background: var(--primary);
+      color: #fff;
+      font-weight: 800;
+      font-size: 18px;
+      padding: 6px 14px;
+      border-radius: 6px;
+      letter-spacing: 1.5px;
+    }
+
+    .brand-title h1 {
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .brand-title span {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
 
     .status-pill {
-      display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600;
-      color: var(--success); background: var(--success-bg); padding: 6px 12px; border-radius: 20px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--success);
+      background: var(--success-bg);
+      padding: 6px 12px;
+      border-radius: 20px;
     }
-    .dot { width: 8px; height: 8px; background: var(--success); border-radius: 50%; }
 
-    .toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; gap: 12px; flex-wrap: wrap; }
-    .tabs { display: flex; background: #e2e8f0; padding: 4px; border-radius: 8px; gap: 4px; }
-    .tab-btn {
-      border: none; background: transparent; padding: 8px 16px; border-radius: 6px;
-      font-size: 13px; font-weight: 600; color: var(--text-muted); cursor: pointer;
+    .dot {
+      width: 8px;
+      height: 8px;
+      background: var(--success);
+      border-radius: 50%;
     }
-    .tab-btn.active { background: var(--bg-card); color: var(--text-main); box-shadow: 0 1px 2px rgba(0,0,0,0.06); }
+
+    .toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .tabs {
+      display: flex;
+      background: #e2e8f0;
+      padding: 4px;
+      border-radius: 8px;
+      gap: 4px;
+    }
+
+    .tab-btn {
+      border: none;
+      background: transparent;
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-muted);
+      cursor: pointer;
+    }
+
+    .tab-btn.active {
+      background: var(--bg-card);
+      color: var(--text-main);
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+    }
 
     .search-input {
-      padding: 8px 14px; border: 1px solid var(--border); border-radius: 8px;
-      background: var(--bg-card); font-size: 13px; width: 280px; color: var(--text-main); outline: none;
+      padding: 8px 14px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--bg-card);
+      font-size: 13px;
+      width: 280px;
+      color: var(--text-main);
+      outline: none;
     }
 
-    .list-container { background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+    .search-input:focus {
+      border-color: var(--primary);
+    }
+
+    .list-container {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+      overflow: hidden;
+    }
+
     .list-row {
-      display: flex; justify-content: space-between; align-items: center;
-      padding: 16px 20px; border-bottom: 1px solid var(--border); gap: 16px; flex-wrap: wrap;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      gap: 16px;
+      flex-wrap: wrap;
     }
-    .list-row:last-child { border-bottom: none; }
-    .list-row:hover { background: #f8fafc; }
-    .row-main { flex: 1; min-width: 240px; }
-    .row-top { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; flex-wrap: wrap; }
-    .cliente-nome { font-weight: 700; font-size: 15px; color: var(--text-main); }
-    .tag { font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 5px; }
-    .tag-lote { background: var(--warning-bg); color: var(--warning-text); }
-    .tag-item { background: var(--primary-light); color: var(--primary); }
-    .tag-pedido { background: #f1f5f9; color: var(--text-muted); font-weight: 600; }
-    .produto-desc { font-size: 13px; color: var(--text-muted); }
 
-    .row-metrics { display: flex; align-items: center; gap: 24px; text-align: right; }
-    .metric-box { min-width: 70px; }
-    .metric-box small { display: block; font-size: 11px; color: var(--text-muted); text-transform: uppercase; }
-    .metric-box strong { font-size: 15px; color: var(--text-main); }
+    .list-row:last-child {
+      border-bottom: none;
+    }
 
-    .saldo-box { background: var(--success-bg); padding: 8px 14px; border-radius: 8px; min-width: 120px; text-align: right; }
-    .saldo-box small { display: block; font-size: 10px; font-weight: 700; color: var(--success); text-transform: uppercase; }
-    .saldo-box strong { font-size: 18px; font-weight: 800; color: var(--success); }
+    .list-row:hover {
+      background: #f8fafc;
+    }
 
-    .btn-primary { background: var(--primary); color: #fff; border: none; padding: 9px 16px; border-radius: 7px; font-weight: 600; font-size: 13px; cursor: pointer; text-decoration: none; }
-    .btn-outline { background: #fff; color: var(--text-main); border: 1px solid var(--border); padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; text-decoration: none; }
-    .btn-danger-outline { background: #fff; color: var(--danger); border: 1px solid #fecaca; padding: 6px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; }
-    .empty-state { padding: 40px; text-align: center; color: var(--text-muted); font-size: 14px; }
+    .row-main {
+      flex: 1;
+      min-width: 240px;
+    }
 
-    .modal-bg { display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.45); align-items: center; justify-content: center; z-index: 100; padding: 16px; }
-    .modal { background: var(--bg-card); border-radius: 12px; padding: 24px; width: 100%; max-width: 460px; }
-    .modal h3 { font-size: 17px; margin-bottom: 16px; color: var(--text-main); }
-    .form-group { margin-bottom: 12px; }
-    .form-group label { display: block; font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 4px; }
-    .form-group input { width: 100%; padding: 9px 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 14px; background: #f8fafc; }
-    .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+    .row-top {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 4px;
+      flex-wrap: wrap;
+    }
+
+    .cliente-nome {
+      font-weight: 700;
+      font-size: 15px;
+      color: var(--text-main);
+    }
+
+    .tag {
+      font-size: 12px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 5px;
+    }
+
+    .tag-lote {
+      background: var(--warning-bg);
+      color: var(--warning-text);
+    }
+
+    .tag-item {
+      background: var(--primary-light);
+      color: var(--primary);
+    }
+
+    .tag-pedido {
+      background: #f1f5f9;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    .produto-desc {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .row-metrics {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      text-align: right;
+    }
+
+    .metric-box {
+      min-width: 70px;
+    }
+
+    .metric-box small {
+      display: block;
+      font-size: 11px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+    }
+
+    .metric-box strong {
+      font-size: 15px;
+      color: var(--text-main);
+    }
+
+    .saldo-box {
+      background: var(--success-bg);
+      padding: 8px 14px;
+      border-radius: 8px;
+      min-width: 120px;
+      text-align: right;
+    }
+
+    .saldo-box small {
+      display: block;
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--success);
+      text-transform: uppercase;
+    }
+
+    .saldo-box strong {
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--success);
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      padding: 9px 16px;
+      border-radius: 7px;
+      font-weight: 600;
+      font-size: 13px;
+      cursor: pointer;
+      text-decoration: none;
+    }
+
+    .btn-outline {
+      background: #fff;
+      color: var(--text-main);
+      border: 1px solid var(--border);
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+    }
+
+    .btn-danger-outline {
+      background: #fff;
+      color: var(--danger);
+      border: 1px solid #fecaca;
+      padding: 6px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .empty-state {
+      padding: 40px;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+
+    .modal-bg {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.45);
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      padding: 16px;
+    }
+
+    .modal {
+      background: var(--bg-card);
+      border-radius: 12px;
+      padding: 24px;
+      width: 100%;
+      max-width: 460px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
+    }
+
+    .modal h3 {
+      font-size: 17px;
+      margin-bottom: 16px;
+      color: var(--text-main);
+    }
+
+    .form-group {
+      margin-bottom: 12px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 9px 12px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 14px;
+      background: #f8fafc;
+      color: var(--text-main);
+    }
+
+    .form-group input:focus {
+      background: #fff;
+      border-color: var(--primary);
+      outline: none;
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 20px;
+    }
   </style>
 </head>
 <body>
@@ -114,33 +396,54 @@
 
     <div class="toolbar">
       <div class="tabs">
-        <button class="tab-btn active" id="btn-aba-saldos" onclick="alternarAba('saldos')">📦 Saldos por Lote</button>
-        <button class="tab-btn" id="btn-aba-historico" onclick="alternarAba('historico')">🛠️ Histórico de Bipes (Corrigir)</button>
+        <button class="tab-btn active" id="btn-aba-saldos" onclick="alternarAba('saldos')">
+          📦 Saldos por Lote
+        </button>
+        <button class="tab-btn" id="btn-aba-historico" onclick="alternarAba('historico')">
+          🛠️ Histórico de Bipes (Corrigir)
+        </button>
       </div>
-      <input type="text" class="search-input" id="campo-busca" placeholder="Buscar cliente, lote, item..." oninput="renderizarListas()" />
+      <input
+        type="text"
+        class="search-input"
+        id="campo-busca"
+        placeholder="Buscar cliente, lote, item..."
+        oninput="renderizarListas()"
+      />
     </div>
 
+    <!-- ABA 1: SALDOS CONSOLIDADOS POR LOTE -->
     <div class="list-container" id="secao-saldos">
       <div id="lista-consolidado"></div>
     </div>
 
+    <!-- ABA 2: HISTÓRICO INDIVIDUAL PARA CORREÇÃO OPERACIONAL -->
     <div class="list-container" id="secao-historico" style="display: none;">
       <div id="lista-historico"></div>
     </div>
   </div>
 
+  <!-- MODAL DE LANÇAMENTO E EDIÇÃO -->
   <div class="modal-bg" id="modal-edicao">
     <div class="modal">
       <h3 id="modal-titulo">Lançar Palete - FINART</h3>
       <input type="hidden" id="edit-id" />
+
       <div class="form-group">
-        <label>Leitura Rápida (Opcional)</label>
-        <input type="text" id="edit-barcode" placeholder="Cole código ou dados da etiqueta..." oninput="preencherPorBarcode(this.value)" />
+        <label>Leitura Rápida (Opcional - ex: FR-12588;0065801;220)</label>
+        <input
+          type="text"
+          id="edit-barcode"
+          placeholder="Cole o código ou dados da etiqueta..."
+          oninput="preencherPorBarcode(this.value)"
+        />
       </div>
+
       <div class="form-group">
         <label>Cliente</label>
         <input type="text" id="edit-cliente" />
       </div>
+
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
         <div class="form-group">
           <label>Pedido</label>
@@ -151,6 +454,7 @@
           <input type="text" id="edit-lote" />
         </div>
       </div>
+
       <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 10px;">
         <div class="form-group">
           <label>Item</label>
@@ -161,6 +465,7 @@
           <input type="text" id="edit-produto" />
         </div>
       </div>
+
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
         <div class="form-group">
           <label>Caixas/Sacos no Palete</label>
@@ -171,6 +476,7 @@
           <input type="number" id="edit-pecas" />
         </div>
       </div>
+
       <div class="modal-actions">
         <button class="btn-outline" onclick="fecharModal()">Cancelar</button>
         <button class="btn-primary" onclick="salvarEdicao()">Salvar Dados</button>
@@ -195,11 +501,26 @@
 
     async function carregarDashboard() {
       try {
-        // cache: 'no-store' + timestamp impede o celular de congelar os dados antigos
         const res = await fetch(`${API_BASE}/api/dashboard?t=${Date.now()}`, {
           cache: 'no-store'
         });
         const { consolidado, historico } = await res.json();
+
+        // Proteção contra reinício do servidor gratuito Render: restaura os saldos automaticamente
+        const backupLocal = JSON.parse(localStorage.getItem('finart_backup_paletes') || '[]');
+        if (historico.length === 0 && backupLocal.length > 0) {
+          await fetch(`${API_BASE}/api/restaurar-backup`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ historico: backupLocal })
+          });
+          return carregarDashboard();
+        }
+
+        if (historico.length > 0) {
+          localStorage.setItem('finart_backup_paletes', JSON.stringify(historico));
+        }
+
         consolidadoCache = consolidado;
         historicoCache = historico;
         renderizarListas();
@@ -261,7 +582,9 @@
                 <span class="tag tag-lote">Lote: ${item.lote}</span>
                 <span class="tag tag-item">${item.item}</span>
               </div>
-              <div class="produto-desc">${item.produto} ${item.volume_etiqueta ? `• Vol: ${item.volume_etiqueta}` : ''} • ${new Date(item.data_hora).toLocaleString('pt-BR')}</div>
+              <div class="produto-desc">
+                ${item.produto} ${item.volume_etiqueta ? `• Vol: ${item.volume_etiqueta}` : ''} • ${new Date(item.data_hora).toLocaleString('pt-BR')}
+              </div>
             </div>
             <div class="row-metrics">
               <div class="metric-box"><small>Caixas/Sacos</small><strong>${item.qtd_volumes_palete}</strong></div>
@@ -362,11 +685,14 @@
 
     async function excluirPalete(id) {
       if (!confirm(`Deseja realmente excluir o lançamento do Palete #${id}?`)) return;
+      // Atualiza o backup local antes de recarregar para não restaurar o palete excluído
+      const atualizado = historicoCache.filter(p => p.id !== id);
+      localStorage.setItem('finart_backup_paletes', JSON.stringify(atualizado));
+
       await fetch(`${API_BASE}/api/paletes/${id}`, { method: 'DELETE' });
       carregarDashboard();
     }
 
-    // Conexão SSE + Sincronização contínua para celular (atualiza sem precisar fechar o app)
     function conectarStream() {
       const stream = new EventSource(`${API_BASE}/api/stream`);
       stream.onmessage = () => carregarDashboard();
