@@ -7,8 +7,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="apple-mobile-web-app-title" content="FINART Coletor" />
   <meta name="mobile-web-app-capable" content="yes" />
-  <title>FINART - Coletor Mobile</title>
-  <!-- Leitor de Etiqueta Completa (OCR) + Leitor QR/Barras -->
+  <title>FINART - Digitalizador de Etiquetas</title>
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
   <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
   <style>
@@ -34,16 +33,55 @@
 
     .box { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 14px; margin-bottom: 12px; }
 
-    #reader { width: 100%; border-radius: 10px; overflow: hidden; border: 2px solid var(--primary); background: #000; }
-    .hint { text-align: center; font-size: 12px; color: var(--muted); margin-top: 8px; }
+    /* Visor Fotográfico HD da Etiqueta */
+    .camera-wrapper {
+      position: relative; width: 100%; height: 270px; background: #0f172a;
+      border-radius: 10px; overflow: hidden; border: 2px solid var(--primary);
+    }
+    #video-hd {
+      width: 100%; height: 100%; object-fit: cover;
+    }
+    #foto-congelada {
+      display: none; width: 100%; height: 100%; object-fit: cover;
+    }
+    .guia-etiqueta {
+      position: absolute; inset: 16px; border: 2px dashed rgba(255, 255, 255, 0.85);
+      border-radius: 8px; pointer-events: none; display: flex; align-items: flex-end;
+      justify-content: center; padding-bottom: 8px;
+      box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.35);
+    }
+    .guia-etiqueta span {
+      background: rgba(15, 23, 42, 0.8); color: #fff; font-size: 11px;
+      padding: 4px 10px; border-radius: 4px; font-weight: 600;
+    }
 
-    .btn { width: 100%; padding: 14px; border: none; border-radius: 10px; font-size: 15px; font-weight: 800; cursor: pointer; margin-top: 10px; }
-    .btn-ocr { background: var(--primary); color: #fff; font-size: 16px; box-shadow: 0 3px 10px rgba(2, 132, 199, 0.25); }
+    /* Linha laser de digitalização */
+    .laser-scan {
+      display: none; position: absolute; left: 16px; right: 16px; height: 3px;
+      background: #10b981; box-shadow: 0 0 12px 3px #10b981;
+      animation: scanMove 1.4s infinite ease-in-out;
+    }
+    @keyframes scanMove {
+      0% { top: 20px; }
+      50% { top: 245px; }
+      100% { top: 20px; }
+    }
+
+    .status-leitura {
+      display: none; margin-top: 10px; padding: 10px; border-radius: 8px;
+      background: #e0f2fe; color: #0369a1; font-size: 13px; font-weight: 700; text-align: center;
+    }
+
+    .btn { width: 100%; padding: 15px; border: none; border-radius: 10px; font-size: 15px; font-weight: 800; cursor: pointer; margin-top: 10px; }
+    .btn-foto { background: var(--primary); color: #fff; font-size: 16px; box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3); }
+    .btn-nativo { background: #f1f5f9; color: var(--text); font-size: 13px; padding: 11px; border: 1px solid var(--border); }
     .btn-confirm { background: var(--success); color: #fff; }
     .btn-cancel { background: #e2e8f0; color: var(--text); }
 
-    .info-grid { display: grid; gap: 6px; margin-bottom: 12px; font-size: 14px; background: #f8fafc; padding: 10px; border-radius: 8px; border: 1px solid var(--border); }
-    .badge-lote { background: #fef3c7; color: #b45309; padding: 2px 8px; border-radius: 5px; font-weight: 700; }
+    .miniatura-etiqueta {
+      width: 100%; height: 110px; object-fit: cover; border-radius: 8px;
+      border: 1px solid var(--border); margin-bottom: 10px;
+    }
 
     label { display: block; font-size: 11px; font-weight: 700; color: var(--muted); margin-top: 10px; margin-bottom: 4px; text-transform: uppercase; }
     input {
@@ -51,6 +89,8 @@
       border: 2px solid var(--border); border-radius: 8px; color: var(--text); text-align: center;
     }
     .input-left { text-align: left; font-size: 14px; font-weight: 600; }
+
+    .badge-lote { background: #fef3c7; color: #b45309; padding: 2px 8px; border-radius: 5px; font-weight: 700; }
 
     .saldo-preview {
       background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 10px;
@@ -70,28 +110,43 @@
 
   <div class="top-bar">
     <span class="logo">FINART</span>
-    <strong style="font-size: 14px;">Coletor Inteligente</strong>
+    <strong style="font-size: 14px;">Digitalizador de Etiqueta</strong>
     <a href="/" class="btn-top">Ver Painel</a>
   </div>
 
-  <!-- TELA 1: LEITOR DE ETIQUETA COMPLETA (1º PLANO) + QR/BARRAS (2º PLANO) -->
+  <!-- TELA 1: CÂMERA FOTOGRÁFICA HD PARA DIGITALIZAR A ETIQUETA -->
   <div class="box" id="tela-scanner">
-    <div id="reader"></div>
-    <button class="btn btn-ocr" id="btn-ler-etiqueta" onclick="capturarEtiquetaCompleta()">
-      📸 LER ETIQUETA COMPLETA (TEXTO)
+    <div class="camera-wrapper">
+      <video id="video-hd" autoplay playsinline muted></video>
+      <img id="foto-congelada" alt="Foto da etiqueta" />
+      <div class="guia-etiqueta">
+        <span>Enquadre a etiqueta inteira aqui dentro</span>
+      </div>
+      <div class="laser-scan" id="laser-scan"></div>
+    </div>
+
+    <div class="status-leitura" id="status-leitura">
+      🔍 Digitalizando foto da etiqueta, aguarde...
+    </div>
+
+    <button class="btn btn-foto" id="btn-fotografar" onclick="fotografarEDigitalizarVisor()">
+      📸 FOTOGRAFAR E DIGITALIZAR ETIQUETA
     </button>
-    <p class="hint">
-      <strong>1º Plano:</strong> Enquadre a etiqueta inteira e toque no botão azul (ou aponte para o QR Code).<br/>
-      <strong>2º Plano:</strong> O código de barras inferior também é lido automaticamente.
-    </p>
+
+    <!-- Opção de câmera nativa do sistema caso a lente precise de foco macro extra -->
+    <input type="file" accept="image/*" capture="environment" id="input-camera-nativa" style="display:none" onchange="digitalizarFotoNativa(this)" />
+    <button class="btn btn-nativo" onclick="document.getElementById('input-camera-nativa').click()">
+      📷 Ou Tirar Foto com Foco Macro da Câmera do Celular
+    </button>
   </div>
 
-  <!-- TELA 2: CONFIRMAÇÃO COMPLETA COM TODOS OS DETALHES DA ETIQUETA -->
+  <!-- TELA 2: DADOS DIGITALIZADOS PARA CONFERÊNCIA E ENVIO -->
   <div class="box" id="tela-confirmacao" style="display: none;">
-    <h3 style="margin-bottom: 10px; color: var(--primary);">Dados Lidos da Etiqueta</h3>
+    <h3 style="margin-bottom: 8px; color: var(--primary);">Etiqueta Digitalizada com Sucesso</h3>
+    <img id="img-conferencia" class="miniatura-etiqueta" alt="Etiqueta lida" />
 
-    <label>Cliente:</label>
-    <input type="text" id="conf-cliente" class="input-left" />
+    <label>Cliente Identificado:</label>
+    <input type="text" id="conf-cliente" class="input-left" oninput="atualizarRegraClienteManual()" />
 
     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
       <div>
@@ -99,32 +154,32 @@
         <input type="text" id="conf-pedido" class="input-left" />
       </div>
       <div>
-        <label>Lote:</label>
+        <label>Nº do Lote:</label>
         <input type="text" id="conf-lote" class="input-left" style="background:#fef3c7; color:#b45309;" />
       </div>
     </div>
 
     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
       <div>
-        <label>Item:</label>
-        <input type="text" id="conf-item" class="input-left" />
+        <label>Código do Item:</label>
+        <input type="text" id="conf-item" class="input-left" oninput="atualizarRegraClienteManual()" />
       </div>
       <div>
-        <label>Volume (Ex: 029/125):</label>
+        <label>Volume (Ex: 153/278):</label>
         <input type="text" id="conf-vol-etiqueta" class="input-left" placeholder="Opcional" />
       </div>
     </div>
 
-    <label>Produto:</label>
+    <label>Descrição do Produto:</label>
     <input type="text" id="conf-produto" class="input-left" />
 
     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
       <div>
-        <label id="label-volumes">Caixas/Sacos Palete:</label>
+        <label id="label-volumes">Caixas/Sacos no Palete:</label>
         <input type="number" id="input-volumes" oninput="recalcularPreview()" style="border-color: var(--primary);" />
       </div>
       <div>
-        <label>QTD Peças p/ Caixa:</label>
+        <label>QTD Peças p/ Volume:</label>
         <input type="number" id="conf-pecas" oninput="recalcularPreview()" />
       </div>
     </div>
@@ -134,11 +189,11 @@
       <strong id="preview-total">0 peças</strong>
     </div>
 
-    <button class="btn btn-confirm" onclick="confirmarEnvio()">CONFIRMAR E SUBIR SALDO</button>
-    <button class="btn btn-cancel" onclick="voltarParaCamera()">Cancelar / Ler Outra</button>
+    <button class="btn btn-confirm" onclick="confirmarEnvio()">✅ CONFIRMAR E SUBIR SALDO</button>
+    <button class="btn btn-cancel" onclick="voltarParaCamera()">🔄 Fotografar Outra Etiqueta</button>
   </div>
 
-  <!-- RESUMO AO VIVO NO CELULAR (ATUALIZA SOZINHO SEM FECHAR O APP) -->
+  <!-- RESUMO AO VIVO NO CELULAR -->
   <div class="box">
     <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
       <strong style="font-size:13px; color:var(--muted);">ÚLTIMOS LOTES SINCRONIZADOS</strong>
@@ -147,13 +202,15 @@
     <div id="lista-ao-vivo">Carregando saldos...</div>
   </div>
 
+  <!-- Div oculta apenas para decodificar código de barras/QR na foto -->
+  <div id="qr-temp" style="display:none;"></div>
+
   <script>
     const API_BASE = window.location.protocol.startsWith('http')
       ? ''
       : 'https://finart-wms.onrender.com';
 
-    let html5QrCode = null;
-    let lendoProcessamento = false;
+    let streamCamera = null;
 
     function tocarBip() {
       try {
@@ -170,86 +227,191 @@
       } catch (e) {}
     }
 
-    function iniciarCamera() {
-      lendoProcessamento = false;
-      html5QrCode = new Html5Qrcode("reader");
-      html5QrCode.start(
-        { facingMode: "environment" },
-        // Quadro amplo para enquadrar a etiqueta inteira (QR Code + Texto + Código de barras em 2º plano)
-        { fps: 10, qrbox: { width: 290, height: 220 } },
-        (decodedText) => {
-          if (lendoProcessamento) return;
-          lendoProcessamento = true;
-          tocarBip();
-          html5QrCode.stop().then(() => enviarParaInterpretador({ codigoLido: decodedText }));
-        },
-        () => {}
-      ).catch(err => console.warn("Aguardando câmera:", err));
-    }
-
-    // 1º PLANO: Captura a imagem da etiqueta inteira e lê todas as informações escritas nela (OCR)
-    async function capturarEtiquetaCompleta() {
-      const video = document.querySelector('#reader video');
-      if (!video) return alert('Aguarde a câmera abrir!');
-
-      const btn = document.getElementById('btn-ler-etiqueta');
-      btn.disabled = true;
-      btn.innerText = '🔍 LENDO INFORMAÇÕES DA ETIQUETA...';
-      lendoProcessamento = true;
+    // Abre a câmera traseira em Alta Definição (Full HD) para focar nas letras da etiqueta
+    async function iniciarCameraHD() {
+      const video = document.getElementById('video-hd');
+      const imgCongelada = document.getElementById('foto-congelada');
+      imgCongelada.style.display = 'none';
+      video.style.display = 'block';
 
       try {
-        const canvas = document.createElement('canvas');
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-        tocarBip();
-        await html5QrCode.stop();
-
-        const { data: { text } } = await Tesseract.recognize(canvas, 'por+eng');
-        await enviarParaInterpretador({ textoEtiqueta: text });
-      } catch (e) {
-        alert('Não foi possível focar o texto. Tente aproximar um pouco mais da etiqueta.');
-        voltarParaCamera();
-      } finally {
-        btn.disabled = false;
-        btn.innerText = '📸 LER ETIQUETA COMPLETA (TEXTO)';
+        if (streamCamera) {
+          streamCamera.getTracks().forEach(t => t.stop());
+        }
+        streamCamera = await navigator.mediaDevices.getUserMedia({
+          video: {
+            facingMode: { ideal: 'environment' },
+            width: { ideal: 1920 },
+            height: { ideal: 1080 }
+          },
+          audio: false
+        });
+        video.srcObject = streamCamera;
+      } catch (err) {
+        console.warn('Erro ao abrir câmera HD:', err);
       }
     }
 
-    async function enviarParaInterpretador(payload) {
+    // Remove o fundo colorido (amarelo, verde ou rosa) da etiqueta para deixar as letras pretas super nítidas
+    function criarImagemAltoContrasteParaOCR(canvasOriginal) {
+      const c = document.createElement('canvas');
+      c.width = canvasOriginal.width;
+      c.height = canvasOriginal.height;
+      const ctx = c.getContext('2d');
+      ctx.drawImage(canvasOriginal, 0, 0);
+
+      const imgData = ctx.getImageData(0, 0, c.width, c.height);
+      const d = imgData.data;
+
+      for (let i = 0; i < d.length; i += 4) {
+        // O canal mais brilhante ignora a tinta verde/amarela/rosa da etiqueta e destaca apenas a tinta preta do texto
+        const maxChannel = Math.max(d[i], d[i + 1], d[i + 2]);
+        const valor = maxChannel > 115 ? 255 : Math.max(0, (maxChannel - 40) * 2);
+        d[i] = valor;
+        d[i + 1] = valor;
+        d[i + 2] = valor;
+      }
+      ctx.putImageData(imgData, 0, 0);
+      return c;
+    }
+
+    // Tenta extrair também qualquer código de barras/QR presente na mesma foto
+    async function tentarLerCodigoNaFoto(canvasOriginal) {
+      return new Promise((resolve) => {
+        canvasOriginal.toBlob(async (blob) => {
+          if (!blob) return resolve('');
+          const file = new File([blob], 'etiqueta.jpg', { type: 'image/jpeg' });
+          try {
+            const qr = new Html5Qrcode('qr-temp');
+            const decoded = await qr.scanFile(file, false);
+            resolve(decoded || '');
+          } catch (e) {
+            resolve('');
+          }
+        }, 'image/jpeg', 0.95);
+      });
+    }
+
+    // Captura a foto do visor HD e digitaliza
+    async function fotografarEDigitalizarVisor() {
+      const video = document.getElementById('video-hd');
+      if (!video || !video.videoWidth) {
+        return alert('Aguarde a câmera iniciar ou use o botão de Foto Nativa logo abaixo.');
+      }
+
+      const canvasFoto = document.createElement('canvas');
+      canvasFoto.width = video.videoWidth;
+      canvasFoto.height = video.videoHeight;
+      const ctx = canvasFoto.getContext('2d');
+      ctx.drawImage(video, 0, 0, canvasFoto.width, canvasFoto.height);
+
+      await executarDigitalizacaoCompleta(canvasFoto);
+    }
+
+    // Caso o usuário tire a foto pelo app nativo da câmera do celular
+    function digitalizarFotoNativa(input) {
+      if (!input.files || !input.files[0]) return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = async () => {
+          const canvasFoto = document.createElement('canvas');
+          canvasFoto.width = img.width;
+          canvasFoto.height = img.height;
+          canvasFoto.getContext('2d').drawImage(img, 0, 0);
+          await executarDigitalizacaoCompleta(canvasFoto);
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(input.files[0]);
+    }
+
+    async function executarDigitalizacaoCompleta(canvasFoto) {
+      tocarBip();
+
+      const dataUrlFoto = canvasFoto.toDataURL('image/jpeg', 0.9);
+      const video = document.getElementById('video-hd');
+      const imgCongelada = document.getElementById('foto-congelada');
+      const laser = document.getElementById('laser-scan');
+      const statusBox = document.getElementById('status-leitura');
+      const btnFoto = document.getElementById('btn-fotografar');
+
+      // Congela a foto na tela e ativa o laser de digitalização
+      video.style.display = 'none';
+      imgCongelada.src = dataUrlFoto;
+      imgCongelada.style.display = 'block';
+      laser.style.display = 'block';
+      statusBox.style.display = 'block';
+      btnFoto.disabled = true;
+
       try {
+        const canvasNitido = criarImagemAltoContrasteParaOCR(canvasFoto);
+
+        // Executa em paralelo: Digitalização do Texto (OCR) + Leitura de Código na foto
+        const [ocrResult, codigoExtraido] = await Promise.all([
+          Tesseract.recognize(canvasNitido, 'por'),
+          tentarLerCodigoNaFoto(canvasFoto)
+        ]);
+
+        const textoDigitalizado = (ocrResult && ocrResult.data && ocrResult.data.text) ? ocrResult.data.text : '';
+
         const res = await fetch(`${API_BASE}/api/interpretar-bipe`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
+          body: JSON.stringify({
+            textoEtiqueta: textoDigitalizado,
+            codigoLido: codigoExtraido
+          })
         });
 
         const data = await res.json();
+
         if (!res.ok) {
-          alert(data.erro || 'Não foi possível identificar os dados. Tente novamente.');
+          alert(`❌ ${data.erro}`);
           voltarParaCamera();
           return;
         }
 
-        document.getElementById('conf-cliente').value = data.cliente || '';
-        document.getElementById('conf-pedido').value = data.pedido || '';
-        document.getElementById('conf-lote').value = data.lote || '';
-        document.getElementById('conf-item').value = data.item || '';
-        document.getElementById('conf-produto').value = data.produto || '';
-        document.getElementById('conf-pecas').value = data.qtd_pecas_por_volume || '';
+        // Preenche os dados reais extraídos da etiqueta
+        document.getElementById('img-conferencia').src = dataUrlFoto;
+        document.getElementById('conf-cliente').value = data.cliente;
+        document.getElementById('conf-pedido').value = data.pedido;
+        document.getElementById('conf-lote').value = data.lote;
+        document.getElementById('conf-item').value = data.item;
+        document.getElementById('conf-produto').value = data.produto;
+        document.getElementById('conf-pecas').value = data.qtd_pecas_por_volume;
         document.getElementById('conf-vol-etiqueta').value = data.volume_etiqueta || '';
-        document.getElementById('label-volumes').innerText = `Qtd ${data.tipoEmbalagem || 'CAIXA'}S (Padrão: ${data.qtd_volumes_sugerida}):`;
-        document.getElementById('input-volumes').value = data.qtd_volumes_sugerida || 15;
+        document.getElementById('label-volumes').innerText = `Qtd ${data.tipoEmbalagem}S (Padrão: ${data.qtd_volumes_sugerida}):`;
+        document.getElementById('input-volumes').value = data.qtd_volumes_sugerida;
 
         recalcularPreview();
+        tocarBip();
+
         document.getElementById('tela-scanner').style.display = 'none';
         document.getElementById('tela-confirmacao').style.display = 'block';
       } catch (err) {
-        alert('Erro de conexão com o servidor.');
+        alert('Falha ao digitalizar a imagem. Tente novamente aproximando mais da etiqueta.');
         voltarParaCamera();
+      } finally {
+        laser.style.display = 'none';
+        statusBox.style.display = 'none';
+        btnFoto.disabled = false;
       }
+    }
+
+    function atualizarRegraClienteManual() {
+      const cli = (document.getElementById('conf-cliente').value || '').toUpperCase();
+      const item = (document.getElementById('conf-item').value || '').toUpperCase();
+      const prod = (document.getElementById('conf-produto').value || '').toUpperCase();
+
+      if (cli.includes('DEVINTEX') && (item === 'PT-7908' || prod.includes('1000 GRS'))) {
+        document.getElementById('input-volumes').value = 22;
+      } else if (cli.includes('DEVINTEX')) {
+        document.getElementById('input-volumes').value = 15;
+      } else if (cli.length > 2) {
+        document.getElementById('input-volumes').value = 20;
+      }
+      recalcularPreview();
     }
 
     function recalcularPreview() {
@@ -297,7 +459,7 @@
     function voltarParaCamera() {
       document.getElementById('tela-confirmacao').style.display = 'none';
       document.getElementById('tela-scanner').style.display = 'block';
-      iniciarCamera();
+      iniciarCameraHD();
     }
 
     async function atualizarResumoAoVivo() {
@@ -327,7 +489,7 @@
     setInterval(atualizarResumoAoVivo, 2000);
 
     window.onload = () => {
-      iniciarCamera();
+      iniciarCameraHD();
       atualizarResumoAoVivo();
     };
   </script>
