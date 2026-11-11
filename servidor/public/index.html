@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FINART - Controle de Estoque</title>
+  <style>
+    :root {
+      --bg-page: #f4f6f8;
+      --bg-card: #ffffff;
+      --border: #e2e8f0;
+      --text-main: #1e293b;
+      --text-muted: #64748b;
+      --primary: #0284c7;
+      --primary-light: #e0f2fe;
+      --success: #059669;
+      --success-bg: #ecfdf5;
+      --warning-bg: #fef3c7;
+      --warning-text: #b45309;
+      --danger: #dc2626;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+    body { background-color: var(--bg-page); color: var(--text-main); padding: 28px 16px; line-height: 1.4; }
+    .container { max-width: 1020px; margin: 0 auto; }
+
+    header {
+      display: flex; justify-content: space-between; align-items: center;
+      background: var(--bg-card); padding: 16px 24px; border-radius: 10px;
+      border: 1px solid var(--border); box-shadow: 0 1px 3px rgba(0,0,0,0.03); margin-bottom: 18px;
+      flex-wrap: wrap; gap: 12px;
+    }
+    .brand-area { display: flex; align-items: center; gap: 12px; }
+    .brand-logo { background: var(--primary); color: #fff; font-weight: 800; font-size: 18px; padding: 6px 14px; border-radius: 6px; letter-spacing: 1.5px; }
+    .brand-title h1 { font-size: 17px; font-weight: 700; color: var(--text-main); }
+    .brand-title span { font-size: 12px; color: var(--text-muted); }
+    .header-actions { display: flex; align-items: center; gap: 10px; }
+
+    .status-pill {
+      display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600;
+      color: var(--success); background: var(--success-bg); padding: 6px 12px; border-radius: 20px;
+    }
+    .dot { width: 8px; height: 8px; background: var(--success); border-radius: 50%; }
+
+    .summary-bar { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 18px; }
+    .summary-item {
+      background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px;
+      padding: 14px 20px; display: flex; justify-content: space-between; align-items: center;
+    }
+    .summary-item span { font-size: 13px; font-weight: 600; color: var(--text-muted); }
+    .summary-item strong { font-size: 22px; font-weight: 800; color: var(--text-main); }
+    .summary-item.destaque strong { color: var(--success); }
+
+    .toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; gap: 12px; flex-wrap: wrap; }
+    .tabs { display: flex; background: #e2e8f0; padding: 4px; border-radius: 8px; gap: 4px; }
+    .tab-btn {
+      border: none; background: transparent; padding: 8px 16px; border-radius: 6px;
+      font-size: 13px; font-weight: 600; color: var(--text-muted); cursor: pointer;
+    }
+    .tab-btn.active { background: var(--bg-card); color: var(--text-main); box-shadow: 0 1px 2px rgba(0,0,0,0.06); }
+
+    .search-input {
+      padding: 8px 14px; border: 1px solid var(--border); border-radius: 8px;
+      background: var(--bg-card); font-size: 13px; width: 280px; color: var(--text-main); outline: none;
+    }
+
+    .list-container { background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+    .list-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 16px 20px; border-bottom: 1px solid var(--border); gap: 16px; flex-wrap: wrap;
+    }
+    .list-row:last-child { border-bottom: none; }
+    .list-row:hover { background: #f8fafc; }
+    .row-main { flex: 1; min-width: 240px; }
+    .row-top { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; flex-wrap: wrap; }
+    .cliente-nome { font-weight: 700; font-size: 15px; color: var(--text-main); }
+    .tag { font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 5px; }
+    .tag-lote { background: var(--warning-bg); color: var(--warning-text); }
+    .tag-item { background: var(--primary-light); color: var(--primary); }
+    .tag-pedido { background: #f1f5f9; color: var(--text-muted); font-weight: 600; }
+    .produto-desc { font-size: 13px; color: var(--text-muted); }
+
+    .row-metrics { display: flex; align-items: center; gap: 24px; text-align: right; }
+    .metric-box { min-width: 70px; }
+    .metric-box small { display: block; font-size: 11px; color: var(--text-muted); text-transform: uppercase; }
+    .metric-box strong { font-size: 15px; color: var(--text-main); }
+
+    .saldo-box { background: var(--success-bg); padding: 8px 14px; border-radius: 8px; min-width: 120px; text-align: right; }
+    .saldo-box small { display: block; font-size: 10px; font-weight: 700; color: var(--success); text-transform: uppercase; }
+    .saldo-box strong { font-size: 18px; font-weight: 800; color: var(--success); }
+
+    .btn-primary { background: var(--primary); color: #fff; border: none; padding: 9px 16px; border-radius: 7px; font-weight: 600; font-size: 13px; cursor: pointer; text-decoration: none; }
+    .btn-outline { background: #fff; color: var(--text-main); border: 1px solid var(--border); padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; text-decoration: none; }
+    .btn-danger-outline { background: #fff; color: var(--danger); border: 1px solid #fecaca; padding: 6px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; }
+    .empty-state { padding: 40px; text-align: center; color: var(--text-muted); font-size: 14px; }
+
+    .modal-bg { display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.45); align-items: center; justify-content: center; z-index: 100; padding: 16px; }
+    .modal { background: var(--bg-card); border-radius: 12px; padding: 24px; width: 100%; max-width: 460px; }
+    .modal h3 { font-size: 17px; margin-bottom: 16px; color: var(--text-main); }
+    .form-group { margin-bottom: 12px; }
+    .form-group label { display: block; font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 4px; }
+    .form-group input { width: 100%; padding: 9px 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 14px; background: #f8fafc; }
+    .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <header>
+      <div class="brand-area">
+        <div class="brand-logo">FINART</div>
+        <div class="brand-title">
+          <h1>Controle de Paletes e Saldos</h1>
+          <span>Servidor Online: finart-wms.onrender.com</span>
+        </div>
+      </div>
+      <div class="header-actions">
+        <div class="status-pill"><div class="dot"></div> Tempo Real</div>
+        <a href="/coletor.html" class="btn-outline">📱 Abrir Coletor</a>
+        <button class="btn-primary" onclick="abrirModalNovo()">+ Lançar Palete</button>
+      </div>
+    </header>
+
+    <div class="summary-bar">
+      <div class="summary-item">
+        <span>Paletes Bipados</span>
+        <strong id="card-paletes">0</strong>
+      </div>
+      <div class="summary-item">
+        <span>Total Caixas / Sacaria</span>
+        <strong id="card-volumes">0</strong>
+      </div>
+      <div class="summary-item destaque">
+        <span>Saldo Total (Peças)</span>
+        <strong id="card-pecas">0</strong>
+      </div>
+    </div>
+
+    <div class="toolbar">
+      <div class="tabs">
+        <button class="tab-btn active" id="btn-aba-saldos" onclick="alternarAba('saldos')">📦 Saldos por Lote</button>
+        <button class="tab-btn" id="btn-aba-historico" onclick="alternarAba('historico')">🛠️ Histórico de Bipes (Corrigir)</button>
+      </div>
+      <input type="text" class="search-input" id="campo-busca" placeholder="Buscar cliente, lote, item..." oninput="renderizarListas()" />
+    </div>
+
+    <div class="list-container" id="secao-saldos">
+      <div id="lista-consolidado"></div>
+    </div>
+
+    <div class="list-container" id="secao-historico" style="display: none;">
+      <div id="lista-historico"></div>
+    </div>
+  </div>
+
+  <div class="modal-bg" id="modal-edicao">
+    <div class="modal">
+      <h3 id="modal-titulo">Lançar Palete - FINART</h3>
+      <input type="hidden" id="edit-id" />
+      <div class="form-group">
+        <label>Leitura Rápida da Etiqueta (Ex: FR-12588;0065801;220)</label>
+        <input type="text" id="edit-barcode" placeholder="Cole ou bipe o código aqui..." oninput="preencherPorBarcode(this.value)" />
+      </div>
+      <div class="form-group">
+        <label>Cliente</label>
+        <input type="text" id="edit-cliente" />
+      </div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+        <div class="form-group">
+          <label>Pedido</label>
+          <input type="text" id="edit-pedido" />
+        </div>
+        <div class="form-group">
+          <label>Nº do Lote</label>
+          <input type="text" id="edit-lote" />
+        </div>
+      </div>
+      <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 10px;">
+        <div class="form-group">
+          <label>Item</label>
+          <input type="text" id="edit-item" />
+        </div>
+        <div class="form-group">
+          <label>Produto</label>
+          <input type="text" id="edit-produto" />
+        </div>
+      </div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+        <div class="form-group">
+          <label>Caixas/Sacos no Palete</label>
+          <input type="number" id="edit-volumes" />
+        </div>
+        <div class="form-group">
+          <label>Peças por Caixa/Saco</label>
+          <input type="number" id="edit-pecas" />
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-outline" onclick="fecharModal()">Cancelar</button>
+        <button class="btn-primary" onclick="salvarEdicao()">Salvar Dados</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Usa automaticamente o seu servidor https://finart-wms.onrender.com quando aberto fora do servidor local
+    const API_BASE = window.location.protocol.startsWith('http')
+      ? ''
+      : 'https://finart-wms.onrender.com';
+
+    let consolidadoCache = [];
+    let historicoCache = [];
+
+    function alternarAba(aba) {
+      document.getElementById('secao-saldos').style.display = aba === 'saldos' ? 'block' : 'none';
+      document.getElementById('secao-historico').style.display = aba === 'historico' ? 'block' : 'none';
+      document.getElementById('btn-aba-saldos').classList.toggle('active', aba === 'saldos');
+      document.getElementById('btn-aba-historico').classList.toggle('active', aba === 'historico');
+    }
+
+    async function carregarDashboard() {
+      try {
+        const res = await fetch(`${API_BASE}/api/dashboard`);
+        const { consolidado, historico } = await res.json();
+        consolidadoCache = consolidado;
+        historicoCache = historico;
+
+        let totalPaletes = 0, totalVolumes = 0, totalPecas = 0;
+        consolidado.forEach(r => {
+          totalPaletes += r.total_paletes;
+          totalVolumes += r.total_caixas_ou_sacaria;
+          totalPecas += r.saldo_total_pecas;
+        });
+
+        document.getElementById('card-paletes').innerText = totalPaletes.toLocaleString('pt-BR');
+        document.getElementById('card-volumes').innerText = totalVolumes.toLocaleString('pt-BR');
+        document.getElementById('card-pecas').innerText = totalPecas.toLocaleString('pt-BR');
+
+        renderizarListas();
+      } catch (e) {
+        console.error('Erro ao buscar dados:', e);
+      }
+    }
+
+    function renderizarListas() {
+      const termo = (document.getElementById('campo-busca').value || '').toLowerCase();
+      const divCons = document.getElementById('lista-consolidado');
+      const consFiltrado = consolidadoCache.filter(r =>
+        r.cliente.toLowerCase().includes(termo) ||
+        r.lote.toLowerCase().includes(termo) ||
+        r.item.toLowerCase().includes(termo) ||
+        r.produto.toLowerCase().includes(termo)
+      );
+
+      if (consFiltrado.length === 0) {
+        divCons.innerHTML = `<div class="empty-state">Nenhum palete bipado até o momento. Clique em "+ Lançar Palete" ou bipe pelo celular.</div>`;
+      } else {
+        divCons.innerHTML = consFiltrado.map(r => `
+          <div class="list-row">
+            <div class="row-main">
+              <div class="row-top">
+                <span class="cliente-nome">${r.cliente}</span>
+                <span class="tag tag-lote">Lote: ${r.lote}</span>
+                <span class="tag tag-item">${r.item}</span>
+                <span class="tag tag-pedido">Ped: ${r.pedido}</span>
+              </div>
+              <div class="produto-desc">${r.produto}</div>
+            </div>
+            <div class="row-metrics">
+              <div class="metric-box"><small>Paletes</small><strong>${r.total_paletes}</strong></div>
+              <div class="metric-box"><small>Volumes</small><strong>${r.total_caixas_ou_sacaria}</strong></div>
+              <div class="metric-box"><small>Pçs/Vol</small><strong>${r.qtd_pecas_por_volume}</strong></div>
+              <div class="saldo-box"><small>Saldo Total</small><strong>${r.saldo_total_pecas.toLocaleString('pt-BR')}</strong></div>
+            </div>
+          </div>
+        `).join('');
+      }
+
+      const divHist = document.getElementById('lista-historico');
+      const histFiltrado = historicoCache.filter(i =>
+        i.cliente.toLowerCase().includes(termo) ||
+        i.lote.toLowerCase().includes(termo) ||
+        i.item.toLowerCase().includes(termo)
+      );
+
+      if (histFiltrado.length === 0) {
+        divHist.innerHTML = `<div class="empty-state">Nenhum registro encontrado no histórico.</div>`;
+      } else {
+        divHist.innerHTML = histFiltrado.map(item => `
+          <div class="list-row">
+            <div class="row-main">
+              <div class="row-top">
+                <span class="tag tag-pedido">#${item.id}</span>
+                <span class="cliente-nome">${item.cliente}</span>
+                <span class="tag tag-lote">Lote: ${item.lote}</span>
+                <span class="tag tag-item">${item.item}</span>
+              </div>
+              <div class="produto-desc">${item.produto} • ${new Date(item.data_hora).toLocaleString('pt-BR')}</div>
+            </div>
+            <div class="row-metrics">
+              <div class="metric-box"><small>Caixas/Sacos</small><strong>${item.qtd_volumes_palete}</strong></div>
+              <div class="metric-box"><small>Peças/Un</small><strong>${item.qtd_pecas_por_volume}</strong></div>
+              <div class="metric-box"><small>Total Palete</small><strong style="color: var(--success)">${item.saldo_total_pecas.toLocaleString('pt-BR')}</strong></div>
+              <div style="display: flex; gap: 6px;">
+                <button class="btn-outline" onclick="abrirModalEdicao(${item.id})">Editar</button>
+                <button class="btn-danger-outline" onclick="excluirPalete(${item.id})">Excluir</button>
+              </div>
+            </div>
+          </div>
+        `).join('');
+      }
+    }
+
+    async function preencherPorBarcode(codigo) {
+      if (!codigo.includes(';')) return;
+      const res = await fetch(`${API_BASE}/api/interpretar-bipe`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ codigoLido: codigo })
+      });
+      if (res.ok) {
+        const d = await res.json();
+        document.getElementById('edit-cliente').value = d.cliente;
+        document.getElementById('edit-pedido').value = d.pedido;
+        document.getElementById('edit-lote').value = d.lote;
+        document.getElementById('edit-item').value = d.item;
+        document.getElementById('edit-produto').value = d.produto;
+        document.getElementById('edit-volumes').value = d.qtd_volumes_sugerida;
+        document.getElementById('edit-pecas').value = d.qtd_pecas_por_volume;
+      }
+    }
+
+    function abrirModalNovo() {
+      document.getElementById('modal-titulo').innerText = 'Lançar Palete - FINART';
+      document.getElementById('edit-id').value = '';
+      document.getElementById('edit-barcode').value = '';
+      document.getElementById('edit-cliente').value = '';
+      document.getElementById('edit-pedido').value = '';
+      document.getElementById('edit-lote').value = '';
+      document.getElementById('edit-item').value = '';
+      document.getElementById('edit-produto').value = '';
+      document.getElementById('edit-volumes').value = '';
+      document.getElementById('edit-pecas').value = '';
+      document.getElementById('modal-edicao').style.display = 'flex';
+    }
+
+    function abrirModalEdicao(id) {
+      const reg = historicoCache.find(r => r.id === id);
+      if (!reg) return;
+      document.getElementById('modal-titulo').innerText = `Corrigir Palete #${id}`;
+      document.getElementById('edit-id').value = reg.id;
+      document.getElementById('edit-barcode').value = '';
+      document.getElementById('edit-cliente').value = reg.cliente;
+      document.getElementById('edit-pedido').value = reg.pedido;
+      document.getElementById('edit-lote').value = reg.lote;
+      document.getElementById('edit-item').value = reg.item;
+      document.getElementById('edit-produto').value = reg.produto;
+      document.getElementById('edit-volumes').value = reg.qtd_volumes_palete;
+      document.getElementById('edit-pecas').value = reg.qtd_pecas_por_volume;
+      document.getElementById('modal-edicao').style.display = 'flex';
+    }
+
+    function fecharModal() {
+      document.getElementById('modal-edicao').style.display = 'none';
+    }
+
+    async function salvarEdicao() {
+      const id = document.getElementById('edit-id').value;
+      const payload = {
+        cliente: document.getElementById('edit-cliente').value,
+        pedido: document.getElementById('edit-pedido').value,
+        lote: document.getElementById('edit-lote').value,
+        item: document.getElementById('edit-item').value,
+        produto: document.getElementById('edit-produto').value,
+        qtd_volumes_palete: Number(document.getElementById('edit-volumes').value),
+        qtd_pecas_por_volume: Number(document.getElementById('edit-pecas').value)
+      };
+
+      const url = id ? `${API_BASE}/api/paletes/${id}` : `${API_BASE}/api/paletes`;
+      const method = id ? 'PUT' : 'POST';
+
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (res.ok) {
+        fecharModal();
+        carregarDashboard();
+      } else {
+        const err = await res.json();
+        alert(err.erro || 'Erro ao salvar');
+      }
+    }
+
+    async function excluirPalete(id) {
+      if (!confirm(`Deseja realmente excluir o lançamento do Palete #${id}?`)) return;
+      await fetch(`${API_BASE}/api/paletes/${id}`, { method: 'DELETE' });
+      carregarDashboard();
+    }
+
+    const stream = new EventSource(`${API_BASE}/api/stream`);
+    stream.onmessage = () => carregarDashboard();
+
+    carregarDashboard();
+  </script>
+</body>
+</html>

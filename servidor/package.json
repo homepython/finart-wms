@@ -1,0 +1,19 @@
+{
+  "name": "finart-wms",
+  "version": "1.0.0",
+  "description": "Sistema FINART WMS Online - Controle de Paletes e Saldos",
+  "main": "server.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/homepython/finart-wms.git"
+  },
+  "author": "homepython",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.19.2",
+    "sqlite3": "^5.1.7"
+  }
+}
