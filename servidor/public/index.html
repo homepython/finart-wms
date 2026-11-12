@@ -56,425 +56,162 @@
       gap: 12px;
     }
 
-    .brand-area {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
+    .brand-area { display: flex; align-items: center; gap: 12px; }
     .brand-logo {
-      background: var(--primary);
-      color: #fff;
-      font-weight: 800;
-      font-size: 18px;
-      padding: 6px 14px;
-      border-radius: 6px;
-      letter-spacing: 1.5px;
+      background: var(--primary); color: #fff; font-weight: 800; font-size: 18px;
+      padding: 6px 14px; border-radius: 6px; letter-spacing: 1.5px;
     }
-
-    .brand-title h1 {
-      font-size: 17px;
-      font-weight: 700;
-      color: var(--text-main);
-    }
-
-    .brand-title span {
-      font-size: 12px;
-      color: var(--text-muted);
-    }
+    .brand-title h1 { font-size: 17px; font-weight: 700; color: var(--text-main); }
+    .brand-title span { font-size: 12px; color: var(--text-muted); }
 
     .header-actions {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      flex-wrap: wrap;
-      width: 100%;
-      justify-content: flex-end;
+      display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+      width: 100%; justify-content: flex-end;
     }
-
-    @media (min-width: 641px) {
-      .header-actions { width: auto; }
-    }
+    @media (min-width: 641px) { .header-actions { width: auto; } }
 
     .status-pill {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 12px;
-      font-weight: 600;
-      color: var(--success);
-      background: var(--success-bg);
-      padding: 6px 12px;
-      border-radius: 20px;
+      display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600;
+      color: var(--success); background: var(--success-bg); padding: 6px 12px; border-radius: 20px;
     }
-
-    .dot {
-      width: 8px;
-      height: 8px;
-      background: var(--success);
-      border-radius: 50%;
-    }
+    .dot { width: 8px; height: 8px; background: var(--success); border-radius: 50%; }
 
     .toolbar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 12px;
-      gap: 10px;
-      flex-wrap: wrap;
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 12px; gap: 10px; flex-wrap: wrap;
     }
-
     .tabs {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      background: #e2e8f0;
-      padding: 4px;
-      border-radius: 8px;
-      gap: 4px;
-      width: 100%;
+      display: grid; grid-template-columns: 1fr 1fr; background: #e2e8f0;
+      padding: 4px; border-radius: 8px; gap: 4px; width: 100%;
     }
-
-    @media (min-width: 641px) {
-      .tabs { width: auto; display: flex; }
-    }
+    @media (min-width: 641px) { .tabs { width: auto; display: flex; } }
 
     .tab-btn {
-      border: none;
-      background: transparent;
-      padding: 9px 14px;
-      border-radius: 6px;
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--text-muted);
-      cursor: pointer;
-      text-align: center;
+      border: none; background: transparent; padding: 9px 14px; border-radius: 6px;
+      font-size: 13px; font-weight: 600; color: var(--text-muted); cursor: pointer; text-align: center;
     }
-
     .tab-btn.active {
-      background: var(--bg-card);
-      color: var(--text-main);
-      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+      background: var(--bg-card); color: var(--text-main); box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
     }
 
     .search-input {
-      padding: 10px 14px;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      background: var(--bg-card);
-      font-size: 13px;
-      width: 100%;
-      color: var(--text-main);
-      outline: none;
+      padding: 10px 14px; border: 1px solid var(--border); border-radius: 8px;
+      background: var(--bg-card); font-size: 13px; width: 100%; color: var(--text-main); outline: none;
     }
+    @media (min-width: 641px) { .search-input { width: 280px; } }
 
-    @media (min-width: 641px) {
-      .search-input { width: 280px; }
-    }
-
-    /* Barra de Seleção e Exclusão Rápida */
     .bulk-bar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      background: #f8fafc;
-      padding: 12px 16px;
-      border-bottom: 1px solid var(--border);
-      gap: 10px;
-      flex-wrap: wrap;
+      display: flex; justify-content: space-between; align-items: center;
+      background: #f8fafc; padding: 12px 16px; border-bottom: 1px solid var(--border);
+      gap: 10px; flex-wrap: wrap;
     }
-
     .check-label {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-size: 14px;
-      font-weight: 700;
-      color: var(--text-main);
-      cursor: pointer;
-      user-select: none;
+      display: flex; align-items: center; gap: 10px; font-size: 14px;
+      font-weight: 700; color: var(--text-main); cursor: pointer; user-select: none;
     }
-
-    .checkbox-item {
-      width: 20px;
-      height: 20px;
-      accent-color: var(--primary);
-      cursor: pointer;
-    }
+    .checkbox-item { width: 20px; height: 20px; accent-color: var(--primary); cursor: pointer; }
 
     .list-container {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
-      overflow: hidden;
-      width: 100%;
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 12px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02); overflow: hidden; width: 100%;
     }
-
     .list-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 16px;
-      border-bottom: 1px solid var(--border);
-      gap: 14px;
-      flex-wrap: wrap;
-      width: 100%;
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 16px; border-bottom: 1px solid var(--border); gap: 14px; flex-wrap: wrap; width: 100%;
     }
+    .list-row:last-child { border-bottom: none; }
+    .list-row.selecionado { background: #e0f2fe; }
 
-    .list-row:last-child {
-      border-bottom: none;
-    }
+    .row-left-wrap { display: flex; align-items: center; gap: 12px; flex: 1; min-width: 220px; width: 100%; }
+    .row-main { flex: 1; min-width: 0; }
+    .row-top { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; flex-wrap: wrap; }
+    .cliente-nome { font-weight: 700; font-size: 15px; color: var(--text-main); }
 
-    .list-row.selecionado {
-      background: #e0f2fe;
-    }
+    .tag { font-size: 12px; font-weight: 700; padding: 3px 8px; border-radius: 5px; white-space: nowrap; }
+    .tag-lote { background: var(--warning-bg); color: var(--warning-text); }
+    .tag-item { background: var(--primary-light); color: var(--primary); }
+    .tag-pedido { background: #f1f5f9; color: var(--text-muted); font-weight: 600; }
+    .produto-desc { font-size: 13px; color: var(--text-muted); word-break: break-word; }
 
-    .row-left-wrap {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      flex: 1;
-      min-width: 220px;
-      width: 100%;
-    }
-
-    .row-main {
-      flex: 1;
-      min-width: 0;
-    }
-
-    .row-top {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      margin-bottom: 6px;
-      flex-wrap: wrap;
-    }
-
-    .cliente-nome {
-      font-weight: 700;
-      font-size: 15px;
-      color: var(--text-main);
-    }
-
-    .tag {
-      font-size: 12px;
-      font-weight: 700;
-      padding: 3px 8px;
-      border-radius: 5px;
-      white-space: nowrap;
-    }
-
-    .tag-lote {
-      background: var(--warning-bg);
-      color: var(--warning-text);
-    }
-
-    .tag-item {
-      background: var(--primary-light);
-      color: var(--primary);
-    }
-
-    .tag-pedido {
-      background: #f1f5f9;
-      color: var(--text-muted);
-      font-weight: 600;
-    }
-
-    .produto-desc {
-      font-size: 13px;
-      color: var(--text-muted);
-      word-break: break-word;
-    }
-
-    .row-metrics {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      text-align: right;
-    }
-
-    .metric-box {
-      min-width: 58px;
-    }
-
-    .metric-box small {
-      display: block;
-      font-size: 10px;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      font-weight: 600;
-    }
-
-    .metric-box strong {
-      font-size: 15px;
-      color: var(--text-main);
-    }
+    .row-metrics { display: flex; align-items: center; gap: 16px; text-align: right; }
+    .metric-box { min-width: 58px; }
+    .metric-box small { display: block; font-size: 10px; color: var(--text-muted); text-transform: uppercase; font-weight: 600; }
+    .metric-box strong { font-size: 15px; color: var(--text-main); }
 
     .saldo-box {
-      background: var(--success-bg);
-      padding: 8px 12px;
-      border-radius: 8px;
-      min-width: 105px;
-      text-align: right;
+      background: var(--success-bg); padding: 8px 12px; border-radius: 8px;
+      min-width: 105px; text-align: right;
     }
-
-    .saldo-box small {
-      display: block;
-      font-size: 10px;
-      font-weight: 700;
-      color: var(--success);
-      text-transform: uppercase;
-    }
-
-    .saldo-box strong {
-      font-size: 17px;
-      font-weight: 800;
-      color: var(--success);
-    }
+    .saldo-box small { display: block; font-size: 10px; font-weight: 700; color: var(--success); text-transform: uppercase; }
+    .saldo-box strong { font-size: 17px; font-weight: 800; color: var(--success); }
 
     @media (max-width: 640px) {
-      .header-actions {
-        justify-content: space-between;
-      }
+      .header-actions { justify-content: space-between; }
       .row-metrics {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        width: 100%;
-        gap: 6px;
-        padding-top: 10px;
-        border-top: 1px dashed var(--border);
-        text-align: center;
+        display: grid; grid-template-columns: repeat(4, 1fr); width: 100%;
+        gap: 6px; padding-top: 10px; border-top: 1px dashed var(--border); text-align: center;
       }
       .metric-box { min-width: 0; }
-      .saldo-box {
-        min-width: 0;
-        text-align: center;
-        padding: 6px 4px;
-      }
+      .saldo-box { min-width: 0; text-align: center; padding: 6px 4px; }
       .acoes-mobile {
-        grid-column: span 4;
-        display: flex;
-        justify-content: flex-end;
-        gap: 8px;
-        margin-top: 6px;
+        grid-column: span 4; display: flex; justify-content: flex-end; gap: 8px; margin-top: 6px;
       }
     }
 
     .btn-primary {
-      background: var(--primary);
-      color: #fff;
-      border: none;
-      padding: 9px 14px;
-      border-radius: 7px;
-      font-weight: 600;
-      font-size: 13px;
-      cursor: pointer;
-      text-decoration: none;
+      background: var(--primary); color: #fff; border: none; padding: 9px 14px;
+      border-radius: 7px; font-weight: 600; font-size: 13px; cursor: pointer; text-decoration: none;
     }
-
     .btn-outline {
-      background: #fff;
-      color: var(--text-main);
-      border: 1px solid var(--border);
-      padding: 7px 12px;
-      border-radius: 6px;
-      font-size: 12px;
-      font-weight: 600;
-      cursor: pointer;
-      text-decoration: none;
+      background: #fff; color: var(--text-main); border: 1px solid var(--border);
+      padding: 7px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; text-decoration: none;
     }
-
     .btn-danger-solid {
-      background: var(--danger);
-      color: #fff;
-      border: none;
-      padding: 9px 14px;
-      border-radius: 7px;
-      font-size: 12px;
-      font-weight: 700;
-      cursor: pointer;
+      background: var(--danger); color: #fff; border: none; padding: 9px 14px;
+      border-radius: 7px; font-size: 12px; font-weight: 700; cursor: pointer;
     }
-
-    .btn-danger-solid:disabled {
-      opacity: 0.35;
-      cursor: not-allowed;
-    }
-
+    .btn-danger-solid:disabled { opacity: 0.35; cursor: not-allowed; }
     .btn-danger-outline {
-      background: #fff;
-      color: var(--danger);
-      border: 1px solid #fecaca;
-      padding: 7px 12px;
-      border-radius: 6px;
-      font-size: 12px;
-      font-weight: 700;
-      cursor: pointer;
+      background: #fff; color: var(--danger); border: 1px solid #fecaca;
+      padding: 7px 12px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer;
     }
 
-    .empty-state {
-      padding: 36px 20px;
-      text-align: center;
-      color: var(--text-muted);
-      font-size: 14px;
-    }
+    .empty-state { padding: 36px 20px; text-align: center; color: var(--text-muted); font-size: 14px; }
 
     .modal-bg {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(15, 23, 42, 0.45);
-      align-items: center;
-      justify-content: center;
-      z-index: 100;
-      padding: 14px;
+      display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.45);
+      align-items: center; justify-content: center; z-index: 100; padding: 14px;
     }
-
     .modal {
-      background: var(--bg-card);
-      border-radius: 12px;
-      padding: 20px;
-      width: 100%;
-      max-width: 460px;
-      max-height: 92vh;
-      overflow-y: auto;
+      background: var(--bg-card); border-radius: 12px; padding: 20px;
+      width: 100%; max-width: 480px; max-height: 92vh; overflow-y: auto;
       box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
     }
+    .modal h3 { font-size: 17px; margin-bottom: 14px; color: var(--text-main); }
 
-    .modal h3 {
-      font-size: 17px;
-      margin-bottom: 14px;
-      color: var(--text-main);
-    }
-
-    .form-group { margin-bottom: 10px; }
-    .form-group label {
-      display: block;
-      font-size: 12px;
-      font-weight: 600;
-      color: var(--text-muted);
-      margin-bottom: 4px;
-    }
-
+    .form-group { margin-bottom: 10px; position: relative; }
+    .form-group label { display: block; font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 4px; }
     .form-group input {
-      width: 100%;
-      padding: 9px 12px;
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      font-size: 14px;
-      background: #f8fafc;
-      color: var(--text-main);
+      width: 100%; padding: 9px 12px; border: 1px solid var(--border);
+      border-radius: 6px; font-size: 14px; background: #f8fafc; color: var(--text-main);
     }
+    .form-group input:focus { border-color: var(--primary); background: #fff; outline: none; }
 
-    .modal-actions {
-      display: flex;
-      justify-content: flex-end;
-      gap: 10px;
-      margin-top: 16px;
+    /* Lista Flutuante de Auto-Complete no Modal */
+    .ac-dropdown {
+      display: none; position: absolute; top: 100%; left: 0; right: 0;
+      background: #fff; border: 2px solid var(--primary); border-radius: 8px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.15); max-height: 180px; overflow-y: auto; z-index: 200;
     }
+    .ac-row { padding: 9px 12px; border-bottom: 1px solid var(--border); cursor: pointer; font-size: 13px; }
+    .ac-row:hover { background: #e0f2fe; }
+    .ac-row strong { display: block; color: var(--primary); }
+    .ac-row small { color: var(--muted); font-size: 11px; }
+
+    .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 16px; }
   </style>
 </head>
-<body>
+<body onclick="fecharDropdownsModal(event)">
 
   <div class="container">
     <header>
@@ -510,12 +247,10 @@
       />
     </div>
 
-    <!-- ABA 1: SALDOS CONSOLIDADOS POR LOTE -->
     <div class="list-container" id="secao-saldos">
       <div id="lista-consolidado"></div>
     </div>
 
-    <!-- ABA 2: HISTÓRICO INDIVIDUAL COM SELEÇÃO E EXCLUSÃO INSTANTÂNEA -->
     <div class="list-container" id="secao-historico" style="display: none;">
       <div class="bulk-bar">
         <label class="check-label">
@@ -532,21 +267,27 @@
     </div>
   </div>
 
-  <!-- MODAL DE LANÇAMENTO E EDIÇÃO -->
+  <!-- MODAL COM AUTO-COMPLETE POR NOME DO PRODUTO E ITEM -->
   <div class="modal-bg" id="modal-edicao">
     <div class="modal">
       <h3 id="modal-titulo">Lançar Palete - FINART</h3>
       <input type="hidden" id="edit-id" />
 
       <div class="form-group">
-        <label>Código do Item (Auto-completa se já conhecido)</label>
-        <input type="text" id="edit-item" list="lista-itens-aprendidos" placeholder="Ex: PT-12236, PT-7908, FR-12588" oninput="autoCompletarPorItem(this.value)" />
-        <datalist id="lista-itens-aprendidos"></datalist>
+        <label>Código do Item (Digite p/ auto-completar)</label>
+        <input type="text" id="edit-item" autocomplete="off" placeholder="Ex: PT-7908, PT-12236, FR-12588" onfocus="filtrarSugestoesModal('item', this.value)" oninput="filtrarSugestoesModal('item', this.value)" />
+        <div class="ac-dropdown" id="drop-item"></div>
+      </div>
+
+      <div class="form-group">
+        <label>Descrição do Produto (Auto-complete pelo histórico)</label>
+        <input type="text" id="edit-produto" autocomplete="off" placeholder="Digite parte do nome do produto..." onfocus="filtrarSugestoesModal('produto', this.value)" oninput="filtrarSugestoesModal('produto', this.value)" />
+        <div class="ac-dropdown" id="drop-produto"></div>
       </div>
 
       <div class="form-group">
         <label>Cliente</label>
-        <input type="text" id="edit-cliente" placeholder="Ex: DEVINTEX COSMETICOS" oninput="autoAjustarVolumesPorCliente()" />
+        <input type="text" id="edit-cliente" autocomplete="off" placeholder="Ex: DEVINTEX COSMETICOS" oninput="autoAjustarVolumesPorCliente()" />
       </div>
 
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
@@ -558,11 +299,6 @@
           <label>Nº do Lote (Máx 1 ponto)</label>
           <input type="text" id="edit-lote" maxlength="8" placeholder="006437.1" oninput="mascaraLoteUnicoPonto(this)" />
         </div>
-      </div>
-
-      <div class="form-group">
-        <label>Descrição do Produto</label>
-        <input type="text" id="edit-produto" />
       </div>
 
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
@@ -624,6 +360,48 @@
       input.value = limparLoteEstrito(input.value);
     }
 
+    function fecharDropdownsModal(e) {
+      if (e && e.target && e.target.tagName === 'INPUT') return;
+      document.querySelectorAll('.ac-dropdown').forEach(d => d.style.display = 'none');
+    }
+
+    function filtrarSugestoesModal(tipo, valor) {
+      document.querySelectorAll('.ac-dropdown').forEach(d => d.style.display = 'none');
+      const termo = (valor || '').trim().toUpperCase();
+      const drop = document.getElementById(tipo === 'item' ? 'drop-item' : 'drop-produto');
+
+      const filtrados = catalogoCache.filter(c =>
+        c.item.toUpperCase().includes(termo) ||
+        c.produto.toUpperCase().includes(termo)
+      );
+      if (filtrados.length === 0) return;
+
+      drop.innerHTML = filtrados.map((c, i) => `
+        <div class="ac-row" onclick="escolherSugestaoModal(${i}, '${tipo}')">
+          <strong>${c.item} — ${c.produto}</strong>
+          <small>${c.cliente} • Padrão: ${c.padrao_volumes_palete} vol. x ${c.qtd_padrao_pecas} pçs</small>
+        </div>
+      `).join('');
+      drop.dataset.lista = JSON.stringify(filtrados);
+      drop.style.display = 'block';
+    }
+
+    function escolherSugestaoModal(idx, tipo) {
+      const drop = document.getElementById(tipo === 'item' ? 'drop-item' : 'drop-produto');
+      const lista = JSON.parse(drop.dataset.lista || '[]');
+      const c = lista[idx];
+      if (!c) return;
+
+      document.getElementById('edit-item').value = c.item;
+      document.getElementById('edit-produto').value = c.produto;
+      document.getElementById('edit-cliente').value = c.cliente;
+      document.getElementById('edit-volumes').value = c.padrao_volumes_palete;
+      if (c.qtd_padrao_pecas > 0) {
+        document.getElementById('edit-pecas').value = c.qtd_padrao_pecas;
+      }
+      fecharDropdownsModal();
+    }
+
     function alternarAba(aba) {
       document.getElementById('secao-saldos').style.display = aba === 'saldos' ? 'block' : 'none';
       document.getElementById('secao-historico').style.display = aba === 'historico' ? 'block' : 'none';
@@ -651,7 +429,6 @@
           if (resJson && resJson.restaurado) {
             return carregarDashboard(true);
           } else {
-            // Se o servidor recusou restaurar porque os itens foram excluídos de propósito, limpa o cache local!
             localStorage.setItem('finart_backup_paletes', '[]');
           }
         } else {
@@ -661,10 +438,8 @@
         if (catalogo && catalogo.length > 0) {
           catalogoCache = catalogo;
           localStorage.setItem('finart_backup_catalogo', JSON.stringify(catalogo));
-          atualizarDatalistCatalogo();
         }
 
-        // Só reconstrói o HTML se os dados do servidor realmente mudaram (não interrompe cliques nas caixinhas!)
         const novaAssinatura = JSON.stringify({ consolidado, historico });
         if (!forcarRender && novaAssinatura === assinaturaAnterior) {
           return;
@@ -685,25 +460,6 @@
       }
     }
 
-    function atualizarDatalistCatalogo() {
-      const dl = document.getElementById('lista-itens-aprendidos');
-      if (!dl) return;
-      dl.innerHTML = catalogoCache.map(c => `<option value="${c.item}">${c.cliente} - ${c.produto}</option>`).join('');
-    }
-
-    function autoCompletarPorItem(codigoDigitado) {
-      const cod = (codigoDigitado || '').trim().toUpperCase();
-      const encontrado = catalogoCache.find(c => c.item.toUpperCase() === cod);
-      if (encontrado) {
-        document.getElementById('edit-cliente').value = encontrado.cliente;
-        document.getElementById('edit-produto').value = encontrado.produto;
-        document.getElementById('edit-volumes').value = encontrado.padrao_volumes_palete;
-        if (encontrado.qtd_padrao_pecas > 0) {
-          document.getElementById('edit-pecas').value = encontrado.qtd_padrao_pecas;
-        }
-      }
-    }
-
     function autoAjustarVolumesPorCliente() {
       const cli = (document.getElementById('edit-cliente').value || '').toUpperCase();
       const item = (document.getElementById('edit-item').value || '').toUpperCase();
@@ -720,7 +476,6 @@
     function renderizarListas() {
       const termo = (document.getElementById('campo-busca').value || '').toLowerCase();
 
-      // 1. ABA SALDOS CONSOLIDADOS
       const divCons = document.getElementById('lista-consolidado');
       const consFiltrado = consolidadoCache.filter(r =>
         r.cliente.toLowerCase().includes(termo) ||
@@ -755,7 +510,6 @@
         `).join('');
       }
 
-      // 2. ABA HISTÓRICO COM SELEÇÃO MÚLTIPLA
       const divHist = document.getElementById('lista-historico');
       const histFiltrado = historicoCache.filter(i =>
         i.cliente.toLowerCase().includes(termo) ||
@@ -844,7 +598,6 @@
       }
     }
 
-    // Exclusão em massa direta (sem bloqueio de pop-up e sem ressuscitar itens)
     async function excluirSelecionados() {
       const ids = Array.from(idsSelecionados).map(Number);
       if (ids.length === 0) return;
@@ -865,14 +618,11 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ ids })
         });
-      } catch (e) {
-        console.error('Erro ao excluir múltiplos:', e);
-      }
+      } catch (e) {}
 
       await carregarDashboard(true);
     }
 
-    // Exclusão individual direta (remove na hora no primeiro clique)
     async function excluirPalete(id) {
       const idNum = Number(id);
       historicoCache = historicoCache.filter(p => Number(p.id) !== idNum);
@@ -882,9 +632,7 @@
 
       try {
         await fetch(`${API_BASE}/api/paletes/${idNum}`, { method: 'DELETE' });
-      } catch (e) {
-        console.error('Erro ao excluir palete:', e);
-      }
+      } catch (e) {}
 
       await carregarDashboard(true);
     }

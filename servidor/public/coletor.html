@@ -7,7 +7,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="apple-mobile-web-app-title" content="FINART Coletor" />
   <meta name="mobile-web-app-capable" content="yes" />
-  <title>FINART - Coletor Inteligente</title>
+  <title>FINART - Coletor Industrial</title>
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
   <style>
     :root {
@@ -17,6 +17,9 @@
       --muted: #64748b;
       --primary: #0284c7;
       --success: #059669;
+      --warning-bg: #fffbeb;
+      --warning-border: #f59e0b;
+      --warning-text: #92400e;
       --border: #e2e8f0;
     }
     * {
@@ -31,7 +34,7 @@
       padding: 10px;
       width: 100%;
       overflow-x: hidden;
-      transition: background-color 0.25s ease;
+      transition: background-color 0.2s ease;
     }
 
     body.flash-leitura {
@@ -139,6 +142,55 @@
       text-align: center;
     }
 
+    /* ALERTA INTELIGENTE DE DIVERGÊNCIA (Ex: Leu PT-7808 mas existe PT-7908) */
+    .alerta-divergencia {
+      display: none;
+      background: var(--warning-bg);
+      border: 2px solid var(--warning-border);
+      border-radius: 10px;
+      padding: 12px;
+      margin-bottom: 12px;
+    }
+    .alerta-divergencia h4 {
+      color: var(--warning-text);
+      font-size: 14px;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .alerta-divergencia p {
+      color: var(--text);
+      font-size: 13px;
+      margin-bottom: 10px;
+      line-height: 1.35;
+    }
+    .alerta-botoes {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 6px;
+    }
+    .btn-corrigir-sugestao {
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      padding: 11px;
+      border-radius: 8px;
+      font-weight: 800;
+      font-size: 13px;
+      cursor: pointer;
+    }
+    .btn-manter-lido {
+      background: #fff;
+      color: var(--muted);
+      border: 1px solid var(--border);
+      padding: 8px;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
     .btn {
       width: 100%;
       padding: 14px;
@@ -171,6 +223,49 @@
       color: var(--text);
     }
 
+    /* CAMPO COM AUTO-COMPLETE FLUTUANTE DO HISTÓRICO */
+    .field-wrap {
+      position: relative;
+      width: 100%;
+    }
+    .autocomplete-list {
+      display: none;
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: #ffffff;
+      border: 2px solid var(--primary);
+      border-radius: 8px;
+      box-shadow: 0 8px 20px rgba(15, 23, 42, 0.18);
+      max-height: 190px;
+      overflow-y: auto;
+      z-index: 99;
+      margin-top: 2px;
+    }
+    .autocomplete-item {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      font-size: 13px;
+      text-align: left;
+    }
+    .autocomplete-item:last-child {
+      border-bottom: none;
+    }
+    .autocomplete-item:active, .autocomplete-item:hover {
+      background: #e0f2fe;
+    }
+    .autocomplete-item strong {
+      color: var(--primary);
+      display: block;
+      font-size: 13px;
+    }
+    .autocomplete-item span {
+      color: var(--muted);
+      font-size: 11px;
+    }
+
     label {
       display: block;
       font-size: 11px;
@@ -189,6 +284,10 @@
       border-radius: 8px;
       color: var(--text);
       text-align: center;
+    }
+    input:focus {
+      border-color: var(--primary);
+      outline: none;
     }
     .input-left {
       text-align: left;
@@ -240,31 +339,32 @@
     }
   </style>
 </head>
-<body ontouchstart="destravarSomMobile()" onclick="destravarSomMobile()">
+<body ontouchstart="destravarSomMobile()" onclick="fecharTodosAutocompletes(event)">
 
-  <audio id="player-chime" preload="auto"></audio>
+  <audio id="player-bip-leitura" preload="auto"></audio>
+  <audio id="player-bip-confirmacao" preload="auto"></audio>
 
   <div class="top-bar">
     <span class="logo">FINART</span>
-    <button class="btn-top" onclick="tocarSomConfirmacaoAgradavel()">🎵 Testar Som</button>
+    <button class="btn-top" onclick="tocarBipConfirmacaoIndustrial()">🔊 Testar Bipe Industrial</button>
     <a href="/" class="btn-top">Ver Painel</a>
   </div>
 
   <!-- TELA 1: LEITOR DA ETIQUETA COMPLETA -->
   <div class="box" id="tela-scanner">
     <div class="status-motor" id="status-motor">
-      ⚡ Iniciando leitor inteligente FINART...
+      ⚡ Iniciando leitor industrial FINART...
     </div>
 
     <div class="visor-wrapper">
       <video id="video-camera" autoplay playsinline muted></video>
       <div class="moldura-etiqueta">
-        <span>Enquadre a etiqueta (Vibra ao ler!)</span>
+        <span>Enquadre a etiqueta (Bipe Industrial Médio-Grave)</span>
       </div>
     </div>
 
     <div class="progresso-box" id="progresso-box">
-      🔍 Extraindo dados da etiqueta...
+      🔍 Analisando etiqueta e conferindo histórico...
     </div>
 
     <button class="btn btn-ler-agora" onclick="capturarEtiquetaDoVisor(true)">
@@ -272,20 +372,42 @@
     </button>
 
     <input type="file" accept="image/*" capture="environment" id="input-macro" style="display:none" onchange="lerFotoMacro(this)" />
-    <button class="btn btn-macro" onclick="vibrarLeitura(); document.getElementById('input-macro').click()">
+    <button class="btn btn-macro" onclick="tocarBipLeituraIndustrial(); document.getElementById('input-macro').click()">
       🔍 TIRAR FOTO MACRO DO CELULAR
     </button>
   </div>
 
-  <!-- TELA 2: CONFERÊNCIA COM UNIFICAÇÃO INTELIGENTE -->
+  <!-- TELA 2: CONFERÊNCIA INTELIGENTE COM AUTO-COMPLETE E DETECTOR DE DIVERGÊNCIA -->
   <div class="box" id="tela-confirmacao" style="display: none;">
-    <h3 style="margin-bottom: 6px; font-size: 16px; color: var(--primary);">✅ Etiqueta Lida — Confira os Dados</h3>
+    <h3 style="margin-bottom: 6px; font-size: 16px; color: var(--primary);">✅ Conferência Inteligente do Palete</h3>
+
+    <!-- ALERTA AUTOMÁTICO QUANDO LÊ CÓDIGO PARECIDO (Ex: PT-7808 vs PT-7908) -->
+    <div class="alerta-divergencia" id="box-divergencia">
+      <h4>⚠️ Dúvida Detectada na Leitura</h4>
+      <p id="texto-divergencia"></p>
+      <div class="alerta-botoes">
+        <button class="btn-corrigir-sugestao" id="btn-aceitar-sugestao" onclick="aplicarSugestaoDivergencia()">
+          ✅ Corrigir para o item já apontado
+        </button>
+        <button class="btn-manter-lido" onclick="fecharAlertaDivergencia()">
+          Manter como está na tela
+        </button>
+      </div>
+    </div>
 
     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-      <div>
+      <div class="field-wrap">
         <label>Código do Item:</label>
-        <input type="text" id="conf-item" class="input-left" list="dl-itens" oninput="autoCompletarItemAprendido()" />
-        <datalist id="dl-itens"></datalist>
+        <input
+          type="text"
+          id="conf-item"
+          class="input-left"
+          autocomplete="off"
+          placeholder="Ex: PT-7908"
+          onfocus="mostrarAutocomplete('item', this.value)"
+          oninput="mostrarAutocomplete('item', this.value)"
+        />
+        <div class="autocomplete-list" id="ac-item"></div>
       </div>
       <div>
         <label>Volume (Ex: 370/400):</label>
@@ -293,22 +415,53 @@
       </div>
     </div>
 
-    <label>Cliente:</label>
-    <input type="text" id="conf-cliente" class="input-left" oninput="atualizarRegraClienteManual()" />
+    <div class="field-wrap">
+      <label>Descrição do Produto (Digite p/ buscar no histórico):</label>
+      <input
+        type="text"
+        id="conf-produto"
+        class="input-left"
+        autocomplete="off"
+        placeholder="Digite parte do nome p/ auto-completar..."
+        onfocus="mostrarAutocomplete('produto', this.value)"
+        oninput="mostrarAutocomplete('produto', this.value)"
+      />
+      <div class="autocomplete-list" id="ac-produto"></div>
+    </div>
+
+    <div class="field-wrap">
+      <label>Cliente:</label>
+      <input
+        type="text"
+        id="conf-cliente"
+        class="input-left"
+        autocomplete="off"
+        onfocus="mostrarAutocomplete('cliente', this.value)"
+        oninput="mostrarAutocomplete('cliente', this.value); atualizarRegraClienteManual();"
+      />
+      <div class="autocomplete-list" id="ac-cliente"></div>
+    </div>
 
     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
       <div>
         <label>Pedido (Máx 6 díg.):</label>
         <input type="text" id="conf-pedido" class="input-left" maxlength="6" oninput="mascaraPedidoColetor(this)" />
       </div>
-      <div>
+      <div class="field-wrap">
         <label>Nº do Lote (1 ponto):</label>
-        <input type="text" id="conf-lote" class="input-left" maxlength="8" style="background:#fef3c7; color:#b45309;" oninput="mascaraLoteColetor(this)" />
+        <input
+          type="text"
+          id="conf-lote"
+          class="input-left"
+          maxlength="8"
+          autocomplete="off"
+          style="background:#fef3c7; color:#b45309;"
+          onfocus="mostrarAutocomplete('lote', this.value)"
+          oninput="mascaraLoteColetor(this); mostrarAutocomplete('lote', this.value);"
+        />
+        <div class="autocomplete-list" id="ac-lote"></div>
       </div>
     </div>
-
-    <label>Descrição Completa do Produto:</label>
-    <input type="text" id="conf-produto" class="input-left" />
 
     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
       <div>
@@ -334,7 +487,7 @@
   <div class="box">
     <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
       <strong style="font-size:12px; color:var(--muted);">SALDOS SINCRONIZADOS</strong>
-      <span style="font-size:11px; color:var(--success); font-weight:700;">● UNIFICAÇÃO ATIVA</span>
+      <span style="font-size:11px; color:var(--success); font-weight:700;">● AUTO-COMPLETE ATIVO</span>
     </div>
     <div id="lista-ao-vivo">Carregando saldos...</div>
   </div>
@@ -351,6 +504,8 @@
     let streamVideo = null;
     let audioCtx = null;
     let catalogoMemoria = [];
+    let historicoMemoria = [];
+    let sugestaoAtual = null;
 
     function limparPedidoEstrito(val = '') {
       return String(val).trim().split('.')[0].replace(/\D/g, '').slice(0, 6);
@@ -382,11 +537,10 @@
       input.value = limparLoteEstrito(input.value);
     }
 
-    // GERA UM ACORDE MUSICAL SUAVE E AGRADÁVEL EM .WAV (Estilo Apple Pay / Sucesso Moderno: Dó5 -> Mi5 -> Sol5 -> Dó6)
-    function criarWavAcordeSuaveBase64() {
+    // GERADOR DE BIPE INDUSTRIAL ENCORPADO MÉDIO-GRAVE (Sem ser agudo! Frequências: 880Hz a 1120Hz)
+    function criarWavIndustrialBase64(tons = [{ freq: 940, inicio: 0.0, fim: 0.11 }], duracaoTotal = 0.13) {
       const sampleRate = 44100;
-      const duracaoSeg = 0.48;
-      const numSamples = Math.floor(sampleRate * duracaoSeg);
+      const numSamples = Math.floor(sampleRate * duracaoTotal);
       const buffer = new ArrayBuffer(44 + numSamples * 2);
       const view = new DataView(buffer);
 
@@ -407,25 +561,18 @@
       writeStr(36, 'data');
       view.setUint32(40, numSamples * 2, true);
 
-      // Notas suaves em onda senoidal pura com fade-out natural
-      const notas = [
-        { freq: 523.25, inicio: 0.00, fim: 0.14 }, // C5
-        { freq: 659.25, inicio: 0.09, fim: 0.24 }, // E5
-        { freq: 783.99, inicio: 0.18, fim: 0.48 }, // G5
-        { freq: 1046.50, inicio: 0.22, fim: 0.48 } // C6
-      ];
-
       for (let i = 0; i < numSamples; i++) {
         const t = i / sampleRate;
-        let sample = 0;
-        notas.forEach((n) => {
-          if (t >= n.inicio && t <= n.fim) {
-            const progresso = (t - n.inicio) / (n.fim - n.inicio);
-            const envelope = Math.sin(progresso * Math.PI); // Subida e descida macia sem estalo
-            sample += Math.sin(2 * Math.PI * n.freq * t) * envelope * 0.42;
+        let val = 0;
+        tons.forEach((tom) => {
+          if (t >= tom.inicio && t <= tom.fim) {
+            // Mistura senoidal fundamental (peso grave/médio) + 3º harmônico suave (timbre de coletor Zebra/Honeywell sem apito agudo)
+            const s1 = Math.sin(2 * Math.PI * tom.freq * t);
+            const s3 = Math.sin(2 * Math.PI * (tom.freq * 2) * t) * 0.25;
+            val += (s1 + s3) * 0.78;
           }
         });
-        const intSample = Math.max(-32767, Math.min(32767, Math.floor(sample * 32767)));
+        const intSample = Math.max(-32767, Math.min(32767, Math.floor(val * 32767)));
         view.setInt16(44 + i * 2, intSample, true);
       }
 
@@ -435,7 +582,20 @@
       return 'data:audio/wav;base64,' + btoa(binary);
     }
 
-    const wavAcordeURI = criarWavAcordeSuaveBase64();
+    // Som 1: Bipe Industrial Único Seco (940Hz - Na leitura da etiqueta)
+    const wavBipLeituraURI = criarWavIndustrialBase64(
+      [{ freq: 940, inicio: 0.0, fim: 0.11 }],
+      0.13
+    );
+
+    // Som 2: Duplo Bipe Industrial Firme (860Hz -> 1120Hz - Ao confirmar o apontamento do palete)
+    const wavBipConfirmacaoURI = criarWavIndustrialBase64(
+      [
+        { freq: 860, inicio: 0.00, fim: 0.09 },
+        { freq: 1120, inicio: 0.12, fim: 0.24 }
+      ],
+      0.26
+    );
 
     function destravarSomMobile() {
       try {
@@ -444,53 +604,185 @@
           audioCtx = new AC();
         }
         if (audioCtx.state === 'suspended') audioCtx.resume();
-        const player = document.getElementById('player-chime');
-        if (!player.src) player.src = wavAcordeURI;
+        const p1 = document.getElementById('player-bip-leitura');
+        const p2 = document.getElementById('player-bip-confirmacao');
+        if (!p1.src) p1.src = wavBipLeituraURI;
+        if (!p2.src) p2.src = wavBipConfirmacaoURI;
       } catch (e) {}
     }
 
-    // 1. VIBRAÇÃO + FLASH VISUAL QUANDO LÊ A IMAGEM DA ETIQUETA
-    function vibrarLeitura() {
-      try {
-        if (navigator.vibrate) {
-          navigator.vibrate([220, 60, 220]);
-        }
-        document.body.classList.add('flash-leitura');
-        setTimeout(() => document.body.classList.remove('flash-leitura'), 350);
-      } catch (e) {}
-    }
-
-    // 2. SOM MUSICAL AGRADÁVEL + VIBRAÇÃO AO CONFIRMAR O APONTAMENTO DO PALETE
-    function tocarSomConfirmacaoAgradavel() {
+    // Toca quando a câmera lê a etiqueta (1 bipe industrial médio-grave + vibração)
+    function tocarBipLeituraIndustrial() {
       try {
         destravarSomMobile();
-        if (navigator.vibrate) navigator.vibrate([120, 50, 180]);
+        if (navigator.vibrate) navigator.vibrate(180);
+        document.body.classList.add('flash-leitura');
+        setTimeout(() => document.body.classList.remove('flash-leitura'), 280);
 
         if (audioCtx) {
           if (audioCtx.state === 'suspended') audioCtx.resume();
           const now = audioCtx.currentTime;
-          const notas = [523.25, 659.25, 783.99, 1046.50];
-          notas.forEach((freq, idx) => {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(940, now);
+          gain.gain.setValueAtTime(0.9, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.11);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start(now);
+          osc.stop(now + 0.11);
+        }
+
+        const p1 = document.getElementById('player-bip-leitura');
+        if (!p1.src) p1.src = wavBipLeituraURI;
+        p1.volume = 1.0;
+        p1.currentTime = 0;
+        p1.play().catch(() => {});
+      } catch (e) {}
+    }
+
+    // Toca quando confirma o apontamento do palete (Duplo bipe industrial 860Hz -> 1120Hz + vibração dupla)
+    function tocarBipConfirmacaoIndustrial() {
+      try {
+        destravarSomMobile();
+        if (navigator.vibrate) navigator.vibrate([140, 50, 180]);
+
+        if (audioCtx) {
+          if (audioCtx.state === 'suspended') audioCtx.resume();
+          const now = audioCtx.currentTime;
+          [
+            { f: 860, ini: 0.00, dur: 0.09 },
+            { f: 1120, ini: 0.12, dur: 0.12 }
+          ].forEach((b) => {
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
-            osc.type = 'sine';
-            osc.frequency.setValueAtTime(freq, now + idx * 0.08);
-            gain.gain.setValueAtTime(0.001, now + idx * 0.08);
-            gain.gain.linearRampToValueAtTime(0.35, now + idx * 0.08 + 0.03);
-            gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.08 + 0.28);
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(b.f, now + b.ini);
+            gain.gain.setValueAtTime(0.95, now + b.ini);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + b.ini + b.dur);
             osc.connect(gain);
             gain.connect(audioCtx.destination);
-            osc.start(now + idx * 0.08);
-            osc.stop(now + idx * 0.08 + 0.29);
+            osc.start(now + b.ini);
+            osc.stop(now + b.ini + b.dur);
           });
         }
 
-        const player = document.getElementById('player-chime');
-        if (!player.src) player.src = wavAcordeURI;
-        player.volume = 0.9;
-        player.currentTime = 0;
-        player.play().catch(() => {});
+        const p2 = document.getElementById('player-bip-confirmacao');
+        if (!p2.src) p2.src = wavBipConfirmacaoURI;
+        p2.volume = 1.0;
+        p2.currentTime = 0;
+        p2.play().catch(() => {});
       } catch (e) {}
+    }
+
+    // AUTO-COMPLETE INTELIGENTE DO HISTÓRICO (Para Produto, Item, Cliente e Lote)
+    function fecharTodosAutocompletes(e) {
+      if (e && e.target && e.target.tagName === 'INPUT') return;
+      document.querySelectorAll('.autocomplete-list').forEach(el => el.style.display = 'none');
+    }
+
+    function mostrarAutocomplete(tipo, valorDigitado) {
+      document.querySelectorAll('.autocomplete-list').forEach(el => el.style.display = 'none');
+      const termo = (valorDigitado || '').trim().toUpperCase();
+
+      // Une catálogo e histórico para ter todas as opções já usadas
+      const baseItens = [...catalogoMemoria];
+      historicoMemoria.forEach(h => {
+        if (!baseItens.some(c => c.item === h.item)) {
+          baseItens.push({
+            item: h.item,
+            cliente: h.cliente,
+            produto: h.produto,
+            padrao_volumes_palete: h.qtd_volumes_palete,
+            qtd_padrao_pecas: h.qtd_pecas_por_volume
+          });
+        }
+      });
+
+      if (tipo === 'produto' || tipo === 'item') {
+        const box = document.getElementById(tipo === 'produto' ? 'ac-produto' : 'ac-item');
+        const filtrados = baseItens.filter(c =>
+          c.produto.toUpperCase().includes(termo) ||
+          c.item.toUpperCase().includes(termo)
+        );
+        if (filtrados.length === 0) return;
+
+        box.innerHTML = filtrados.map((c, idx) => `
+          <div class="autocomplete-item" onclick="selecionarItemAutocomplete(${idx}, '${tipo}')">
+            <strong>${c.item} — ${c.produto}</strong>
+            <span>Cliente: ${c.cliente} • Padrão: ${c.padrao_volumes_palete} vol. x ${c.qtd_padrao_pecas} pçs</span>
+          </div>
+        `).join('');
+        box.dataset.lista = JSON.stringify(filtrados);
+        box.style.display = 'block';
+      } else if (tipo === 'cliente') {
+        const box = document.getElementById('ac-cliente');
+        const clientesUnicos = [...new Set(baseItens.map(c => c.cliente))].filter(cli => cli.toUpperCase().includes(termo));
+        if (clientesUnicos.length === 0) return;
+
+        box.innerHTML = clientesUnicos.map(cli => `
+          <div class="autocomplete-item" onclick="selecionarClienteAutocomplete('${cli}')">
+            <strong>${cli}</strong>
+          </div>
+        `).join('');
+        box.style.display = 'block';
+      } else if (tipo === 'lote') {
+        const box = document.getElementById('ac-lote');
+        const lotesUnicos = [];
+        historicoMemoria.forEach(h => {
+          if (!lotesUnicos.some(l => l.lote === h.lote) && h.lote.includes(termo)) {
+            lotesUnicos.push(h);
+          }
+        });
+        if (lotesUnicos.length === 0) return;
+
+        box.innerHTML = lotesUnicos.slice(0, 6).map((h, idx) => `
+          <div class="autocomplete-item" onclick="selecionarLoteAutocomplete('${h.lote}', '${h.pedido}', '${h.item}')">
+            <strong>Lote: ${h.lote} (Ped: ${h.pedido})</strong>
+            <span>${h.item} — ${h.produto}</span>
+          </div>
+        `).join('');
+        box.style.display = 'block';
+      }
+    }
+
+    function selecionarItemAutocomplete(idx, tipo) {
+      const box = document.getElementById(tipo === 'produto' ? 'ac-produto' : 'ac-item');
+      const lista = JSON.parse(box.dataset.lista || '[]');
+      const escolhido = lista[idx];
+      if (!escolhido) return;
+
+      document.getElementById('conf-item').value = escolhido.item;
+      document.getElementById('conf-produto').value = escolhido.produto;
+      document.getElementById('conf-cliente').value = escolhido.cliente;
+      document.getElementById('input-volumes').value = escolhido.padrao_volumes_palete || 15;
+      if (escolhido.qtd_padrao_pecas > 0) {
+        document.getElementById('conf-pecas').value = escolhido.qtd_padrao_pecas;
+      }
+      recalcularPreview();
+      fecharTodosAutocompletes();
+    }
+
+    function selecionarClienteAutocomplete(cli) {
+      document.getElementById('conf-cliente').value = cli;
+      atualizarRegraClienteManual();
+      fecharTodosAutocompletes();
+    }
+
+    function selecionarLoteAutocomplete(lote, pedido, itemAssociado) {
+      document.getElementById('conf-lote').value = limparLoteEstrito(lote, pedido);
+      document.getElementById('conf-pedido').value = limparPedidoEstrito(pedido || lote);
+      const mem = catalogoMemoria.find(c => c.item === itemAssociado);
+      if (mem) {
+        document.getElementById('conf-item').value = mem.item;
+        document.getElementById('conf-produto').value = mem.produto;
+        document.getElementById('conf-cliente').value = mem.cliente;
+        document.getElementById('input-volumes').value = mem.padrao_volumes_palete;
+        document.getElementById('conf-pecas').value = mem.qtd_padrao_pecas;
+        recalcularPreview();
+      }
+      fecharTodosAutocompletes();
     }
 
     async function inicializarMotorOptico() {
@@ -499,7 +791,7 @@
         ocrWorker = await Tesseract.createWorker('eng');
         await ocrWorker.setParameters({ tessedit_pageseg_mode: '6' });
         motorPronto = true;
-        badge.innerText = '✅ Leitor Inteligente Pronto (Vibra ao ler)';
+        badge.innerText = '✅ Leitor Industrial Pronto (Verificação de Divergência Ativa)';
       } catch (e) {
         badge.innerText = '⚠️ Modo de leitura básico ativo';
       }
@@ -528,8 +820,9 @@
       } catch (err) {}
     }
 
-    function prepararCanvasEtiqueta(fonteImgOuVideo, wOrig, hOrig) {
-      const maxDim = 920;
+    // Aumenta a nitidez das bordas dos números (evita confundir 8 com 9 na leitura)
+    function prepararCanvasEtiquetaNitido(fonteImgOuVideo, wOrig, hOrig) {
+      const maxDim = 1100;
       let w = wOrig;
       let h = hOrig;
       if (w > maxDim || h > maxDim) {
@@ -545,6 +838,7 @@
       canvas.width = w;
       canvas.height = h;
       const ctx = canvas.getContext('2d');
+      ctx.filter = 'contrast(1.35) grayscale(0.5)';
       ctx.drawImage(fonteImgOuVideo, 0, 0, w, h);
       return canvas;
     }
@@ -554,13 +848,13 @@
       if (!video || !video.videoWidth || lendoAgora) return;
 
       destravarSomMobile();
-      if (manual) vibrarLeitura();
+      if (manual) tocarBipLeituraIndustrial();
       lendoAgora = true;
       const prog = document.getElementById('progresso-box');
       if (manual) prog.style.display = 'block';
 
       try {
-        const canvas = prepararCanvasEtiqueta(video, video.videoWidth, video.videoHeight);
+        const canvas = prepararCanvasEtiquetaNitido(video, video.videoWidth, video.videoHeight);
         await reconhecerTextoEEnviar(canvas, manual);
       } finally {
         if (manual) prog.style.display = 'none';
@@ -580,7 +874,7 @@
         const img = new Image();
         img.onload = async () => {
           try {
-            const canvas = prepararCanvasEtiqueta(img, img.width, img.height);
+            const canvas = prepararCanvasEtiquetaNitido(img, img.width, img.height);
             await reconhecerTextoEEnviar(canvas, true);
           } finally {
             prog.style.display = 'none';
@@ -593,18 +887,31 @@
       reader.readAsDataURL(input.files[0]);
     }
 
+    // Tenta usar também o detector nativo de códigos do celular na mesma imagem para precisão extra
+    async function tentarBarcodeNativo(canvas) {
+      if ('BarcodeDetector' in window) {
+        try {
+          const detector = new BarcodeDetector({ formats: ['code_128', 'qr_code', 'ean_13'] });
+          const barcodes = await detector.detect(canvas);
+          if (barcodes && barcodes.length > 0) {
+            return barcodes.map(b => b.rawValue).join('\n');
+          }
+        } catch (e) {}
+      }
+      return '';
+    }
+
     async function reconhecerTextoEEnviar(canvas, mostrarAlertaSeFalhar) {
       try {
-        let textoExtraido = '';
-        if (motorPronto && ocrWorker) {
-          const { data: { text } } = await ocrWorker.recognize(canvas);
-          textoExtraido = text || '';
-        } else {
-          const { data: { text } } = await Tesseract.recognize(canvas, 'eng');
-          textoExtraido = text || '';
-        }
+        const [codigoNativo, ocrRes] = await Promise.all([
+          tentarBarcodeNativo(canvas),
+          (motorPronto && ocrWorker) ? ocrWorker.recognize(canvas) : Tesseract.recognize(canvas, 'eng')
+        ]);
 
-        const temDadosValidos = /PEDIDO|CLIENTE|DEVINTEX|FLORA|ITEM|PRODUTO|LOTE|006\d{3}|PT\s*-\s*\d|FR\s*-\s*\d|719935/i.test(textoExtraido);
+        const textoExtraido = (ocrRes && ocrRes.data && ocrRes.data.text) ? ocrRes.data.text : '';
+        const tudo = `${codigoNativo}\n${textoExtraido}`;
+
+        const temDadosValidos = /PEDIDO|CLIENTE|DEVINTEX|FLORA|ITEM|PRODUTO|LOTE|006\d{3}|PT\s*-\s*\d|FR\s*-\s*\d|719935/i.test(tudo);
         if (!temDadosValidos) {
           if (mostrarAlertaSeFalhar) {
             alert('Etiqueta não identificada. Enquadre a etiqueta com foco nas letras.');
@@ -615,7 +922,10 @@
         const res = await fetch(`${API_BASE}/api/interpretar-bipe`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ textoEtiqueta: textoExtraido })
+          body: JSON.stringify({
+            codigoLido: codigoNativo,
+            textoEtiqueta: textoExtraido
+          })
         });
 
         const data = await res.json();
@@ -630,8 +940,8 @@
 
         if (timerAutoScan) clearInterval(timerAutoScan);
 
-        // VIBRA O CELULAR E PISCA VERDE ASSIM QUE LÊ A ETIQUETA
-        vibrarLeitura();
+        // Bipe industrial curto imediato ao concluir a leitura
+        tocarBipLeituraIndustrial();
         abrirTelaConfirmacao(data);
       } catch (e) {
         if (mostrarAlertaSeFalhar) alert('Erro ao processar leitura.');
@@ -652,23 +962,50 @@
       document.getElementById('label-volumes').innerText = `Qtd ${data.tipoEmbalagem || 'CAIXA'}S (Padrão: ${data.qtd_volumes_sugerida || 15}):`;
       document.getElementById('input-volumes').value = data.qtd_volumes_sugerida || 15;
 
+      // Verifica se o servidor detectou código parecido (ex: PT-7808 vs PT-7908)
+      const boxDiv = document.getElementById('box-divergencia');
+      if (data.sugestao_divergencia) {
+        sugestaoAtual = data.sugestao_divergencia;
+        document.getElementById('texto-divergencia').innerText = sugestaoAtual.mensagem;
+        document.getElementById('btn-aceitar-sugestao').innerText =
+          sugestaoAtual.tipo === 'LOTE_PARECIDO'
+            ? `✅ Corrigir para Lote ${sugestaoAtual.lote_sugerido}`
+            : `✅ Corrigir para ${sugestaoAtual.item_sugerido} (${sugestaoAtual.produto_sugerido.slice(0, 28)}...)`;
+        boxDiv.style.display = 'block';
+      } else {
+        sugestaoAtual = null;
+        boxDiv.style.display = 'none';
+      }
+
       recalcularPreview();
       document.getElementById('tela-scanner').style.display = 'none';
       document.getElementById('tela-confirmacao').style.display = 'block';
     }
 
-    function autoCompletarItemAprendido() {
-      const cod = (document.getElementById('conf-item').value || '').trim().toUpperCase();
-      const mem = catalogoMemoria.find(c => c.item.toUpperCase() === cod);
-      if (mem) {
-        document.getElementById('conf-cliente').value = mem.cliente;
-        document.getElementById('conf-produto').value = mem.produto;
-        document.getElementById('input-volumes').value = mem.padrao_volumes_palete;
-        if (mem.qtd_padrao_pecas > 0) {
-          document.getElementById('conf-pecas').value = mem.qtd_padrao_pecas;
-        }
+    function aplicarSugestaoDivergencia() {
+      if (!sugestaoAtual) return;
+      document.getElementById('conf-item').value = sugestaoAtual.item_sugerido;
+      document.getElementById('conf-cliente').value = sugestaoAtual.cliente_sugerido;
+      document.getElementById('conf-produto').value = sugestaoAtual.produto_sugerido;
+      if (sugestaoAtual.qtd_pecas_sugerida > 0) {
+        document.getElementById('conf-pecas').value = sugestaoAtual.qtd_pecas_sugerida;
       }
-      atualizarRegraClienteManual();
+      if (sugestaoAtual.qtd_volumes_sugerida > 0) {
+        document.getElementById('input-volumes').value = sugestaoAtual.qtd_volumes_sugerida;
+      }
+      if (sugestaoAtual.lote_sugerido) {
+        document.getElementById('conf-lote').value = sugestaoAtual.lote_sugerido;
+      }
+      if (sugestaoAtual.pedido_sugerido) {
+        document.getElementById('conf-pedido').value = sugestaoAtual.pedido_sugerido;
+      }
+      recalcularPreview();
+      fecharAlertaDivergencia();
+      tocarBipLeituraIndustrial();
+    }
+
+    function fecharAlertaDivergencia() {
+      document.getElementById('box-divergencia').style.display = 'none';
     }
 
     function atualizarRegraClienteManual() {
@@ -700,8 +1037,8 @@
         return alert('Verifique a quantidade de caixas e de peças por caixa!');
       }
 
-      // TOCA O SOM MUSICAL AGRADÁVEL ASSIM QUE VOCÊ CONFIRMA O APONTAMENTO DO PALETE
-      tocarSomConfirmacaoAgradavel();
+      // TOCA DUPLO BIPE INDUSTRIAL ENCORPADO AO CONFIRMAR O APONTAMENTO
+      tocarBipConfirmacaoIndustrial();
 
       const pedLimpo = limparPedidoEstrito(document.getElementById('conf-pedido').value);
       let loteLimpo = limparLoteEstrito(document.getElementById('conf-lote').value, pedLimpo);
@@ -764,11 +1101,10 @@
           localStorage.setItem('finart_backup_paletes', JSON.stringify(historico));
         }
 
+        historicoMemoria = historico || [];
         if (catalogo && catalogo.length > 0) {
           catalogoMemoria = catalogo;
           localStorage.setItem('finart_backup_catalogo', JSON.stringify(catalogo));
-          const dl = document.getElementById('dl-itens');
-          if (dl) dl.innerHTML = catalogo.map(c => `<option value="${c.item}">${c.produto}</option>`).join('');
         }
 
         const div = document.getElementById('lista-ao-vivo');
