@@ -14,21 +14,30 @@
     :root {
       --bg: #f4f6f8;
       --card: #ffffff;
-      --text: #1e293b;
+      --text: #0f172a;
       --muted: #64748b;
       --primary: #0284c7;
+      --primary-dark: #0369a1;
+      --primary-light: #e0f2fe;
       --success: #059669;
+      --success-bg: #ecfdf5;
+      --success-border: #a7f3d0;
       --warning-bg: #fffbeb;
       --warning-border: #f59e0b;
       --warning-text: #92400e;
+      --danger: #dc2626;
+      --danger-bg: #fef2f2;
       --border: #e2e8f0;
     }
+
     * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Inter, sans-serif;
+      -webkit-tap-highlight-color: transparent;
     }
+
     html, body {
       background: var(--bg);
       color: var(--text);
@@ -36,64 +45,148 @@
       width: 100%;
       min-height: 100vh;
       overflow-x: hidden;
-      transition: background-color 0.2s ease;
+      transition: background-color 0.18s ease;
     }
 
     body.flash-leitura {
       background-color: #bbf7d0 !important;
     }
 
+    body.flash-erro {
+      background-color: #fecaca !important;
+    }
+
+    .app-shell {
+      max-width: 520px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    /* TOP BAR INDUSTRIAL */
     .top-bar {
       background: var(--card);
       padding: 10px 12px;
-      border-radius: 10px;
+      border-radius: 12px;
       border: 1px solid var(--border);
       display: flex;
       justify-content: space-between;
       align-items: center;
       margin-bottom: 10px;
       gap: 6px;
-      flex-wrap: wrap;
+      box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
     }
+
+    .brand-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
     .logo {
       background: var(--primary);
       color: #fff;
-      font-weight: 800;
-      padding: 5px 12px;
+      font-weight: 900;
+      padding: 5px 11px;
       border-radius: 6px;
       letter-spacing: 1px;
       font-size: 14px;
     }
+
+    .sync-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--success);
+      background: var(--success-bg);
+      padding: 4px 8px;
+      border-radius: 20px;
+      border: 1px solid var(--success-border);
+    }
+
+    .sync-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--success);
+    }
+
+    .top-actions {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+
     .btn-top {
       text-decoration: none;
       font-size: 12px;
       font-weight: 700;
       color: var(--primary);
-      background: #e0f2fe;
+      background: var(--primary-light);
       padding: 6px 10px;
-      border-radius: 6px;
+      border-radius: 7px;
       border: none;
       cursor: pointer;
+    }
+
+    /* TOAST DE FEEDBACK NÃO-BLOQUEANTE (SUBSTITUI ALERT NATIVO) */
+    .toast-industrial {
+      display: none;
+      padding: 11px 14px;
+      border-radius: 10px;
+      margin-bottom: 10px;
+      font-size: 13px;
+      font-weight: 800;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+      animation: fadeSlide 0.18s ease-out;
+    }
+    .toast-industrial.erro {
+      display: flex;
+      background: var(--danger-bg);
+      color: var(--danger);
+      border: 2px solid #fca5a5;
+    }
+    .toast-industrial.sucesso {
+      display: flex;
+      background: var(--success-bg);
+      color: var(--success);
+      border: 2px solid var(--success-border);
+    }
+    .toast-industrial.aviso {
+      display: flex;
+      background: var(--warning-bg);
+      color: var(--warning-text);
+      border: 2px solid var(--warning-border);
+    }
+    @keyframes fadeSlide {
+      from { opacity: 0; transform: translateY(-6px); }
+      to { opacity: 1; transform: translateY(0); }
     }
 
     .box {
       background: var(--card);
       border: 1px solid var(--border);
-      border-radius: 12px;
+      border-radius: 14px;
       padding: 12px;
       margin-bottom: 10px;
       width: 100%;
+      box-shadow: 0 2px 6px rgba(15, 23, 42, 0.03);
     }
 
+    /* BARRA DE STATUS DA LENTE */
     .status-motor {
       font-size: 12px;
       font-weight: 800;
-      padding: 6px 10px;
-      border-radius: 6px;
+      padding: 7px 10px;
+      border-radius: 8px;
       margin-bottom: 8px;
-      background: #ecfdf5;
+      background: var(--success-bg);
       color: var(--success);
-      border: 1px solid #a7f3d0;
+      border: 1px solid var(--success-border);
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -107,10 +200,10 @@
     }
 
     .zoom-badge {
-      background: #0284c7;
+      background: var(--primary);
       color: #fff;
-      padding: 4px 8px;
-      border-radius: 5px;
+      padding: 5px 9px;
+      border-radius: 6px;
       font-size: 11px;
       cursor: pointer;
       border: none;
@@ -120,8 +213,8 @@
     .lanterna-badge {
       background: #334155;
       color: #fff;
-      padding: 4px 8px;
-      border-radius: 5px;
+      padding: 5px 9px;
+      border-radius: 6px;
       font-size: 11px;
       cursor: pointer;
       border: none;
@@ -132,10 +225,11 @@
       color: #0f172a;
     }
 
+    /* VISOR HD COM MIRA LASER INDUSTRIAL */
     .visor-wrapper {
       position: relative;
       width: 100%;
-      height: 270px;
+      height: 275px;
       background: #0f172a;
       border-radius: 12px;
       overflow: hidden;
@@ -148,23 +242,24 @@
     }
     .moldura-etiqueta {
       position: absolute;
-      inset: 8px;
-      border: 2px dashed rgba(56, 189, 248, 0.75);
-      border-radius: 8px;
+      inset: 10px;
+      border: 2px dashed rgba(56, 189, 248, 0.8);
+      border-radius: 10px;
       pointer-events: none;
       display: flex;
       align-items: flex-end;
       justify-content: center;
-      padding-bottom: 6px;
+      padding-bottom: 8px;
     }
     .moldura-etiqueta span {
-      background: rgba(15, 23, 42, 0.85);
+      background: rgba(15, 23, 42, 0.88);
       color: #fff;
       font-size: 11px;
-      padding: 4px 10px;
-      border-radius: 4px;
+      padding: 5px 12px;
+      border-radius: 6px;
       font-weight: 700;
       text-align: center;
+      letter-spacing: 0.2px;
     }
 
     .progresso-box {
@@ -177,8 +272,10 @@
       font-size: 13px;
       font-weight: 800;
       text-align: center;
+      border: 1px solid #fde68a;
     }
 
+    /* ZONA ERGONÔMICA DE DISPARO COM UMA MÃO (POLEGAR) */
     .macro-bottom-zone {
       margin-top: 12px;
       display: flex;
@@ -188,8 +285,8 @@
 
     .btn-macro-direta-gigante {
       width: 100%;
-      min-height: 92px;
-      background: linear-gradient(135deg, #0284c7, #0369a1);
+      min-height: 94px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
       color: #ffffff;
       border: none;
       border-radius: 14px;
@@ -197,13 +294,13 @@
       font-weight: 900;
       letter-spacing: 0.5px;
       cursor: pointer;
-      box-shadow: 0 8px 20px rgba(2, 132, 199, 0.32);
+      box-shadow: 0 8px 20px rgba(2, 132, 199, 0.3);
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       gap: 4px;
-      transition: transform 0.1s ease;
+      transition: transform 0.1s ease, opacity 0.15s ease;
     }
     .btn-macro-direta-gigante:active {
       transform: scale(0.98);
@@ -214,21 +311,29 @@
     .btn-macro-direta-gigante small {
       font-size: 12px;
       font-weight: 600;
-      opacity: 0.9;
+      opacity: 0.92;
+    }
+
+    .aux-buttons-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
     }
 
     .btn-camera-externa-aux {
       width: 100%;
-      padding: 11px;
+      padding: 11px 8px;
       background: #f1f5f9;
-      color: var(--muted);
+      color: var(--text);
       border: 1px solid var(--border);
       border-radius: 10px;
       font-size: 12px;
       font-weight: 700;
       cursor: pointer;
+      text-align: center;
     }
 
+    /* ALERTA DE FONTE CONFIÁVEL */
     .alerta-divergencia {
       display: none;
       background: var(--warning-bg);
@@ -274,27 +379,7 @@
       cursor: pointer;
     }
 
-    .btn {
-      width: 100%;
-      padding: 14px;
-      border: none;
-      border-radius: 10px;
-      font-size: 14px;
-      font-weight: 800;
-      cursor: pointer;
-      margin-top: 8px;
-    }
-    .btn-confirm {
-      background: var(--success);
-      color: #fff;
-      font-size: 16px;
-      padding: 16px;
-    }
-    .btn-cancel {
-      background: #e2e8f0;
-      color: var(--text);
-    }
-
+    /* FORMULÁRIO E AUTO-COMPLETE */
     .field-wrap {
       position: relative;
       width: 100%;
@@ -322,7 +407,7 @@
       text-align: left;
     }
     .autocomplete-item:last-child { border-bottom: none; }
-    .autocomplete-item:active, .autocomplete-item:hover { background: #e0f2fe; }
+    .autocomplete-item:active, .autocomplete-item:hover { background: var(--primary-light); }
     .autocomplete-item strong { color: var(--primary); display: block; font-size: 13px; }
     .autocomplete-item span { color: var(--muted); font-size: 11px; }
 
@@ -344,6 +429,7 @@
       border-radius: 8px;
       color: var(--text);
       text-align: center;
+      background: #fff;
     }
     input:focus {
       border-color: var(--primary);
@@ -353,6 +439,50 @@
       text-align: left;
       font-size: 14px;
       font-weight: 600;
+    }
+
+    /* STEPPER ZERO-DIGITAÇÃO PARA VOLUMES / PICADEIRA */
+    .stepper-row {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .btn-step {
+      width: 40px;
+      height: 42px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: #f1f5f9;
+      color: var(--text);
+      font-size: 18px;
+      font-weight: 900;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .btn-step:active {
+      background: var(--primary-light);
+      border-color: var(--primary);
+    }
+    .preset-chips {
+      display: flex;
+      gap: 4px;
+      margin-top: 5px;
+    }
+    .chip-vol {
+      flex: 1;
+      padding: 4px 0;
+      font-size: 11px;
+      font-weight: 800;
+      background: #f1f5f9;
+      color: var(--muted);
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      cursor: pointer;
+      text-align: center;
+    }
+    .chip-vol:active {
+      background: var(--primary);
+      color: #fff;
     }
 
     .badge-lote {
@@ -365,8 +495,8 @@
     }
 
     .saldo-preview {
-      background: #ecfdf5;
-      border: 1px solid #a7f3d0;
+      background: var(--success-bg);
+      border: 1px solid var(--success-border);
       border-radius: 10px;
       padding: 10px;
       text-align: center;
@@ -381,8 +511,30 @@
     }
     .saldo-preview strong {
       color: var(--success);
-      font-size: 22px;
+      font-size: 24px;
       font-weight: 900;
+    }
+
+    .btn {
+      width: 100%;
+      padding: 14px;
+      border: none;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 800;
+      cursor: pointer;
+      margin-top: 8px;
+    }
+    .btn-confirm {
+      background: var(--success);
+      color: #fff;
+      font-size: 16px;
+      padding: 16px;
+      box-shadow: 0 4px 12px rgba(5, 150, 105, 0.25);
+    }
+    .btn-cancel {
+      background: #e2e8f0;
+      color: var(--text);
     }
 
     .live-item {
@@ -401,160 +553,189 @@
 
   <audio id="player-bip-leitura" preload="auto"></audio>
   <audio id="player-bip-confirmacao" preload="auto"></audio>
+  <audio id="player-bip-erro" preload="auto"></audio>
   <div id="qr-hidden-decoder" style="display:none;"></div>
 
-  <div class="top-bar">
-    <span class="logo">FINART</span>
-    <button class="btn-top" onclick="tocarSomApontamentoZebra()">🔊 Testar Som</button>
-    <a href="/" class="btn-top">Ver Painel</a>
-  </div>
-
-  <!-- TELA 1: VISOR SEMPRE ATIVO (NÃO DESLIGA A CÂMERA E NÃO PEDE PERMISSÃO DE NOVO) -->
-  <div class="box" id="tela-scanner">
-    <div class="status-motor">
-      <span id="status-motor">⚡ Iniciando Lente HD...</span>
-      <div class="controles-lente">
-        <button class="lanterna-badge" id="btn-lanterna" onclick="alternarLanterna()">🔦 Lanterna</button>
-        <button class="zoom-badge" id="btn-zoom-toggle" onclick="alternarMacroZoom()">🔍 Macro 1.5x</button>
+  <div class="app-shell">
+    <div class="top-bar">
+      <div class="brand-group">
+        <span class="logo">FINART</span>
+        <span class="sync-badge"><span class="sync-dot"></span> Online 0ms</span>
+      </div>
+      <div class="top-actions">
+        <button class="btn-top" onclick="tocarSomApontamentoZebra()">🔊 Som</button>
+        <a href="/" class="btn-top">📊 Painel</a>
       </div>
     </div>
 
-    <div class="visor-wrapper">
-      <video id="video-camera" autoplay playsinline muted></video>
-      <div class="moldura-etiqueta">
-        <span>Enquadre a etiqueta inteira e toque no botão azul</span>
+    <div id="toast-industrial" class="toast-industrial">
+      <span id="toast-texto"></span>
+    </div>
+
+    <!-- TELA 1: VISOR SEMPRE ATIVO (NÃO DESLIGA A CÂMERA E NÃO PEDE PERMISSÃO DE NOVO) -->
+    <div class="box" id="tela-scanner">
+      <div class="status-motor">
+        <span id="status-motor">⚡ Iniciando Lente HD...</span>
+        <div class="controles-lente">
+          <button class="lanterna-badge" id="btn-lanterna" onclick="alternarLanterna()">🔦 Lanterna</button>
+          <button class="zoom-badge" id="btn-zoom-toggle" onclick="alternarMacroZoom()">🔍 Macro 1.5x</button>
+        </div>
       </div>
-    </div>
 
-    <div class="progresso-box" id="progresso-box">
-      ⚡ Lendo etiqueta (QR + Barras + Texto Completo)...
-    </div>
+      <div class="visor-wrapper">
+        <video id="video-camera" autoplay playsinline muted></video>
+        <div class="moldura-etiqueta">
+          <span>Enquadre a etiqueta inteira e toque no botão azul</span>
+        </div>
+      </div>
 
-    <div class="macro-bottom-zone">
-      <button class="btn-macro-direta-gigante" id="btn-disparo-macro" onclick="capturarEtiquetaDoVisor()">
-        <span>🔍 APONTAR COM MACRO DIRETA</span>
-        <small>Leitura instantânea sem cortar bordas (Funciona em baixa luz)</small>
-      </button>
+      <div class="progresso-box" id="progresso-box">
+        ⚡ Lendo etiqueta (QR + Barras + Texto Completo)...
+      </div>
 
-      <input type="file" accept="image/*" capture="environment" id="input-macro" style="display:none" onchange="lerFotoMacro(this)" />
-      <button class="btn-camera-externa-aux" onclick="tocarBipLeituraCurto(); document.getElementById('input-macro').click()">
-        📷 Ou abrir câmera nativa do celular
-      </button>
-    </div>
-  </div>
-
-  <!-- TELA 2: CONFERÊNCIA INTELIGENTE -->
-  <div class="box" id="tela-confirmacao" style="display: none;">
-    <h3 style="margin-bottom: 6px; font-size: 16px; color: var(--primary);">✅ Conferência Inteligente do Palete</h3>
-
-    <div class="alerta-divergencia" id="box-divergencia">
-      <h4 id="titulo-divergencia">🛡️ Proteção de Fonte Confiável Ativa</h4>
-      <p id="texto-divergencia"></p>
-      <div class="alerta-botoes">
-        <button class="btn-corrigir-sugestao" id="btn-aceitar-sugestao" onclick="aplicarSugestaoConfiavel()">
-          ✅ Confirmado: Manter Lote Confiável
+      <div class="macro-bottom-zone">
+        <button class="btn-macro-direta-gigante" id="btn-disparo-macro" onclick="capturarEtiquetaDoVisor()">
+          <span>🔍 APONTAR COM MACRO DIRETA</span>
+          <small>Leitura instantânea sem cortar bordas (Funciona em baixa luz)</small>
         </button>
-        <button class="btn-manter-lido" id="btn-usar-lido-camera" onclick="usarValorBrutoDaCamera()">
-          ⚠️ Mudar para o número lido na câmera
-        </button>
+
+        <input type="file" accept="image/*" capture="environment" id="input-macro" style="display:none" onchange="lerFotoMacro(this)" />
+        <div class="aux-buttons-grid">
+          <button class="btn-camera-externa-aux" onclick="tocarBipLeituraCurto(); document.getElementById('input-macro').click()">
+            📷 Câmera Nativa
+          </button>
+          <button class="btn-camera-externa-aux" onclick="abrirModoCatalogoManual()">
+            ⌨️ Catálogo Rápido
+          </button>
+        </div>
       </div>
     </div>
 
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+    <!-- TELA 2: CONFERÊNCIA INTELIGENTE ZERO-DIGITAÇÃO -->
+    <div class="box" id="tela-confirmacao" style="display: none;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 6px;">
+        <h3 style="font-size: 16px; color: var(--primary);">✅ Conferência Inteligente do Palete</h3>
+        <span id="badge-origem-leitura" class="badge-lote" style="background:var(--primary-light); color:var(--primary);">OCR + Base</span>
+      </div>
+
+      <div class="alerta-divergencia" id="box-divergencia">
+        <h4 id="titulo-divergencia">🛡️ Proteção de Fonte Confiável Ativa</h4>
+        <p id="texto-divergencia"></p>
+        <div class="alerta-botoes">
+          <button class="btn-corrigir-sugestao" id="btn-aceitar-sugestao" onclick="aplicarSugestaoConfiavel()">
+            ✅ Confirmado: Manter Lote Confiável
+          </button>
+          <button class="btn-manter-lido" id="btn-usar-lido-camera" onclick="usarValorBrutoDaCamera()">
+            ⚠️ Mudar para o número lido na câmera
+          </button>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 8px;">
+        <div class="field-wrap">
+          <label>Código do Item:</label>
+          <input
+            type="text"
+            id="conf-item"
+            class="input-left"
+            autocomplete="off"
+            placeholder="Ex: 721467, PT-7908"
+            onfocus="mostrarAutocomplete('item', this.value)"
+            oninput="mostrarAutocomplete('item', this.value)"
+          />
+          <div class="autocomplete-list" id="ac-item"></div>
+        </div>
+        <div>
+          <label>Volume (Ex: 112/160):</label>
+          <input type="text" id="conf-vol-etiqueta" class="input-left" placeholder="Opcional" />
+        </div>
+      </div>
+
       <div class="field-wrap">
-        <label>Código do Item:</label>
+        <label>Descrição do Produto (Auto-complete do histórico):</label>
         <input
           type="text"
-          id="conf-item"
+          id="conf-produto"
           class="input-left"
           autocomplete="off"
-          placeholder="Ex: 721467, PT-7908"
-          onfocus="mostrarAutocomplete('item', this.value)"
-          oninput="mostrarAutocomplete('item', this.value)"
+          placeholder="Digite ou selecione da lista..."
+          onfocus="mostrarAutocomplete('produto', this.value)"
+          oninput="mostrarAutocomplete('produto', this.value)"
         />
-        <div class="autocomplete-list" id="ac-item"></div>
+        <div class="autocomplete-list" id="ac-produto"></div>
       </div>
-      <div>
-        <label>Volume (Ex: 112/160):</label>
-        <input type="text" id="conf-vol-etiqueta" class="input-left" placeholder="Opcional" />
-      </div>
-    </div>
 
-    <div class="field-wrap">
-      <label>Descrição do Produto (Auto-complete do histórico):</label>
-      <input
-        type="text"
-        id="conf-produto"
-        class="input-left"
-        autocomplete="off"
-        placeholder="Digite parte do nome..."
-        onfocus="mostrarAutocomplete('produto', this.value)"
-        oninput="mostrarAutocomplete('produto', this.value)"
-      />
-      <div class="autocomplete-list" id="ac-produto"></div>
-    </div>
-
-    <div class="field-wrap">
-      <label>Cliente:</label>
-      <input
-        type="text"
-        id="conf-cliente"
-        class="input-left"
-        autocomplete="off"
-        onfocus="mostrarAutocomplete('cliente', this.value)"
-        oninput="mostrarAutocomplete('cliente', this.value); atualizarRegraClienteManual();"
-      />
-      <div class="autocomplete-list" id="ac-cliente"></div>
-    </div>
-
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-      <div>
-        <label>Pedido (Máx 6 díg.):</label>
-        <input type="text" id="conf-pedido" class="input-left" maxlength="6" oninput="mascaraPedidoColetor(this)" />
-      </div>
       <div class="field-wrap">
-        <label>Nº do Lote (1 ponto):</label>
+        <label>Cliente:</label>
         <input
           type="text"
-          id="conf-lote"
+          id="conf-cliente"
           class="input-left"
-          maxlength="8"
           autocomplete="off"
-          style="background:#fef3c7; color:#b45309;"
-          onfocus="mostrarAutocomplete('lote', this.value)"
-          oninput="mascaraLoteColetor(this); mostrarAutocomplete('lote', this.value);"
+          onfocus="mostrarAutocomplete('cliente', this.value)"
+          oninput="mostrarAutocomplete('cliente', this.value); atualizarRegraClienteManual();"
         />
-        <div class="autocomplete-list" id="ac-lote"></div>
+        <div class="autocomplete-list" id="ac-cliente"></div>
       </div>
-    </div>
 
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-      <div>
-        <label id="label-volumes">Caixas/Sacos Palete:</label>
-        <input type="number" id="input-volumes" oninput="recalcularPreview()" style="border-color: var(--primary); font-size: 18px;" />
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+        <div>
+          <label>Pedido (Máx 6 díg.):</label>
+          <input type="text" id="conf-pedido" class="input-left" inputmode="numeric" maxlength="6" oninput="mascaraPedidoColetor(this)" />
+        </div>
+        <div class="field-wrap">
+          <label>Nº do Lote (1 ponto):</label>
+          <input
+            type="text"
+            id="conf-lote"
+            class="input-left"
+            maxlength="8"
+            autocomplete="off"
+            style="background:#fef3c7; color:#b45309;"
+            onfocus="mostrarAutocomplete('lote', this.value)"
+            oninput="mascaraLoteColetor(this); mostrarAutocomplete('lote', this.value);"
+          />
+          <div class="autocomplete-list" id="ac-lote"></div>
+        </div>
       </div>
-      <div>
-        <label>QTD Peças p/ Caixa:</label>
-        <input type="number" id="conf-pecas" oninput="recalcularPreview()" style="font-size: 18px;" />
+
+      <div style="display: grid; grid-template-columns: 1.15fr 0.85fr; gap: 8px; align-items: start;">
+        <div>
+          <label id="label-volumes">Caixas/Sacos Palete:</label>
+          <div class="stepper-row">
+            <button type="button" class="btn-step" onclick="ajustarVolumesDelta(-1)">−</button>
+            <input type="number" id="input-volumes" oninput="recalcularPreview()" style="border-color: var(--primary); font-size: 18px;" />
+            <button type="button" class="btn-step" onclick="ajustarVolumesDelta(1)">+</button>
+          </div>
+          <div class="preset-chips">
+            <button type="button" class="chip-vol" onclick="definirVolumesRapido(15)">15 cx</button>
+            <button type="button" class="chip-vol" onclick="definirVolumesRapido(20)">20 cx</button>
+            <button type="button" class="chip-vol" onclick="definirVolumesRapido(22)">22 sac</button>
+          </div>
+        </div>
+        <div>
+          <label>QTD Peças p/ Caixa:</label>
+          <input type="number" id="conf-pecas" oninput="recalcularPreview()" style="font-size: 18px; height: 42px;" />
+        </div>
       </div>
+
+      <div class="saldo-preview">
+        <small id="preview-detalhe">Saldo Total deste Palete</small>
+        <strong id="preview-total">0 peças</strong>
+      </div>
+
+      <button class="btn btn-confirm" id="btn-confirmar-envio" onclick="confirmarEnvio()">✅ CONFIRMAR E SUBIR SALDO</button>
+      <button class="btn btn-cancel" onclick="voltarParaCameraSemFecharStream()">🔄 Ler Outra Etiqueta</button>
     </div>
 
-    <div class="saldo-preview">
-      <small>Saldo Total deste Palete</small>
-      <strong id="preview-total">0 peças</strong>
+    <!-- SÓ APARECE DEPOIS QUE O OPERADOR BIPAR UM PALETE NESTA SESSÃO -->
+    <div class="box" id="box-saldos-sessao" style="display: none;">
+      <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
+        <strong style="font-size:12px; color:var(--muted);">SALDO APONTADO AGORA</strong>
+        <span style="font-size:11px; color:var(--success); font-weight:700;">● FONTE CONFIÁVEL ATIVA</span>
+      </div>
+      <div id="lista-ao-vivo"></div>
     </div>
-
-    <button class="btn btn-confirm" onclick="confirmarEnvio()">✅ CONFIRMAR E SUBIR SALDO</button>
-    <button class="btn btn-cancel" onclick="voltarParaCameraSemFecharStream()">🔄 Ler Outra Etiqueta</button>
-  </div>
-
-  <!-- SÓ APARECE DEPOIS QUE VOCÊ BIPAR UM PALETE NESTA SESSÃO -->
-  <div class="box" id="box-saldos-sessao" style="display: none;">
-    <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
-      <strong style="font-size:12px; color:var(--muted);">SALDO APONTADO AGORA</strong>
-      <span style="font-size:11px; color:var(--success); font-weight:700;">● FONTE CONFIÁVEL ATIVA</span>
-    </div>
-    <div id="lista-ao-vivo"></div>
   </div>
 
   <script>
@@ -562,7 +743,17 @@
       ? ''
       : 'https://finart-wms.onrender.com';
 
+    // Remove PT-7808 do cache local do celular imediatamente
+    (function higienizarCacheLocal() {
+      try {
+        const cat = JSON.parse(localStorage.getItem('finart_backup_catalogo') || '[]')
+          .filter(c => c.item !== 'PT-7808' && c.item !== 'PT7808');
+        localStorage.setItem('finart_backup_catalogo', JSON.stringify(cat));
+      } catch (e) {}
+    })();
+
     let ocrWorker = null;
+    let html5QrInstance = null;
     let motorPronto = false;
     let lendoAgora = false;
     let streamVideo = null;
@@ -573,13 +764,26 @@
     let jaBipouNestaSessao = false;
     let macroZoomAtivo = false;
     let lanternaAtiva = false;
+    let timerToast = null;
+
+    function mostrarToast(mensagem, tipo = 'erro', duracao = 4200) {
+      const box = document.getElementById('toast-industrial');
+      const txt = document.getElementById('toast-texto');
+      if (!box || !txt) return;
+      clearTimeout(timerToast);
+      box.className = `toast-industrial ${tipo}`;
+      txt.innerText = mensagem;
+      timerToast = setTimeout(() => {
+        box.className = 'toast-industrial';
+      }, duracao);
+    }
 
     function limparPedidoEstrito(val = '') {
-      return String(val).trim().split('.')[0].replace(/\D/g, '').slice(0, 6);
+      return String(val || '').trim().split('.')[0].replace(/\D/g, '').slice(0, 6);
     }
 
     function limparLoteEstrito(val = '', pedidoRef = '') {
-      let limpo = String(val).replace(/,/g, '.').replace(/[^0-9.]/g, '');
+      let limpo = String(val || '').replace(/,/g, '.').replace(/[^0-9.]/g, '');
       const partes = limpo.split('.').filter(Boolean);
       if (partes.length === 0) {
         const p = limparPedidoEstrito(pedidoRef);
@@ -623,6 +827,22 @@
       input.value = limparLoteEstrito(input.value);
     }
 
+    function ajustarVolumesDelta(delta) {
+      const inp = document.getElementById('input-volumes');
+      const atual = parseInt(inp.value || '0', 10);
+      const novo = Math.max(1, atual + delta);
+      inp.value = novo;
+      recalcularPreview();
+    }
+
+    function definirVolumesRapido(valor) {
+      document.getElementById('input-volumes').value = valor;
+      recalcularPreview();
+    }
+
+    // ============================================================================
+    // SINTETIZADOR DE ÁUDIO .WAV EM MEMÓRIA (ESTILO ZEBRA / HONEYWELL)
+    // ============================================================================
     function criarSomColetorZebraBase64(notas = [{ f: 800, ini: 0.0, fim: 0.07 }, { f: 1180, ini: 0.075, fim: 0.19 }], duracao = 0.21) {
       const sampleRate = 44100;
       const numSamples = Math.floor(sampleRate * duracao);
@@ -685,6 +905,14 @@
       0.23
     );
 
+    const wavErroGraveURI = criarSomColetorZebraBase64(
+      [
+        { f: 310, ini: 0.00, fim: 0.11 },
+        { f: 230, ini: 0.12, fim: 0.26 }
+      ],
+      0.28
+    );
+
     function destravarSomMobile() {
       try {
         if (!audioCtx) {
@@ -694,23 +922,40 @@
         if (audioCtx.state === 'suspended') audioCtx.resume();
         const p1 = document.getElementById('player-bip-leitura');
         const p2 = document.getElementById('player-bip-confirmacao');
-        if (!p1.src) p1.src = wavLeituraCurtoURI;
-        if (!p2.src) p2.src = wavApontamentoZebraURI;
+        const p3 = document.getElementById('player-bip-erro');
+        if (p1 && !p1.src) p1.src = wavLeituraCurtoURI;
+        if (p2 && !p2.src) p2.src = wavApontamentoZebraURI;
+        if (p3 && !p3.src) p3.src = wavErroGraveURI;
       } catch (e) {}
     }
 
     function tocarBipLeituraCurto() {
       try {
         destravarSomMobile();
-        if (navigator.vibrate) navigator.vibrate(140);
+        if (navigator.vibrate) navigator.vibrate(130);
         document.body.classList.add('flash-leitura');
-        setTimeout(() => document.body.classList.remove('flash-leitura'), 240);
+        setTimeout(() => document.body.classList.remove('flash-leitura'), 220);
 
         const p1 = document.getElementById('player-bip-leitura');
         if (!p1.src) p1.src = wavLeituraCurtoURI;
         p1.volume = 1.0;
         p1.currentTime = 0;
         p1.play().catch(() => {});
+      } catch (e) {}
+    }
+
+    function tocarBipErroIndustrial() {
+      try {
+        destravarSomMobile();
+        if (navigator.vibrate) navigator.vibrate([180, 60, 180]);
+        document.body.classList.add('flash-erro');
+        setTimeout(() => document.body.classList.remove('flash-erro'), 260);
+
+        const p3 = document.getElementById('player-bip-erro');
+        if (!p3.src) p3.src = wavErroGraveURI;
+        p3.volume = 1.0;
+        p3.currentTime = 0;
+        p3.play().catch(() => {});
       } catch (e) {}
     }
 
@@ -748,15 +993,15 @@
       } catch (e) {}
     }
 
+    // ============================================================================
+    // AUTO-COMPLETE INTELIGENTE EM TODOS OS CAMPOS
+    // ============================================================================
     function fecharTodosAutocompletes(e) {
       if (e && e.target && e.target.tagName === 'INPUT') return;
       document.querySelectorAll('.autocomplete-list').forEach(el => el.style.display = 'none');
     }
 
-    function mostrarAutocomplete(tipo, valorDigitado) {
-      document.querySelectorAll('.autocomplete-list').forEach(el => el.style.display = 'none');
-      const termo = (valorDigitado || '').trim().toUpperCase();
-
+    function obterBaseUnificadaItens() {
       const baseItens = catalogoMemoria.filter(c => c.item !== 'PT-7808');
       historicoMemoria.forEach(h => {
         if (h.item !== 'PT-7808' && !baseItens.some(c => c.item === h.item)) {
@@ -769,6 +1014,13 @@
           });
         }
       });
+      return baseItens;
+    }
+
+    function mostrarAutocomplete(tipo, valorDigitado) {
+      document.querySelectorAll('.autocomplete-list').forEach(el => el.style.display = 'none');
+      const termo = (valorDigitado || '').trim().toUpperCase();
+      const baseItens = obterBaseUnificadaItens();
 
       if (tipo === 'produto' || tipo === 'item') {
         const box = document.getElementById(tipo === 'produto' ? 'ac-produto' : 'ac-item');
@@ -830,6 +1082,14 @@
       if (escolhido.qtd_padrao_pecas > 0) {
         document.getElementById('conf-pecas').value = escolhido.qtd_padrao_pecas;
       }
+
+      // Se já houver lote ativo para este item na memória, preenche automaticamente
+      const ultimoDesteItem = historicoMemoria.find(h => h.item.toUpperCase() === escolhido.item.toUpperCase());
+      if (ultimoDesteItem && !document.getElementById('conf-lote').value) {
+        document.getElementById('conf-lote').value = limparLoteEstrito(ultimoDesteItem.lote, ultimoDesteItem.pedido);
+        document.getElementById('conf-pedido').value = limparPedidoEstrito(ultimoDesteItem.pedido || ultimoDesteItem.lote);
+      }
+
       recalcularPreview();
       fecharTodosAutocompletes();
     }
@@ -855,11 +1115,41 @@
       fecharTodosAutocompletes();
     }
 
+    function abrirModoCatalogoManual() {
+      tocarBipLeituraCurto();
+      sugestaoAtual = null;
+      document.getElementById('box-divergencia').style.display = 'none';
+      document.getElementById('badge-origem-leitura').innerText = 'Catálogo Rápido';
+      document.getElementById('conf-item').value = '';
+      document.getElementById('conf-produto').value = '';
+      document.getElementById('conf-cliente').value = '';
+      document.getElementById('conf-pedido').value = '';
+      document.getElementById('conf-lote').value = '';
+      document.getElementById('conf-vol-etiqueta').value = '';
+      document.getElementById('input-volumes').value = 15;
+      document.getElementById('conf-pecas').value = '';
+      recalcularPreview();
+      document.getElementById('tela-scanner').style.display = 'none';
+      document.getElementById('tela-confirmacao').style.display = 'block';
+      setTimeout(() => {
+        const inp = document.getElementById('conf-item');
+        inp.focus();
+        mostrarAutocomplete('item', '');
+      }, 80);
+    }
+
+    // ============================================================================
+    // MOTOR ÓPTICO TESSERACT (PSM 6 + DAWG OFF) E STREAM PERMANENTE DE CÂMERA
+    // ============================================================================
     async function inicializarMotorOptico() {
       const badge = document.getElementById('status-motor');
       try {
         ocrWorker = await Tesseract.createWorker('eng');
-        await ocrWorker.setParameters({ tessedit_pageseg_mode: '6' });
+        await ocrWorker.setParameters({
+          tessedit_pageseg_mode: '6',
+          load_system_dawg: '0',
+          load_freq_dawg: '0'
+        });
         motorPronto = true;
         badge.innerText = '✅ Lente Macro Pronta (Sem Corte)';
       } catch (e) {
@@ -867,7 +1157,6 @@
       }
     }
 
-    // ABRE A CÂMERA APENAS 1 VEZ E MANTÉM O STREAM VIVO (NUNCA MAIS PEDE PERMISSÃO REPETIDA!)
     async function garantirCameraAbertaUmaUnicaVez() {
       const video = document.getElementById('video-camera');
       if (streamVideo && streamVideo.active) {
@@ -892,7 +1181,6 @@
     }
 
     async function aplicarConfiguracaoLente() {
-      const video = document.getElementById('video-camera');
       const btnZoom = document.getElementById('btn-zoom-toggle');
       if (!streamVideo) return;
 
@@ -932,10 +1220,9 @@
       await aplicarConfiguracaoLente();
     }
 
-    // PREPARA 100% DA IMAGEM SEM CORTAR AS BORDAS + COMPENSAÇÃO AUTOMÁTICA PARA POUCA LUZ
-    function prepararCanvasSemCortarBordas(fonteImgOuVideo, wOrig, hOrig) {
-      const canvas = document.createElement('canvas');
-      const maxDim = 1150;
+    // PIPELINE DUPLO: CANVAS PURO (PARA BARCODE DETECTOR) + CANVAS REALÇADO (PARA OCR)
+    function prepararPipelinesDeImagem(fonteImgOuVideo, wOrig, hOrig) {
+      const maxDim = 1200;
       let w = wOrig;
       let h = hOrig;
 
@@ -949,14 +1236,21 @@
         }
       }
 
-      canvas.width = w;
-      canvas.height = h;
-      const ctx = canvas.getContext('2d');
-      ctx.drawImage(fonteImgOuVideo, 0, 0, w, h);
+      // 1. Canvas Natural (Preserva anti-aliasing das barras 1D/QR para BarcodeDetector)
+      const canvasNatural = document.createElement('canvas');
+      canvasNatural.width = w;
+      canvasNatural.height = h;
+      const ctxNat = canvasNatural.getContext('2d');
+      ctxNat.drawImage(fonteImgOuVideo, 0, 0, w, h);
 
-      // Mede o brilho médio da foto para saber se o ambiente está escuro (galpão/caminhão)
-      const imgData = ctx.getImageData(0, 0, w, h);
+      // 2. Canvas Realçado Adaptativo (Sem cortar bordas + compensação de baixa luz e plástico filme)
+      const canvasOCR = document.createElement('canvas');
+      canvasOCR.width = w;
+      canvasOCR.height = h;
+      const ctxOCR = canvasOCR.getContext('2d');
+      const imgData = ctxNat.getImageData(0, 0, w, h);
       const d = imgData.data;
+
       let somaBrilho = 0;
       const passo = 16;
       let amostras = 0;
@@ -966,39 +1260,45 @@
       }
       const brilhoMedio = somaBrilho / (amostras || 1);
 
-      // Se estiver escuro (brilho < 115), aplica ganho de luz automático para destacar as letras pretas
       const ganhoLuz = brilhoMedio < 115 ? 1.45 : 1.12;
       for (let i = 0; i < d.length; i += 4) {
         let cinza = (d[i] * 0.299 + d[i + 1] * 0.587 + d[i + 2] * 0.114) * ganhoLuz;
-        // Aumenta nitidez entre o fundo da etiqueta e as letras pretas sem apagar letras finas
         cinza = cinza > 175 ? 255 : Math.max(0, (cinza - 25) * 1.15);
         d[i] = cinza;
         d[i + 1] = cinza;
         d[i + 2] = cinza;
       }
-      ctx.putImageData(imgData, 0, 0);
-      return canvas;
+      ctxOCR.putImageData(imgData, 0, 0);
+
+      return { canvasNatural, canvasOCR };
     }
 
-    // Decodifica QR Code ou Código de Barras da foto em 0.1s (compatível com iPhone e Android)
-    async function decodificarQRCodeOuBarrasRapido(canvas) {
+    async function decodificarQRCodeOuBarrasRapido(canvasNatural, canvasOCR) {
       if ('BarcodeDetector' in window) {
         try {
-          const detector = new BarcodeDetector({ formats: ['code_128', 'qr_code', 'ean_13'] });
-          const barcodes = await detector.detect(canvas);
-          if (barcodes && barcodes.length > 0) {
-            return barcodes.map(b => b.rawValue).join('\n');
+          const detector = new BarcodeDetector({
+            formats: ['code_128', 'qr_code', 'ean_13', 'ean_8', 'itf', 'data_matrix']
+          });
+          const barcodesNat = await detector.detect(canvasNatural);
+          if (barcodesNat && barcodesNat.length > 0) {
+            return barcodesNat.map(b => b.rawValue).join('\n');
+          }
+          const barcodesOcr = await detector.detect(canvasOCR);
+          if (barcodesOcr && barcodesOcr.length > 0) {
+            return barcodesOcr.map(b => b.rawValue).join('\n');
           }
         } catch (e) {}
       }
 
       return new Promise((resolve) => {
-        canvas.toBlob(async (blob) => {
+        canvasNatural.toBlob(async (blob) => {
           if (!blob) return resolve('');
           const file = new File([blob], 'etiqueta.jpg', { type: 'image/jpeg' });
           try {
-            const qr = new Html5Qrcode('qr-hidden-decoder');
-            const decoded = await qr.scanFile(file, false);
+            if (!html5QrInstance) {
+              html5QrInstance = new Html5Qrcode('qr-hidden-decoder');
+            }
+            const decoded = await html5QrInstance.scanFile(file, false);
             resolve(decoded || '');
           } catch (e) {
             resolve('');
@@ -1007,7 +1307,6 @@
       });
     }
 
-    // DISPARO IMEDIATO DO BOTÃO AZUL (0ms de espera, sem fila!)
     async function capturarEtiquetaDoVisor() {
       const video = document.getElementById('video-camera');
       if (!video || !video.videoWidth || lendoAgora) return;
@@ -1022,8 +1321,8 @@
       prog.style.display = 'block';
 
       try {
-        const canvas = prepararCanvasSemCortarBordas(video, video.videoWidth, video.videoHeight);
-        await reconhecerTextoEEnviar(canvas);
+        const { canvasNatural, canvasOCR } = prepararPipelinesDeImagem(video, video.videoWidth, video.videoHeight);
+        await reconhecerTextoEEnviar(canvasNatural, canvasOCR);
       } finally {
         prog.style.display = 'none';
         btn.disabled = false;
@@ -1043,8 +1342,8 @@
         const img = new Image();
         img.onload = async () => {
           try {
-            const canvas = prepararCanvasSemCortarBordas(img, img.width, img.height);
-            await reconhecerTextoEEnviar(canvas);
+            const { canvasNatural, canvasOCR } = prepararPipelinesDeImagem(img, img.width, img.height);
+            await reconhecerTextoEEnviar(canvasNatural, canvasOCR);
           } finally {
             prog.style.display = 'none';
             lendoAgora = false;
@@ -1056,12 +1355,11 @@
       reader.readAsDataURL(input.files[0]);
     }
 
-    async function reconhecerTextoEEnviar(canvas) {
+    async function reconhecerTextoEEnviar(canvasNatural, canvasOCR) {
       try {
-        // Roda em paralelo: Leitor de QR/Barras + Leitor do Texto Completo da Etiqueta
         const [codigoExtraido, ocrRes] = await Promise.all([
-          decodificarQRCodeOuBarrasRapido(canvas),
-          (motorPronto && ocrWorker) ? ocrWorker.recognize(canvas) : Tesseract.recognize(canvas, 'eng')
+          decodificarQRCodeOuBarrasRapido(canvasNatural, canvasOCR),
+          (motorPronto && ocrWorker) ? ocrWorker.recognize(canvasOCR) : Tesseract.recognize(canvasOCR, 'eng')
         ]);
 
         const textoExtraido = (ocrRes && ocrRes.data && ocrRes.data.text) ? ocrRes.data.text : '';
@@ -1069,7 +1367,8 @@
 
         const temDadosValidos = /PEDIDO|CLIENTE|DEVINTEX|FLORA|ITEM|PRODUTO|LOTE|00\d{4}|PT\s*-\s*\d|FR\s*-\s*\d|719935|721467|[1-9]\d{5}/i.test(tudo);
         if (!temDadosValidos) {
-          alert('Etiqueta não identificada. Enquadre a etiqueta inteira dentro do visor e toque no botão azul.');
+          tocarBipErroIndustrial();
+          mostrarToast('⚠️ Etiqueta não enquadrada. Aponte para a etiqueta inteira e toque no botão azul.', 'erro');
           return;
         }
 
@@ -1084,28 +1383,51 @@
 
         const data = await res.json();
         if (!res.ok) {
-          alert(data.erro || 'Tente aproximar um pouco mais da etiqueta.');
+          tocarBipErroIndustrial();
+          mostrarToast(data.erro || '⚠️ Aproxime um pouco mais da etiqueta e tente novamente.', 'erro');
           return;
         }
 
         tocarBipLeituraCurto();
+        document.getElementById('badge-origem-leitura').innerText = codigoExtraido ? 'QR/Barras + OCR' : 'Leitura Óptica HD';
         abrirTelaConfirmacao(data);
       } catch (e) {
-        alert('Erro de conexão ao processar leitura.');
+        tocarBipErroIndustrial();
+        mostrarToast('⚠️ Erro de conexão ao processar leitura. Verifique a rede.', 'erro');
       }
     }
 
+    // ============================================================================
+    // CONFERÊNCIA INTELIGENTE E PROTEÇÃO DA FONTE CONFIÁVEL
+    // ============================================================================
     function abrirTelaConfirmacao(data) {
       let itemLido = (data.item === 'PT-7808' ? 'PT-7908' : (data.item || '')).toUpperCase();
       let pedLimpo = limparPedidoEstrito(data.pedido || data.lote);
       let loteLimpo = limparLoteEstrito(data.lote, pedLimpo);
       let sugestao = data.sugestao_divergencia || null;
 
-      if (!sugestao && historicoMemoria.length > 0 && itemLido) {
-        const doMesmoItem = historicoMemoria.filter(h => h.item.toUpperCase() === itemLido);
-        const jaTemExato = doMesmoItem.some(h => limparLoteEstrito(h.lote, h.pedido) === loteLimpo);
+      // Busca todos os paletes já apontados/corrigidos deste mesmo item na memória do celular
+      const doMesmoItem = itemLido
+        ? historicoMemoria.filter(h => h.item.toUpperCase() === itemLido)
+        : [];
+      const catDoItem = itemLido
+        ? catalogoMemoria.find(c => c.item.toUpperCase() === itemLido)
+        : null;
 
-        if (doMesmoItem.length > 0 && !jaTemExato && loteLimpo) {
+      // Prioriza o último palete padrão (>= 10 caixas) ou o catálogo para que picadeiras não alterem o padrão
+      const ultimoPadraoDoItem = doMesmoItem.find(h => h.qtd_volumes_palete >= 10) || doMesmoItem[0];
+      let volumesSugeridos = data.qtd_volumes_sugerida || 15;
+      if (ultimoPadraoDoItem && ultimoPadraoDoItem.qtd_volumes_palete > 0) {
+        volumesSugeridos = ultimoPadraoDoItem.qtd_volumes_palete;
+      } else if (catDoItem && catDoItem.padrao_volumes_palete > 0) {
+        volumesSugeridos = catDoItem.padrao_volumes_palete;
+      }
+
+      const tipoEmb = volumesSugeridos === 22 ? 'SACARIA' : 'CAIXA';
+
+      if (!sugestao && doMesmoItem.length > 0 && loteLimpo) {
+        const jaTemExato = doMesmoItem.some(h => limparLoteEstrito(h.lote, h.pedido) === loteLimpo);
+        if (!jaTemExato) {
           const confiavel = doMesmoItem.find(h => distanciaLocal(loteLimpo, limparLoteEstrito(h.lote, h.pedido)) <= 2);
           if (confiavel) {
             const loteConfiavel = limparLoteEstrito(confiavel.lote, confiavel.pedido);
@@ -1120,7 +1442,7 @@
               cliente_sugerido: confiavel.cliente,
               produto_sugerido: confiavel.produto,
               qtd_pecas_sugerida: confiavel.qtd_pecas_por_volume,
-              qtd_volumes_sugerida: confiavel.qtd_volumes_palete,
+              qtd_volumes_sugerida: volumesSugeridos,
               lote_lido: loteLimpo,
               pedido_lido: pedLimpo,
               lote_sugerido: loteConfiavel,
@@ -1140,8 +1462,8 @@
       document.getElementById('conf-produto').value = data.produto || '';
       document.getElementById('conf-pecas').value = data.qtd_pecas_por_volume || '';
       document.getElementById('conf-vol-etiqueta').value = data.volume_etiqueta || '';
-      document.getElementById('label-volumes').innerText = `Qtd ${data.tipoEmbalagem || 'CAIXA'}S (Padrão: ${data.qtd_volumes_sugerida || 15}):`;
-      document.getElementById('input-volumes').value = data.qtd_volumes_sugerida || 15;
+      document.getElementById('label-volumes').innerText = `Qtd ${tipoEmb}S (Padrão: ${volumesSugeridos}):`;
+      document.getElementById('input-volumes').value = volumesSugeridos;
 
       const boxDiv = document.getElementById('box-divergencia');
       if (sugestao) {
@@ -1204,104 +1526,9 @@
       const item = (document.getElementById('conf-item').value || '').toUpperCase();
       const prod = (document.getElementById('conf-produto').value || '').toUpperCase();
 
-      if (cli.includes('DEVINTEX') && (item === 'PT-7908' || prod.includes('1000 GRS'))) {
-        document.getElementById('input-volumes').value = 22;
-      } else if (cli.includes('DEVINTEX')) {
-        document.getElementById('input-volumes').value = 15;
-      } else if (cli.length > 2) {
-        document.getElementById('input-volumes').value = 20;
-      }
-      recalcularPreview();
-    }function abrirTelaConfirmacao(data) {
-      let itemLido = (data.item === 'PT-7808' ? 'PT-7908' : (data.item || '')).toUpperCase();
-      let pedLimpo = limparPedidoEstrito(data.pedido || data.lote);
-      let loteLimpo = limparLoteEstrito(data.lote, pedLimpo);
-      let sugestao = data.sugestao_divergencia || null;
-
-      // Busca todos os paletes já apontados/corrigidos deste mesmo item na memória do celular
-      const doMesmoItem = itemLido
-        ? historicoMemoria.filter(h => h.item.toUpperCase() === itemLido)
-        : [];
-      const catDoItem = itemLido
-        ? catalogoMemoria.find(c => c.item.toUpperCase() === itemLido)
-        : null;
-
-      // Se você corrigiu o 1º palete (ex: de 22 para 15), puxa exatamente a quantidade corrigida (15) da base!
-      let volumesSugeridos = data.qtd_volumes_sugerida || 15;
-      if (doMesmoItem.length > 0 && doMesmoItem[0].qtd_volumes_palete > 0) {
-        volumesSugeridos = doMesmoItem[0].qtd_volumes_palete;
-      } else if (catDoItem && catDoItem.padrao_volumes_palete > 0) {
-        volumesSugeridos = catDoItem.padrao_volumes_palete;
-      }
-
-      const tipoEmb = volumesSugeridos === 22 ? 'SACARIA' : 'CAIXA';
-
-      if (!sugestao && doMesmoItem.length > 0 && loteLimpo) {
-        const jaTemExato = doMesmoItem.some(h => limparLoteEstrito(h.lote, h.pedido) === loteLimpo);
-        if (!jaTemExato) {
-          const confiavel = doMesmoItem.find(h => distanciaLocal(loteLimpo, limparLoteEstrito(h.lote, h.pedido)) <= 2);
-          if (confiavel) {
-            const loteConfiavel = limparLoteEstrito(confiavel.lote, confiavel.pedido);
-            const pedConfiavel = limparPedidoEstrito(confiavel.pedido || confiavel.lote);
-
-            sugestao = {
-              tipo: 'LOTE_AUTO_CORRIGIDO_PELA_BASE',
-              auto_corrigido: true,
-              mensagem: `A câmera leu Pedido "${pedLimpo}" / Lote "${loteLimpo}", mas este produto (${itemLido}) já tem saldo confirmado no Lote Confiável "${loteConfiavel}" (Ped: "${pedConfiavel}"). O sistema corrigiu automaticamente para "${loteConfiavel}"!`,
-              item_lido: itemLido,
-              item_sugerido: confiavel.item,
-              cliente_sugerido: confiavel.cliente,
-              produto_sugerido: confiavel.produto,
-              qtd_pecas_sugerida: confiavel.qtd_pecas_por_volume,
-              qtd_volumes_sugerida: confiavel.qtd_volumes_palete,
-              lote_lido: loteLimpo,
-              pedido_lido: pedLimpo,
-              lote_sugerido: loteConfiavel,
-              pedido_sugerido: pedConfiavel
-            };
-
-            loteLimpo = loteConfiavel;
-            pedLimpo = pedConfiavel;
-          }
-        }
-      }
-
-      document.getElementById('conf-cliente').value = data.cliente || '';
-      document.getElementById('conf-pedido').value = pedLimpo;
-      document.getElementById('conf-lote').value = loteLimpo;
-      document.getElementById('conf-item').value = itemLido;
-      document.getElementById('conf-produto').value = data.produto || '';
-      document.getElementById('conf-pecas').value = data.qtd_pecas_por_volume || '';
-      document.getElementById('conf-vol-etiqueta').value = data.volume_etiqueta || '';
-      document.getElementById('label-volumes').innerText = `Qtd ${tipoEmb}S (Padrão: ${volumesSugeridos}):`;
-      document.getElementById('input-volumes').value = volumesSugeridos;
-
-      const boxDiv = document.getElementById('box-divergencia');
-      if (sugestao) {
-        sugestaoAtual = sugestao;
-        document.getElementById('texto-divergencia').innerText = sugestao.mensagem;
-        document.getElementById('btn-aceitar-sugestao').innerText =
-          `✅ Manter Fonte Confiável: Lote ${sugestao.lote_sugerido} (Ped: ${sugestao.pedido_sugerido})`;
-        document.getElementById('btn-usar-lido-camera').innerText =
-          `⚠️ Usar o que a câmera leu (${sugestao.lote_lido || sugestao.item_lido})`;
-        boxDiv.style.display = 'block';
-      } else {
-        sugestaoAtual = null;
-        boxDiv.style.display = 'none';
-      }
-
-      recalcularPreview();
-      document.getElementById('tela-scanner').style.display = 'none';
-      document.getElementById('tela-confirmacao').style.display = 'block';
-    }
-
-    function atualizarRegraClienteManual() {
-      const cli = (document.getElementById('conf-cliente').value || '').toUpperCase();
-      const item = (document.getElementById('conf-item').value || '').toUpperCase();
-      const prod = (document.getElementById('conf-produto').value || '').toUpperCase();
-
-      // 1º Prioridade: Verifica se já existe um palete apontado/corrigido ou salvo no catálogo para este item
-      const jaApontado = historicoMemoria.find(h => h.item.toUpperCase() === item);
+      // 1º Prioridade: Verifica se já existe um palete padrão apontado/corrigido ou salvo no catálogo
+      const jaApontado = historicoMemoria.find(h => h.item.toUpperCase() === item && h.qtd_volumes_palete >= 10) ||
+                         historicoMemoria.find(h => h.item.toUpperCase() === item);
       const noCatalogo = catalogoMemoria.find(c => c.item.toUpperCase() === item);
 
       if (jaApontado && jaApontado.qtd_volumes_palete > 0) {
@@ -1330,6 +1557,8 @@
       const vols = parseInt(document.getElementById('input-volumes').value || '0', 10);
       const pecas = parseInt(document.getElementById('conf-pecas').value || '0', 10);
       const total = vols * pecas;
+      document.getElementById('preview-detalhe').innerText =
+        vols > 0 && pecas > 0 ? `Saldo Total deste Palete (${vols} vol × ${pecas} pçs)` : 'Saldo Total deste Palete';
       document.getElementById('preview-total').innerText = `${total.toLocaleString('pt-BR')} peças`;
     }
 
@@ -1337,8 +1566,13 @@
       const vols = parseInt(document.getElementById('input-volumes').value, 10);
       const pecas = parseInt(document.getElementById('conf-pecas').value, 10);
       if (!vols || vols <= 0 || !pecas || pecas <= 0) {
-        return alert('Verifique a quantidade de caixas e de peças por caixa!');
+        tocarBipErroIndustrial();
+        mostrarToast('⚠️ Verifique a quantidade de volumes e de peças por volume!', 'erro');
+        return;
       }
+
+      const btnConf = document.getElementById('btn-confirmar-envio');
+      btnConf.disabled = true;
 
       tocarSomApontamentoZebra();
 
@@ -1360,26 +1594,34 @@
         volume_etiqueta: document.getElementById('conf-vol-etiqueta').value
       };
 
-      const res = await fetch(`${API_BASE}/api/paletes`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
+      try {
+        const res = await fetch(`${API_BASE}/api/paletes`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
 
-      const resultado = await res.json();
-      if (!res.ok) {
-        alert(resultado.erro);
-        return;
+        const resultado = await res.json();
+        if (!res.ok) {
+          tocarBipErroIndustrial();
+          mostrarToast(resultado.erro || '⚠️ Erro ao salvar palete.', 'erro');
+          return;
+        }
+
+        jaBipouNestaSessao = true;
+        document.getElementById('box-saldos-sessao').style.display = 'block';
+        mostrarToast(`✅ Palete salvo! +${(vols * pecas).toLocaleString('pt-BR')} pçs no Lote ${loteLimpo}`, 'sucesso', 3000);
+
+        await carregarDadosSilencioso();
+        voltarParaCameraSemFecharStream();
+      } catch (e) {
+        tocarBipErroIndustrial();
+        mostrarToast('⚠️ Sem conexão com o servidor. Tente confirmar novamente.', 'erro');
+      } finally {
+        btnConf.disabled = false;
       }
-
-      jaBipouNestaSessao = true;
-      document.getElementById('box-saldos-sessao').style.display = 'block';
-
-      await carregarDadosSilencioso();
-      voltarParaCameraSemFecharStream();
     }
 
-    // Volta para o visor sem desligar a câmera (NUNCA pede permissão novamente!)
     function voltarParaCameraSemFecharStream() {
       document.getElementById('tela-confirmacao').style.display = 'none';
       document.getElementById('tela-scanner').style.display = 'block';
@@ -1436,18 +1678,31 @@
       } catch (e) {}
     }
 
+    // Conexão SSE também no Coletor Mobile para sincronia 0ms da Fonte Confiável!
+    function conectarStreamColetor() {
+      try {
+        const stream = new EventSource(`${API_BASE}/api/stream`);
+        stream.onmessage = () => carregarDadosSilencioso();
+        stream.onerror = () => {
+          stream.close();
+          setTimeout(conectarStreamColetor, 2500);
+        };
+      } catch (e) {}
+    }
+
     document.addEventListener('visibilitychange', () => {
       if (!document.hidden) {
         garantirCameraAbertaUmaUnicaVez();
         carregarDadosSilencioso();
       }
     });
-    setInterval(carregarDadosSilencioso, 3000);
+    setInterval(carregarDadosSilencioso, 4000);
 
     window.onload = () => {
       inicializarMotorOptico();
       garantirCameraAbertaUmaUnicaVez();
       carregarDadosSilencioso();
+      conectarStreamColetor();
     };
   </script>
 </body>
