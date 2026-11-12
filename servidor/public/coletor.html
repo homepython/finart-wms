@@ -9,6 +9,7 @@
   <meta name="mobile-web-app-capable" content="yes" />
   <title>FINART - Coletor Industrial</title>
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
   <style>
     :root {
       --bg: #f4f6f8;
@@ -89,7 +90,6 @@
       font-weight: 800;
       padding: 6px 10px;
       border-radius: 6px;
-      text-align: center;
       margin-bottom: 8px;
       background: #ecfdf5;
       color: var(--success);
@@ -97,15 +97,39 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .controles-lente {
+      display: flex;
+      gap: 6px;
     }
 
     .zoom-badge {
       background: #0284c7;
       color: #fff;
-      padding: 2px 8px;
-      border-radius: 4px;
+      padding: 4px 8px;
+      border-radius: 5px;
       font-size: 11px;
       cursor: pointer;
+      border: none;
+      font-weight: 700;
+    }
+
+    .lanterna-badge {
+      background: #334155;
+      color: #fff;
+      padding: 4px 8px;
+      border-radius: 5px;
+      font-size: 11px;
+      cursor: pointer;
+      border: none;
+      font-weight: 700;
+    }
+    .lanterna-badge.acesa {
+      background: #f59e0b;
+      color: #0f172a;
     }
 
     .visor-wrapper {
@@ -121,19 +145,17 @@
       width: 100%;
       height: 100%;
       object-fit: cover;
-      transform-origin: center center;
-      transition: transform 0.2s ease;
     }
     .moldura-etiqueta {
       position: absolute;
-      inset: 14px;
-      border: 2px dashed #38bdf8;
+      inset: 8px;
+      border: 2px dashed rgba(56, 189, 248, 0.75);
       border-radius: 8px;
       pointer-events: none;
       display: flex;
       align-items: flex-end;
       justify-content: center;
-      padding-bottom: 8px;
+      padding-bottom: 6px;
     }
     .moldura-etiqueta span {
       background: rgba(15, 23, 42, 0.85);
@@ -186,6 +208,9 @@
     .btn-macro-direta-gigante:active {
       transform: scale(0.98);
     }
+    .btn-macro-direta-gigante:disabled {
+      opacity: 0.65;
+    }
     .btn-macro-direta-gigante small {
       font-size: 12px;
       font-weight: 600;
@@ -204,7 +229,6 @@
       cursor: pointer;
     }
 
-    /* ALERTA DE FONTE CONFIÁVEL / DIVERGÊNCIA SEMPRE VISÍVEL */
     .alerta-divergencia {
       display: none;
       background: var(--warning-bg);
@@ -377,6 +401,7 @@
 
   <audio id="player-bip-leitura" preload="auto"></audio>
   <audio id="player-bip-confirmacao" preload="auto"></audio>
+  <div id="qr-hidden-decoder" style="display:none;"></div>
 
   <div class="top-bar">
     <span class="logo">FINART</span>
@@ -384,38 +409,41 @@
     <a href="/" class="btn-top">Ver Painel</a>
   </div>
 
-  <!-- TELA 1: VISOR COM LENTE MACRO DIRETA INTEGRADA -->
+  <!-- TELA 1: VISOR SEMPRE ATIVO (NÃO DESLIGA A CÂMERA E NÃO PEDE PERMISSÃO DE NOVO) -->
   <div class="box" id="tela-scanner">
     <div class="status-motor">
-      <span id="status-motor">⚡ Iniciando Lente Macro HD...</span>
-      <span class="zoom-badge" id="btn-zoom-toggle" onclick="alternarMacroZoom()">🔍 Macro 2.0x ON</span>
+      <span id="status-motor">⚡ Iniciando Lente HD...</span>
+      <div class="controles-lente">
+        <button class="lanterna-badge" id="btn-lanterna" onclick="alternarLanterna()">🔦 Lanterna</button>
+        <button class="zoom-badge" id="btn-zoom-toggle" onclick="alternarMacroZoom()">🔍 Macro 1.5x</button>
+      </div>
     </div>
 
     <div class="visor-wrapper">
       <video id="video-camera" autoplay playsinline muted></video>
       <div class="moldura-etiqueta">
-        <span>Aponte para a etiqueta e aperte o botão azul abaixo</span>
+        <span>Enquadre a etiqueta inteira e toque no botão azul</span>
       </div>
     </div>
 
     <div class="progresso-box" id="progresso-box">
-      🔍 Conferindo etiqueta com a Fonte Confiável...
+      ⚡ Lendo etiqueta (QR + Barras + Texto Completo)...
     </div>
 
     <div class="macro-bottom-zone">
-      <button class="btn-macro-direta-gigante" onclick="capturarEtiquetaDoVisor(true)">
+      <button class="btn-macro-direta-gigante" id="btn-disparo-macro" onclick="capturarEtiquetaDoVisor()">
         <span>🔍 APONTAR COM MACRO DIRETA</span>
-        <small>Captura em Foco Macro HD instantaneamente sem sair da tela</small>
+        <small>Leitura instantânea sem cortar bordas (Funciona em baixa luz)</small>
       </button>
 
       <input type="file" accept="image/*" capture="environment" id="input-macro" style="display:none" onchange="lerFotoMacro(this)" />
       <button class="btn-camera-externa-aux" onclick="tocarBipLeituraCurto(); document.getElementById('input-macro').click()">
-        📷 Ou abrir aplicativo de câmera nativo do celular
+        📷 Ou abrir câmera nativa do celular
       </button>
     </div>
   </div>
 
-  <!-- TELA 2: CONFERÊNCIA INTELIGENTE COM PROTEÇÃO DE FONTE CONFIÁVEL -->
+  <!-- TELA 2: CONFERÊNCIA INTELIGENTE -->
   <div class="box" id="tela-confirmacao" style="display: none;">
     <h3 style="margin-bottom: 6px; font-size: 16px; color: var(--primary);">✅ Conferência Inteligente do Palete</h3>
 
@@ -440,14 +468,14 @@
           id="conf-item"
           class="input-left"
           autocomplete="off"
-          placeholder="Ex: PT-7908"
+          placeholder="Ex: 721467, PT-7908"
           onfocus="mostrarAutocomplete('item', this.value)"
           oninput="mostrarAutocomplete('item', this.value)"
         />
         <div class="autocomplete-list" id="ac-item"></div>
       </div>
       <div>
-        <label>Volume (Ex: 370/400):</label>
+        <label>Volume (Ex: 112/160):</label>
         <input type="text" id="conf-vol-etiqueta" class="input-left" placeholder="Opcional" />
       </div>
     </div>
@@ -517,7 +545,7 @@
     </div>
 
     <button class="btn btn-confirm" onclick="confirmarEnvio()">✅ CONFIRMAR E SUBIR SALDO</button>
-    <button class="btn btn-cancel" onclick="voltarParaCamera()">🔄 Ler Outra Etiqueta</button>
+    <button class="btn btn-cancel" onclick="voltarParaCameraSemFecharStream()">🔄 Ler Outra Etiqueta</button>
   </div>
 
   <!-- SÓ APARECE DEPOIS QUE VOCÊ BIPAR UM PALETE NESTA SESSÃO -->
@@ -534,29 +562,17 @@
       ? ''
       : 'https://finart-wms.onrender.com';
 
-    (function limparCodigoErradoCache() {
-      try {
-        const cat = JSON.parse(localStorage.getItem('finart_backup_catalogo') || '[]')
-          .filter(c => c.item !== 'PT-7808' && c.item !== 'PT7808');
-        localStorage.setItem('finart_backup_catalogo', JSON.stringify(cat));
-
-        const hist = JSON.parse(localStorage.getItem('finart_backup_paletes') || '[]')
-          .map(p => ({ ...p, item: (p.item === 'PT-7808' ? 'PT-7908' : p.item) }));
-        localStorage.setItem('finart_backup_paletes', JSON.stringify(hist));
-      } catch (e) {}
-    })();
-
     let ocrWorker = null;
     let motorPronto = false;
     let lendoAgora = false;
-    let timerAutoScan = null;
     let streamVideo = null;
     let audioCtx = null;
     let catalogoMemoria = [];
     let historicoMemoria = [];
     let sugestaoAtual = null;
     let jaBipouNestaSessao = false;
-    let macroZoomAtivo = true;
+    let macroZoomAtivo = false;
+    let lanternaAtiva = false;
 
     function limparPedidoEstrito(val = '') {
       return String(val).trim().split('.')[0].replace(/\D/g, '').slice(0, 6);
@@ -577,7 +593,6 @@
       return `${partes[0].slice(0, 6)}.${partes[1].slice(0, 1)}`.slice(0, 8);
     }
 
-    // Distância de dígitos no próprio celular para garantir a Fonte Confiável mesmo offline/lento
     function distanciaLocal(a = '', b = '') {
       const s1 = String(a).toUpperCase().trim();
       const s2 = String(b).toUpperCase().trim();
@@ -846,16 +861,21 @@
         ocrWorker = await Tesseract.createWorker('eng');
         await ocrWorker.setParameters({ tessedit_pageseg_mode: '6' });
         motorPronto = true;
-        badge.innerText = '✅ Lente Macro HD Pronta';
+        badge.innerText = '✅ Lente Macro Pronta (Sem Corte)';
       } catch (e) {
-        badge.innerText = '⚠️ Leitor ativo';
+        badge.innerText = '✅ Câmera Pronta';
       }
     }
 
-    async function iniciarCameraMacroDireta() {
+    // ABRE A CÂMERA APENAS 1 VEZ E MANTÉM O STREAM VIVO (NUNCA MAIS PEDE PERMISSÃO REPETIDA!)
+    async function garantirCameraAbertaUmaUnicaVez() {
       const video = document.getElementById('video-camera');
+      if (streamVideo && streamVideo.active) {
+        if (video.paused) video.play().catch(() => {});
+        return;
+      }
+
       try {
-        if (streamVideo) streamVideo.getTracks().forEach(t => t.stop());
         streamVideo = await navigator.mediaDevices.getUserMedia({
           video: {
             facingMode: { ideal: 'environment' },
@@ -865,19 +885,13 @@
           audio: false
         });
         video.srcObject = streamVideo;
-
-        aplicarConfiguracaoMacroNaLente();
-
-        if (timerAutoScan) clearInterval(timerAutoScan);
-        timerAutoScan = setInterval(() => {
-          if (!lendoAgora && motorPronto && document.getElementById('tela-scanner').style.display !== 'none') {
-            capturarEtiquetaDoVisor(false);
-          }
-        }, 1500);
-      } catch (err) {}
+        aplicarConfiguracaoLente();
+      } catch (err) {
+        console.warn('Erro ao acessar câmera:', err);
+      }
     }
 
-    async function aplicarConfiguracaoMacroNaLente() {
+    async function aplicarConfiguracaoLente() {
       const video = document.getElementById('video-camera');
       const btnZoom = document.getElementById('btn-zoom-toggle');
       if (!streamVideo) return;
@@ -892,41 +906,39 @@
           adv.focusMode = 'continuous';
         }
         if (caps.zoom) {
-          const zoomIdeal = macroZoomAtivo ? Math.min(caps.zoom.max, Math.max(caps.zoom.min, 1.8)) : caps.zoom.min;
-          adv.zoom = zoomIdeal;
-          video.style.transform = 'scale(1)';
-        } else {
-          video.style.transform = macroZoomAtivo ? 'scale(1.45)' : 'scale(1)';
+          adv.zoom = macroZoomAtivo ? Math.min(caps.zoom.max, 1.5) : caps.zoom.min;
+        }
+        if (caps.torch) {
+          adv.torch = lanternaAtiva;
         }
         if (Object.keys(adv).length > 0) {
           await track.applyConstraints({ advanced: [adv] });
         }
-      } catch (e) {
-        video.style.transform = macroZoomAtivo ? 'scale(1.45)' : 'scale(1)';
-      }
+      } catch (e) {}
 
-      btnZoom.innerText = macroZoomAtivo ? '🔍 Macro 2.0x ON' : '🔍 Macro 1.0x';
+      btnZoom.innerText = macroZoomAtivo ? '🔍 Macro 1.5x ON' : '🔍 Lente 1.0x';
     }
 
     function alternarMacroZoom() {
       macroZoomAtivo = !macroZoomAtivo;
-      aplicarConfiguracaoMacroNaLente();
+      aplicarConfiguracaoLente();
     }
 
-    function prepararCanvasEtiquetaNitido(fonteImgOuVideo, wOrig, hOrig, usarRecorteMacro = false) {
+    async function alternarLanterna() {
+      lanternaAtiva = !lanternaAtiva;
+      const btn = document.getElementById('btn-lanterna');
+      btn.classList.toggle('acesa', lanternaAtiva);
+      btn.innerText = lanternaAtiva ? '🔦 Lanterna ON' : '🔦 Lanterna';
+      await aplicarConfiguracaoLente();
+    }
+
+    // PREPARA 100% DA IMAGEM SEM CORTAR AS BORDAS + COMPENSAÇÃO AUTOMÁTICA PARA POUCA LUZ
+    function prepararCanvasSemCortarBordas(fonteImgOuVideo, wOrig, hOrig) {
       const canvas = document.createElement('canvas');
-      const maxDim = 1200;
+      const maxDim = 1150;
+      let w = wOrig;
+      let h = hOrig;
 
-      let sx = 0, sy = 0, sw = wOrig, sh = hOrig;
-      if (usarRecorteMacro && macroZoomAtivo) {
-        sw = Math.round(wOrig * 0.78);
-        sh = Math.round(hOrig * 0.78);
-        sx = Math.round((wOrig - sw) / 2);
-        sy = Math.round((hOrig - sh) / 2);
-      }
-
-      let w = sw;
-      let h = sh;
       if (w > maxDim || h > maxDim) {
         if (w > h) {
           h = Math.round((h * maxDim) / w);
@@ -940,27 +952,81 @@
       canvas.width = w;
       canvas.height = h;
       const ctx = canvas.getContext('2d');
-      ctx.filter = 'contrast(1.35) grayscale(0.5)';
-      ctx.drawImage(fonteImgOuVideo, sx, sy, sw, sh, 0, 0, w, h);
+      ctx.drawImage(fonteImgOuVideo, 0, 0, w, h);
+
+      // Mede o brilho médio da foto para saber se o ambiente está escuro (galpão/caminhão)
+      const imgData = ctx.getImageData(0, 0, w, h);
+      const d = imgData.data;
+      let somaBrilho = 0;
+      const passo = 16;
+      let amostras = 0;
+      for (let i = 0; i < d.length; i += passo) {
+        somaBrilho += (d[i] + d[i + 1] + d[i + 2]) / 3;
+        amostras++;
+      }
+      const brilhoMedio = somaBrilho / (amostras || 1);
+
+      // Se estiver escuro (brilho < 115), aplica ganho de luz automático para destacar as letras pretas
+      const ganhoLuz = brilhoMedio < 115 ? 1.45 : 1.12;
+      for (let i = 0; i < d.length; i += 4) {
+        let cinza = (d[i] * 0.299 + d[i + 1] * 0.587 + d[i + 2] * 0.114) * ganhoLuz;
+        // Aumenta nitidez entre o fundo da etiqueta e as letras pretas sem apagar letras finas
+        cinza = cinza > 175 ? 255 : Math.max(0, (cinza - 25) * 1.15);
+        d[i] = cinza;
+        d[i + 1] = cinza;
+        d[i + 2] = cinza;
+      }
+      ctx.putImageData(imgData, 0, 0);
       return canvas;
     }
 
-    async function capturarEtiquetaDoVisor(manual) {
+    // Decodifica QR Code ou Código de Barras da foto em 0.1s (compatível com iPhone e Android)
+    async function decodificarQRCodeOuBarrasRapido(canvas) {
+      if ('BarcodeDetector' in window) {
+        try {
+          const detector = new BarcodeDetector({ formats: ['code_128', 'qr_code', 'ean_13'] });
+          const barcodes = await detector.detect(canvas);
+          if (barcodes && barcodes.length > 0) {
+            return barcodes.map(b => b.rawValue).join('\n');
+          }
+        } catch (e) {}
+      }
+
+      return new Promise((resolve) => {
+        canvas.toBlob(async (blob) => {
+          if (!blob) return resolve('');
+          const file = new File([blob], 'etiqueta.jpg', { type: 'image/jpeg' });
+          try {
+            const qr = new Html5Qrcode('qr-hidden-decoder');
+            const decoded = await qr.scanFile(file, false);
+            resolve(decoded || '');
+          } catch (e) {
+            resolve('');
+          }
+        }, 'image/jpeg', 0.9);
+      });
+    }
+
+    // DISPARO IMEDIATO DO BOTÃO AZUL (0ms de espera, sem fila!)
+    async function capturarEtiquetaDoVisor() {
       const video = document.getElementById('video-camera');
       if (!video || !video.videoWidth || lendoAgora) return;
 
       destravarSomMobile();
-      if (manual) tocarBipLeituraCurto();
+      tocarBipLeituraCurto();
       lendoAgora = true;
+
+      const btn = document.getElementById('btn-disparo-macro');
       const prog = document.getElementById('progresso-box');
-      if (manual) prog.style.display = 'block';
+      btn.disabled = true;
+      prog.style.display = 'block';
 
       try {
-        await carregarDadosSilencioso();
-        const canvas = prepararCanvasEtiquetaNitido(video, video.videoWidth, video.videoHeight, true);
-        await reconhecerTextoEEnviar(canvas, manual);
+        const canvas = prepararCanvasSemCortarBordas(video, video.videoWidth, video.videoHeight);
+        await reconhecerTextoEEnviar(canvas);
       } finally {
-        if (manual) prog.style.display = 'none';
+        prog.style.display = 'none';
+        btn.disabled = false;
         lendoAgora = false;
       }
     }
@@ -977,9 +1043,8 @@
         const img = new Image();
         img.onload = async () => {
           try {
-            await carregarDadosSilencioso();
-            const canvas = prepararCanvasEtiquetaNitido(img, img.width, img.height, false);
-            await reconhecerTextoEEnviar(canvas, true);
+            const canvas = prepararCanvasSemCortarBordas(img, img.width, img.height);
+            await reconhecerTextoEEnviar(canvas);
           } finally {
             prog.style.display = 'none';
             lendoAgora = false;
@@ -991,34 +1056,20 @@
       reader.readAsDataURL(input.files[0]);
     }
 
-    async function tentarBarcodeNativo(canvas) {
-      if ('BarcodeDetector' in window) {
-        try {
-          const detector = new BarcodeDetector({ formats: ['code_128', 'qr_code', 'ean_13'] });
-          const barcodes = await detector.detect(canvas);
-          if (barcodes && barcodes.length > 0) {
-            return barcodes.map(b => b.rawValue).join('\n');
-          }
-        } catch (e) {}
-      }
-      return '';
-    }
-
-    async function reconhecerTextoEEnviar(canvas, mostrarAlertaSeFalhar) {
+    async function reconhecerTextoEEnviar(canvas) {
       try {
-        const [codigoNativo, ocrRes] = await Promise.all([
-          tentarBarcodeNativo(canvas),
+        // Roda em paralelo: Leitor de QR/Barras + Leitor do Texto Completo da Etiqueta
+        const [codigoExtraido, ocrRes] = await Promise.all([
+          decodificarQRCodeOuBarrasRapido(canvas),
           (motorPronto && ocrWorker) ? ocrWorker.recognize(canvas) : Tesseract.recognize(canvas, 'eng')
         ]);
 
         const textoExtraido = (ocrRes && ocrRes.data && ocrRes.data.text) ? ocrRes.data.text : '';
-        const tudo = `${codigoNativo}\n${textoExtraido}`;
+        const tudo = `${codigoExtraido}\n${textoExtraido}`;
 
-        const temDadosValidos = /PEDIDO|CLIENTE|DEVINTEX|FLORA|ITEM|PRODUTO|LOTE|00\d{4}|PT\s*-\s*\d|FR\s*-\s*\d|719935/i.test(tudo);
+        const temDadosValidos = /PEDIDO|CLIENTE|DEVINTEX|FLORA|ITEM|PRODUTO|LOTE|00\d{4}|PT\s*-\s*\d|FR\s*-\s*\d|719935|721467|[1-9]\d{5}/i.test(tudo);
         if (!temDadosValidos) {
-          if (mostrarAlertaSeFalhar) {
-            alert('Etiqueta não identificada. Enquadre a etiqueta no tracejado e toque no botão azul.');
-          }
+          alert('Etiqueta não identificada. Enquadre a etiqueta inteira dentro do visor e toque no botão azul.');
           return;
         }
 
@@ -1026,27 +1077,21 @@
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            codigoLido: codigoNativo,
+            codigoLido: codigoExtraido,
             textoEtiqueta: textoExtraido
           })
         });
 
         const data = await res.json();
         if (!res.ok) {
-          if (mostrarAlertaSeFalhar) alert(data.erro || 'Tente aproximar um pouco mais da etiqueta.');
+          alert(data.erro || 'Tente aproximar um pouco mais da etiqueta.');
           return;
         }
-
-        if (!mostrarAlertaSeFalhar && (!data.item || !data.lote || !data.qtd_pecas_por_volume)) {
-          return;
-        }
-
-        if (timerAutoScan) clearInterval(timerAutoScan);
 
         tocarBipLeituraCurto();
         abrirTelaConfirmacao(data);
       } catch (e) {
-        if (mostrarAlertaSeFalhar) alert('Erro ao processar leitura.');
+        alert('Erro de conexão ao processar leitura.');
       }
     }
 
@@ -1056,35 +1101,35 @@
       let loteLimpo = limparLoteEstrito(data.lote, pedLimpo);
       let sugestao = data.sugestao_divergencia || null;
 
-      // DUPLA GARANTIA LOCAL NO CELULAR:
-      // Se o servidor não enviou alerta, mas o histórico local no celular já tem este Item com outro Lote (ex: 006332.1 vs 008332.1), trava na Fonte Confiável!
       if (!sugestao && historicoMemoria.length > 0 && itemLido) {
         const doMesmoItem = historicoMemoria.filter(h => h.item.toUpperCase() === itemLido);
         const jaTemExato = doMesmoItem.some(h => limparLoteEstrito(h.lote, h.pedido) === loteLimpo);
 
         if (doMesmoItem.length > 0 && !jaTemExato && loteLimpo) {
-          const confiavel = doMesmoItem.find(h => distanciaLocal(loteLimpo, limparLoteEstrito(h.lote, h.pedido)) <= 2) || doMesmoItem[0];
-          const loteConfiavel = limparLoteEstrito(confiavel.lote, confiavel.pedido);
-          const pedConfiavel = limparPedidoEstrito(confiavel.pedido || confiavel.lote);
+          const confiavel = doMesmoItem.find(h => distanciaLocal(loteLimpo, limparLoteEstrito(h.lote, h.pedido)) <= 2);
+          if (confiavel) {
+            const loteConfiavel = limparLoteEstrito(confiavel.lote, confiavel.pedido);
+            const pedConfiavel = limparPedidoEstrito(confiavel.pedido || confiavel.lote);
 
-          sugestao = {
-            tipo: 'LOTE_AUTO_CORRIGIDO_PELA_BASE',
-            auto_corrigido: true,
-            mensagem: `A câmera leu Pedido "${pedLimpo}" / Lote "${loteLimpo}", mas este produto (${itemLido}) já tem saldo confirmado no Lote Confiável "${loteConfiavel}" (Ped: "${pedConfiavel}"). O sistema corrigiu automaticamente para "${loteConfiavel}"!`,
-            item_lido: itemLido,
-            item_sugerido: confiavel.item,
-            cliente_sugerido: confiavel.cliente,
-            produto_sugerido: confiavel.produto,
-            qtd_pecas_sugerida: confiavel.qtd_pecas_por_volume,
-            qtd_volumes_sugerida: confiavel.qtd_volumes_palete,
-            lote_lido: loteLimpo,
-            pedido_lido: pedLimpo,
-            lote_sugerido: loteConfiavel,
-            pedido_sugerido: pedConfiavel
-          };
+            sugestao = {
+              tipo: 'LOTE_AUTO_CORRIGIDO_PELA_BASE',
+              auto_corrigido: true,
+              mensagem: `A câmera leu Pedido "${pedLimpo}" / Lote "${loteLimpo}", mas este produto (${itemLido}) já tem saldo confirmado no Lote Confiável "${loteConfiavel}" (Ped: "${pedConfiavel}"). O sistema corrigiu automaticamente para "${loteConfiavel}"!`,
+              item_lido: itemLido,
+              item_sugerido: confiavel.item,
+              cliente_sugerido: confiavel.cliente,
+              produto_sugerido: confiavel.produto,
+              qtd_pecas_sugerida: confiavel.qtd_pecas_por_volume,
+              qtd_volumes_sugerida: confiavel.qtd_volumes_palete,
+              lote_lido: loteLimpo,
+              pedido_lido: pedLimpo,
+              lote_sugerido: loteConfiavel,
+              pedido_sugerido: pedConfiavel
+            };
 
-          loteLimpo = loteConfiavel;
-          pedLimpo = pedConfiavel;
+            loteLimpo = loteConfiavel;
+            pedLimpo = pedConfiavel;
+          }
         }
       }
 
@@ -1139,7 +1184,6 @@
       tocarBipLeituraCurto();
     }
 
-    // Só altera para o número diferente se o operador clicar explicitamente que é um lote novo
     function usarValorBrutoDaCamera() {
       if (!sugestaoAtual) return;
       if (sugestaoAtual.lote_lido) {
@@ -1220,13 +1264,14 @@
       document.getElementById('box-saldos-sessao').style.display = 'block';
 
       await carregarDadosSilencioso();
-      voltarParaCamera();
+      voltarParaCameraSemFecharStream();
     }
 
-    function voltarParaCamera() {
+    // Volta para o visor sem desligar a câmera (NUNCA pede permissão novamente!)
+    function voltarParaCameraSemFecharStream() {
       document.getElementById('tela-confirmacao').style.display = 'none';
       document.getElementById('tela-scanner').style.display = 'block';
-      iniciarCameraMacroDireta();
+      garantirCameraAbertaUmaUnicaVez();
     }
 
     async function carregarDadosSilencioso() {
@@ -1280,13 +1325,16 @@
     }
 
     document.addEventListener('visibilitychange', () => {
-      if (!document.hidden) carregarDadosSilencioso();
+      if (!document.hidden) {
+        garantirCameraAbertaUmaUnicaVez();
+        carregarDadosSilencioso();
+      }
     });
-    setInterval(carregarDadosSilencioso, 2500);
+    setInterval(carregarDadosSilencioso, 3000);
 
     window.onload = () => {
       inicializarMotorOptico();
-      iniciarCameraMacroDireta();
+      garantirCameraAbertaUmaUnicaVez();
       carregarDadosSilencioso();
     };
   </script>

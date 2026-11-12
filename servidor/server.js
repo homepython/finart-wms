@@ -88,10 +88,10 @@ function corrigirCodigoItem(itemBruto = '', produtoTexto = '') {
     return 'PT-7908';
   }
   if (cod === '19935') return '719935';
+  if (cod === '21467') return '721467';
   return cod;
 }
 
-// Calcula quantos dígitos ou letras diferem entre dois códigos/lotes (Ex: "008332.1" vs "006332.1" = distância 1)
 function distanciaSimilaridade(a = '', b = '') {
   const s1 = String(a).toUpperCase().trim();
   const s2 = String(b).toUpperCase().trim();
@@ -135,6 +135,13 @@ const CATALOGO_OFICIAL = {
   '719935': {
     cliente: 'FLORA PRODS DE HIG E LIM',
     produto: 'FRA 300 ML FLORA 24 410 PUSH PULL ROSA 22908/2 CPP PÓS DANOS SOL. MAR E',
+    padrao_volumes: 20,
+    qtd_pecas: 252,
+    embalagem: 'CAIXA'
+  },
+  '721467': {
+    cliente: 'FLORA PRODS DE HIG E LIM',
+    produto: 'FRA 300 ML FLORA 24 410 PUSH PULL VERDE CLARO 04.001.04.0498 ATIVADOR',
     padrao_volumes: 20,
     qtd_pecas: 252,
     embalagem: 'CAIXA'
@@ -215,7 +222,7 @@ function calcularPadraoPalete(cliente = '', item = '', produto = '', padraoSalvo
   return 20;
 }
 
-// 1. INTERPRETADOR COM VOTAÇÃO TRIPLA E FONTE CONFIÁVEL DOS PALETES JÁ APONTADOS
+// 1. INTERPRETADOR ULTRA RÁPIDO E COMPLETO (LÊ 100% DOS CAMPOS SEM CORTAR NOMES LONGOS)
 app.post('/api/interpretar-bipe', (req, res) => {
   const { codigoLido, textoEtiqueta } = req.body;
   const brCode = (codigoLido || '').trim();
@@ -225,16 +232,18 @@ app.post('/api/interpretar-bipe', (req, res) => {
     return res.status(400).json({ erro: 'Nenhuma imagem recebida.' });
   }
 
+  // Normaliza falhas de OCR quando a borda da etiqueta está próxima
   let texto = `${brCode}\n${ocrRaw}`
     .replace(/\r/g, '')
     .replace(/\bPA[A-Z]{2,5}\s*\d{4,9}\b/gi, ' ')
     .replace(/\bMQN\s*\d{1,4}\b/gi, ' ')
     .replace(/N[º°o]\s*PED\.?\s*CLIENTE\s*:?/gi, ' ')
-    .replace(/OTD|0TD|QTO|QID|QT0/gi, 'QTD')
-    .replace(/1TEM|lTEM|!TEM|ITEN/gi, 'ITEM')
-    .replace(/L0TE|LQTE/gi, 'LOTE')
-    .replace(/PED1DO|PEDID0/gi, 'PEDIDO')
-    .replace(/CL1ENTE/gi, 'CLIENTE')
+    .replace(/OTD|0TD|QTO|QID|QT0|QTD\./gi, 'QTD:')
+    .replace(/1TEM|lTEM|!TEM|ITEN|IIEM|\|TEM|TEM:/gi, 'ITEM:')
+    .replace(/PR0DUTO|PRODUT0|PRODUTO\./gi, 'PRODUTO:')
+    .replace(/L0TE|LQTE/gi, 'LOTE:')
+    .replace(/PED1DO|PEDID0|PEDIDO\./gi, 'PEDIDO:')
+    .replace(/CL1ENTE/gi, 'CLIENTE:')
     .replace(/PI\s*-\s*(\d)/gi, 'PT-$1')
     .replace(/P1\s*-\s*(\d)/gi, 'PT-$1')
     .replace(/F8\s*-\s*(\d)/gi, 'FR-$1')
@@ -248,7 +257,7 @@ app.post('/api/interpretar-bipe', (req, res) => {
   let produtoLido = '';
   let volumeLido = '';
 
-  // FONTE 1 DA ETIQUETA: Linha do código de barras inferior (Ex: PT-7908;0063321;59)
+  // FONTE 1: Código de Barras ou QR Code (Ex: 721467;0062061;252 ou PT-7908;0066431;59)
   const mBarcode = texto.match(/([A-Z]{2}\s*-\s*\d{4,6}|\d{5,7})\s*[;:,]\s*(\d{6,8})\s*[;:,]\s*(\d{2,4})/i);
   if (mBarcode) {
     candidatosItem.push(mBarcode[1].replace(/\s+/g, '').toUpperCase());
@@ -260,7 +269,7 @@ app.post('/api/interpretar-bipe', (req, res) => {
     qtdPorVolume = parseInt(mBarcode[3].trim(), 10) || 0;
   }
 
-  // FONTE 2 DA ETIQUETA: Campo "PEDIDO: 006332" (Extraído separadamente do Lote!)
+  // FONTE 2: Pedido
   const regexPedidos = /PEDIDO[:.\s]*(\d{4,6})(?!\.\d)/gi;
   let mPed;
   while ((mPed = regexPedidos.exec(texto)) !== null) {
@@ -271,7 +280,7 @@ app.post('/api/interpretar-bipe', (req, res) => {
     }
   }
 
-  // FONTE 3 DA ETIQUETA: Campo "LOTE: 006332.1"
+  // FONTE 3: Lote
   const regexLotes = /(?:LOTE[:.\s]*(\d{4,6}\s*[\.,]\s*\d)|\b(00\d{4}\s*\.\s*\d)\b)/gi;
   let mLote;
   while ((mLote = regexLotes.exec(texto)) !== null) {
@@ -282,7 +291,6 @@ app.post('/api/interpretar-bipe', (req, res) => {
     if (p) candidatosPedido.push(p);
   }
 
-  // Captura números de 6 dígitos iniciados por 00 caso o título "PEDIDO:" tenha saído cortado
   const regexZeroZero = /\b(00\d{4})\b/g;
   let mZZ;
   while ((mZZ = regexZeroZero.exec(texto)) !== null) {
@@ -291,7 +299,7 @@ app.post('/api/interpretar-bipe', (req, res) => {
     candidatosLote.push(sanitizarLote('', p));
   }
 
-  // Coleta todos os candidatos de Código do Item na etiqueta
+  // FONTE 4: Código do Item (Suporta PT-XXXX, FR-XXXX e códigos numéricos de 6 dígitos como 721467 e 719935)
   const regexTodosPrefixados = /\b((?:PT|FR)\s*-?\s*\d{4,6})(?:MP)?\b/gi;
   let matchPref;
   while ((matchPref = regexTodosPrefixados.exec(texto)) !== null) {
@@ -300,31 +308,47 @@ app.post('/api/interpretar-bipe', (req, res) => {
     candidatosItem.push(c);
   }
 
-  const mItemGenerico = texto.match(/ITEM[:.\s]*([A-Z0-9\-]{4,12})/i) || texto.match(/\b(719935|19935)\b/);
-  if (mItemGenerico) {
-    let cand = mItemGenerico[1].trim().toUpperCase();
+  const mItemExplicito = texto.match(/ITEM[:.\s]*([A-Z0-9\-]{5,12})/i);
+  if (mItemExplicito) {
+    const cand = mItemExplicito[1].trim().toUpperCase();
     if (!cand.startsWith('00')) candidatosItem.push(cand);
+  }
+
+  // Captura qualquer código numérico de 6 dígitos de item (ex: 721467, 719935) mesmo que a palavra "ITEM:" tenha falhado
+  const regexSeisDigitos = /\b([1-9]\d{5})\b/g;
+  let mSeis;
+  while ((mSeis = regexSeisDigitos.exec(texto)) !== null) {
+    const num6 = mSeis[1];
+    if (!candidatosPedido.includes(num6)) {
+      candidatosItem.push(num6);
+    }
+  }
+
+  // Se o texto tiver o código interno específico da etiqueta 721467 (04.001.04.0498) ou 719935 (22908/2)
+  if (/04\.001\.04\.0498|VERDE\s*CLARO/i.test(texto)) {
+    candidatosItem.unshift('721467');
+  } else if (/22908\/2|P[OÓ]S\s*DANOS/i.test(texto)) {
+    candidatosItem.unshift('719935');
   }
 
   // Cliente
   if (/DEVINTEX|COSMETICOS/i.test(texto)) {
     clienteLido = 'DEVINTEX COSMETICOS';
-  } else if (/FLORA\s*PRODS|FLORA\s*24|HIG\s*E\s*LIM|P[OÓ]S\s*DANOS/i.test(texto)) {
+  } else if (/FLORA\s*PRODS|FLORA\s*24|HIG\s*E\s*LIM|P[OÓ]S\s*DANOS|VERDE\s*CLARO/i.test(texto)) {
     clienteLido = 'FLORA PRODS DE HIG E LIM';
   } else {
     const mCli = texto.match(/CLIENTE[:.\s]*([A-Z0-9\s.\-&]{3,35})/i);
     if (mCli) clienteLido = mCli[1].split('\n')[0].trim().toUpperCase();
   }
 
-  // Produto
+  // Produto Completo (Captura todas as linhas entre PRODUTO: e QTD: / LOTE: sem cortar códigos como 04.001.04.0498 ATIVADOR)
   const mBlocoProduto =
-    texto.match(/PRODUTO[:.\s]*([\s\S]{5,140}?)(?=\bQTD\b|\bLOTE\b|\bVALIDADE\b|\b00\d{4}\.\d\b|$)/i) ||
-    texto.match(/\b((?:PT|FRA)\s+\d{2,4}\s*(?:GRS|ML)[\s\S]{5,110}?)(?=\bQTD\b|\bLOTE\b|\bVALIDADE\b|$)/i);
+    texto.match(/PRODUTO[:.\s]*([\s\S]{5,160}?)(?=\bQTD[:\s]|\bLOTE[:\s]|\bVALIDADE[:\s]|\b00\d{4}\.\d\b|$)/i) ||
+    texto.match(/\b((?:PT|FRA)\s+\d{2,4}\s*(?:GRS|ML)[\s\S]{5,140}?)(?=\bQTD[:\s]|\bLOTE[:\s]|\bVALIDADE[:\s]|\b00\d{4}\.\d\b|$)/i);
 
   if (mBlocoProduto) {
     let prodLimpo = mBlocoProduto[1]
       .replace(/\n+/g, ' ')
-      .replace(/\s+\d{2,3}\s*$/, '')
       .replace(/[^A-Z0-9À-Ú\s.\-\/]/gi, ' ')
       .replace(/\s{2,}/g, ' ')
       .trim()
@@ -346,7 +370,7 @@ app.post('/api/interpretar-bipe', (req, res) => {
     }
   }
   if (!qtdPorVolume) {
-    const mEntreProdELote = texto.match(/(?:MP|MAR\s*E)[\s\S]{0,30}?\b(\d{2,4})\b[\s\S]{0,30}?(?:LOTE|00\d{4})/i);
+    const mEntreProdELote = texto.match(/(?:MP|MAR\s*E|ATIVADOR)[\s\S]{0,30}?\b(\d{2,4})\b[\s\S]{0,30}?(?:LOTE|00\d{4})/i);
     if (mEntreProdELote) qtdPorVolume = parseInt(mEntreProdELote[1], 10);
   }
 
@@ -360,26 +384,24 @@ app.post('/api/interpretar-bipe', (req, res) => {
     db.all(`SELECT * FROM paletes_bipados ORDER BY id DESC LIMIT 150`, [], (errHist, histRows) => {
       const historico = histRows || [];
 
-      // 1º: Identifica o Item Oficial
       let itemEscolhido = corrigirCodigoItem(candidatosItem[0] || '', produtoLido);
       let itemMemoriaExato = null;
 
       for (const candBruto of candidatosItem) {
         const cand = corrigirCodigoItem(candBruto, produtoLido);
-        const achouNoHistorico = historico.find((h) => h.item.toUpperCase() === cand.toUpperCase());
         const achouNoCatalogo = catalogoRows.find((r) => r.item.toUpperCase() === cand.toUpperCase());
-        if (achouNoHistorico || achouNoCatalogo) {
+        const achouNoHistorico = historico.find((h) => h.item.toUpperCase() === cand.toUpperCase());
+        if (achouNoCatalogo || achouNoHistorico) {
           itemEscolhido = (achouNoCatalogo || achouNoHistorico).item;
           itemMemoriaExato = achouNoCatalogo || achouNoHistorico;
           break;
         }
       }
 
-      // 2º: Identifica o Lote e Pedido Lidos na Etiqueta (Votação entre os candidatos da etiqueta)
+      // Se a câmera não leu o código do item, mas leu um Pedido/Lote que já foi apontado hoje, descobre o Item pelo Lote!
       let loteLidoNaCamera = candidatosLote[0] || '';
       let pedidoLidoNaCamera = candidatosPedido[0] || sanitizarPedido(loteLidoNaCamera);
 
-      // Se um dos candidatos lidos na própria etiqueta já bate 100% com um lote ativo no histórico, ele vence!
       for (const candL of candidatosLote) {
         if (historico.some((h) => h.lote === candL)) {
           loteLidoNaCamera = candL;
@@ -388,142 +410,67 @@ app.post('/api/interpretar-bipe', (req, res) => {
         }
       }
 
+      if (!itemEscolhido && loteLidoNaCamera) {
+        const doMesmoLote = historico.find((h) => h.lote === loteLidoNaCamera);
+        if (doMesmoLote) {
+          itemEscolhido = doMesmoLote.item;
+          itemMemoriaExato = catalogoRows.find((c) => c.item === itemEscolhido) || doMesmoLote;
+        }
+      }
+
       let loteFinal = loteLidoNaCamera;
       let pedidoFinal = pedidoLidoNaCamera;
       let sugestaoDivergencia = null;
 
-      // 3º: INTELIGÊNCIA DE FONTE CONFIÁVEL PARA LOTES E PEDIDOS (Funciona para qualquer cliente e qualquer lote!)
-      // Busca todos os lotes que já foram apontados para este Item (ou no histórico recente)
       const paletesDesteItem = itemEscolhido
         ? historico.filter((h) => h.item.toUpperCase() === itemEscolhido.toUpperCase())
         : [];
 
       if (paletesDesteItem.length > 0) {
-        // Último lote confiável já apontado para este produto (ex: 006332.1)
         const fonteConfiavel = paletesDesteItem[0];
         const jaExisteExatoParaOItem = paletesDesteItem.some((h) => h.lote === loteLidoNaCamera);
 
         if (!jaExisteExatoParaOItem && loteLidoNaCamera) {
-          // Procura se algum lote já apontado para este item tem distância de 1 ou 2 dígitos (ex: leu 008332.1 mas o confiável é 006332.1)
           const loteConfiavelParecido = paletesDesteItem.find(
             (h) => distanciaSimilaridade(loteLidoNaCamera, h.lote) <= 2 ||
                    distanciaSimilaridade(pedidoLidoNaCamera, h.pedido) <= 2
-          ) || fonteConfiavel;
+          );
 
-          const dist = distanciaSimilaridade(loteLidoNaCamera, loteConfiavelParecido.lote);
+          // Só força auto-correção se for erro de leitura de 1 ou 2 dígitos no mesmo item (ex: 008332 vs 006332)
+          if (loteConfiavelParecido) {
+            loteFinal = loteConfiavelParecido.lote;
+            pedidoFinal = loteConfiavelParecido.pedido;
 
-          // AUTO-CORRIGE IMEDIATAMENTE PARA A FONTE CONFIÁVEL E MOSTRA O ALERTA NA TELA!
-          loteFinal = loteConfiavelParecido.lote;
-          pedidoFinal = loteConfiavelParecido.pedido;
-
-          sugestaoDivergencia = {
-            tipo: 'LOTE_AUTO_CORRIGIDO_PELA_BASE',
-            auto_corrigido: true,
-            mensagem: dist <= 2
-              ? `A câmera leu Pedido "${pedidoLidoNaCamera}" / Lote "${loteLidoNaCamera}", mas você já apontou este item na Fonte Confiável Lote "${loteConfiavelParecido.lote}" (Ped: "${loteConfiavelParecido.pedido}"). O sistema corrigiu automaticamente para "${loteConfiavelParecido.lote}"!`
-              : `Este item (${itemEscolhido}) já está sendo apontado no Lote "${loteConfiavelParecido.lote}", mas a câmera leu "${loteLidoNaCamera}". O sistema manteve "${loteConfiavelParecido.lote}" por segurança.`,
-            item_lido: itemEscolhido,
-            item_sugerido: loteConfiavelParecido.item,
-            cliente_sugerido: loteConfiavelParecido.cliente,
-            produto_sugerido: loteConfiavelParecido.produto,
-            qtd_pecas_sugerida: loteConfiavelParecido.qtd_pecas_por_volume,
-            qtd_volumes_sugerida: loteConfiavelParecido.qtd_volumes_palete,
-            lote_lido: loteLidoNaCamera,
-            pedido_lido: pedidoLidoNaCamera,
-            lote_sugerido: loteConfiavelParecido.lote,
-            pedido_sugerido: loteConfiavelParecido.pedido
-          };
+            sugestaoDivergencia = {
+              tipo: 'LOTE_AUTO_CORRIGIDO_PELA_BASE',
+              auto_corrigido: true,
+              mensagem: `A câmera leu Pedido "${pedidoLidoNaCamera}" / Lote "${loteLidoNaCamera}", mas este item já tem saldo na Fonte Confiável Lote "${loteConfiavelParecido.lote}" (Ped: "${loteConfiavelParecido.pedido}"). O sistema ajustou automaticamente para "${loteConfiavelParecido.lote}"!`,
+              item_lido: itemEscolhido,
+              item_sugerido: loteConfiavelParecido.item,
+              cliente_sugerido: loteConfiavelParecido.cliente,
+              produto_sugerido: loteConfiavelParecido.produto,
+              qtd_pecas_sugerida: loteConfiavelParecido.qtd_pecas_por_volume,
+              qtd_volumes_sugerida: loteConfiavelParecido.qtd_volumes_palete,
+              lote_lido: loteLidoNaCamera,
+              pedido_lido: pedidoLidoNaCamera,
+              lote_sugerido: loteConfiavelParecido.lote,
+              pedido_sugerido: loteConfiavelParecido.pedido
+            };
+          }
         } else if (!loteLidoNaCamera) {
-          // Se a câmera leu o item (ex: PT-7908) mas o lote saiu borrado em branco, puxa direto da Fonte Confiável!
           loteFinal = fonteConfiavel.lote;
           pedidoFinal = fonteConfiavel.pedido;
         }
-      } else if (loteLidoNaCamera && historico.length > 0) {
-        // Caso o Item ainda não tenha sido identificado ou tenha lido diferente, verifica se o Lote lido é 1 dígito diferente de QUALQUER lote ativo no histórico
-        const loteGlobalParecido = historico.find((h) => {
-          const d = distanciaSimilaridade(loteLidoNaCamera, h.lote);
-          return d >= 1 && d <= 2;
-        });
-
-        if (loteGlobalParecido) {
-          loteFinal = loteGlobalParecido.lote;
-          pedidoFinal = loteGlobalParecido.pedido;
-          if (!itemEscolhido) itemEscolhido = loteGlobalParecido.item;
-
-          sugestaoDivergencia = {
-            tipo: 'LOTE_AUTO_CORRIGIDO_PELA_BASE',
-            auto_corrigido: true,
-            mensagem: `A câmera leu o Lote "${loteLidoNaCamera}", que é muito parecido com o Lote ativo "${loteGlobalParecido.lote}" (Ped: "${loteGlobalParecido.pedido}"). O sistema ajustou para "${loteGlobalParecido.lote}".`,
-            item_lido: itemEscolhido,
-            item_sugerido: loteGlobalParecido.item,
-            cliente_sugerido: loteGlobalParecido.cliente,
-            produto_sugerido: loteGlobalParecido.produto,
-            qtd_pecas_sugerida: loteGlobalParecido.qtd_pecas_por_volume,
-            qtd_volumes_sugerida: loteGlobalParecido.qtd_volumes_palete,
-            lote_lido: loteLidoNaCamera,
-            pedido_lido: pedidoLidoNaCamera,
-            lote_sugerido: loteGlobalParecido.lote,
-            pedido_sugerido: loteGlobalParecido.pedido
-          };
-        }
       }
 
-      // 4º: Verifica divergência no Código do Item (Ex: leu código 1 ou 2 letras diferente de um item do catálogo/histórico)
-      if (!itemMemoriaExato && itemEscolhido && !sugestaoDivergencia) {
-        let melhorCandidato = null;
-        let menorDist = 99;
-
-        const baseCompleta = [...catalogoRows];
-        historico.forEach((h) => {
-          if (!baseCompleta.some((c) => c.item === h.item)) {
-            baseCompleta.push({
-              item: h.item,
-              cliente: h.cliente,
-              produto: h.produto,
-              padrao_volumes_palete: h.qtd_volumes_palete,
-              qtd_padrao_pecas: h.qtd_pecas_por_volume
-            });
-          }
-        });
-
-        baseCompleta.forEach((cat) => {
-          const dist = distanciaSimilaridade(itemEscolhido, cat.item);
-          if (dist > 0 && dist <= 2 && dist < menorDist) {
-            menorDist = dist;
-            melhorCandidato = cat;
-          }
-        });
-
-        if (melhorCandidato) {
-          const itemLidoOriginal = itemEscolhido;
-          itemEscolhido = melhorCandidato.item;
-          itemMemoriaExato = melhorCandidato;
-
-          sugestaoDivergencia = {
-            tipo: 'ITEM_AUTO_CORRIGIDO',
-            auto_corrigido: true,
-            mensagem: `A câmera leu o item "${itemLidoOriginal}", mas a Fonte Confiável possui "${melhorCandidato.item}" (${melhorCandidato.produto}). Corrigido automaticamente para "${melhorCandidato.item}"!`,
-            item_lido: itemLidoOriginal,
-            item_sugerido: melhorCandidato.item,
-            cliente_sugerido: melhorCandidato.cliente,
-            produto_sugerido: melhorCandidato.produto,
-            qtd_pecas_sugerida: melhorCandidato.qtd_padrao_pecas || qtdPorVolume,
-            qtd_volumes_sugerida: calcularPadraoPalete(melhorCandidato.cliente, melhorCandidato.item, melhorCandidato.produto, melhorCandidato.padrao_volumes_palete),
-            lote_lido: loteFinal,
-            pedido_lido: pedidoFinal,
-            lote_sugerido: loteFinal,
-            pedido_sugerido: pedidoFinal
-          };
-        }
-      }
-
-      const refItemConfiavel = paletesDesteItem[0] || itemMemoriaExato;
+      const refItemConfiavel = itemMemoriaExato || paletesDesteItem[0];
 
       const clienteFinal =
         (refItemConfiavel && refItemConfiavel.cliente) ||
         clienteLido ||
-        (itemEscolhido.startsWith('PT-') || itemEscolhido.startsWith('FR-') ? 'DEVINTEX COSMETICOS' : '');
+        (itemEscolhido.startsWith('PT-') || itemEscolhido.startsWith('FR-') ? 'DEVINTEX COSMETICOS' : 'FLORA PRODS DE HIG E LIM');
 
+      // Se o produto já existe no catálogo ou histórico, usa SEMPRE o nome completo oficial (nunca vem cortado!)
       const produtoFinal =
         (refItemConfiavel && refItemConfiavel.produto) ||
         produtoLido ||
@@ -533,7 +480,7 @@ app.post('/api/interpretar-bipe', (req, res) => {
         (paletesDesteItem[0] && paletesDesteItem[0].qtd_pecas_por_volume > 0 ? paletesDesteItem[0].qtd_pecas_por_volume : 0) ||
         (itemMemoriaExato && itemMemoriaExato.qtd_padrao_pecas > 0 ? itemMemoriaExato.qtd_padrao_pecas : 0) ||
         qtdPorVolume ||
-        0;
+        (clienteFinal.includes('FLORA') ? 252 : 0);
 
       if (!itemEscolhido && !pedidoFinal && !loteFinal && !produtoFinal) {
         return res.status(422).json({
@@ -555,7 +502,7 @@ app.post('/api/interpretar-bipe', (req, res) => {
         item: itemEscolhido,
         pedido: pedidoFinal,
         lote: loteFinal,
-        cliente: clienteFinal || 'DEVINTEX COSMETICOS',
+        cliente: clienteFinal,
         produto: produtoFinal || (itemEscolhido ? `PRODUTO ITEM ${itemEscolhido}` : ''),
         tipoEmbalagem,
         volume_etiqueta: volumeLido,
@@ -568,7 +515,7 @@ app.post('/api/interpretar-bipe', (req, res) => {
   });
 });
 
-// 2. SALVAR PALETE E ATUALIZAR FONTE CONFIÁVEL
+// 2. SALVAR PALETE E ENSINAR NOVOS ITENS
 app.post('/api/paletes', (req, res) => {
   const {
     pedido,
