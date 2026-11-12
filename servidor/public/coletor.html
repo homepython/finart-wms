@@ -157,7 +157,6 @@
       text-align: center;
     }
 
-    /* ÁREA INFERIOR COM O BOTÃO GIGANTE DE MACRO DIRETA */
     .macro-bottom-zone {
       margin-top: 12px;
       display: flex;
@@ -205,7 +204,7 @@
       cursor: pointer;
     }
 
-    /* ALERTA INTELIGENTE DE DIVERGÊNCIA */
+    /* ALERTA DE FONTE CONFIÁVEL / DIVERGÊNCIA SEMPRE VISÍVEL */
     .alerta-divergencia {
       display: none;
       background: var(--warning-bg);
@@ -231,7 +230,7 @@
       gap: 6px;
     }
     .btn-corrigir-sugestao {
-      background: var(--primary);
+      background: var(--success);
       color: #fff;
       border: none;
       padding: 11px;
@@ -242,9 +241,9 @@
     }
     .btn-manter-lido {
       background: #fff;
-      color: var(--muted);
-      border: 1px solid var(--border);
-      padding: 8px;
+      color: var(--warning-text);
+      border: 1px solid var(--warning-border);
+      padding: 9px;
       border-radius: 8px;
       font-weight: 700;
       font-size: 12px;
@@ -272,7 +271,6 @@
       color: var(--text);
     }
 
-    /* AUTO-COMPLETE FLUTUANTE DO HISTÓRICO */
     .field-wrap {
       position: relative;
       width: 100%;
@@ -386,7 +384,7 @@
     <a href="/" class="btn-top">Ver Painel</a>
   </div>
 
-  <!-- TELA 1: VISOR COM LENTE MACRO DIRETA INTEGRADA + BOTÃO GRANDE EMBAIXO -->
+  <!-- TELA 1: VISOR COM LENTE MACRO DIRETA INTEGRADA -->
   <div class="box" id="tela-scanner">
     <div class="status-motor">
       <span id="status-motor">⚡ Iniciando Lente Macro HD...</span>
@@ -401,10 +399,9 @@
     </div>
 
     <div class="progresso-box" id="progresso-box">
-      🔍 Captura Macro realizada! Lendo etiqueta...
+      🔍 Conferindo etiqueta com a Fonte Confiável...
     </div>
 
-    <!-- BOTÃO GIGANTE NO ESPAÇO INFERIOR QUE JÁ USA A MACRO DIRETA SEM ABRIR OUTRO APP -->
     <div class="macro-bottom-zone">
       <button class="btn-macro-direta-gigante" onclick="capturarEtiquetaDoVisor(true)">
         <span>🔍 APONTAR COM MACRO DIRETA</span>
@@ -418,19 +415,19 @@
     </div>
   </div>
 
-  <!-- TELA 2: CONFERÊNCIA INTELIGENTE DO PALETE -->
+  <!-- TELA 2: CONFERÊNCIA INTELIGENTE COM PROTEÇÃO DE FONTE CONFIÁVEL -->
   <div class="box" id="tela-confirmacao" style="display: none;">
     <h3 style="margin-bottom: 6px; font-size: 16px; color: var(--primary);">✅ Conferência Inteligente do Palete</h3>
 
     <div class="alerta-divergencia" id="box-divergencia">
-      <h4>⚠️ Dúvida Detectada na Leitura</h4>
+      <h4 id="titulo-divergencia">🛡️ Proteção de Fonte Confiável Ativa</h4>
       <p id="texto-divergencia"></p>
       <div class="alerta-botoes">
-        <button class="btn-corrigir-sugestao" id="btn-aceitar-sugestao" onclick="aplicarSugestaoDivergencia()">
-          ✅ Corrigir para o item oficial
+        <button class="btn-corrigir-sugestao" id="btn-aceitar-sugestao" onclick="aplicarSugestaoConfiavel()">
+          ✅ Confirmado: Manter Lote Confiável
         </button>
-        <button class="btn-manter-lido" onclick="fecharAlertaDivergencia()">
-          Manter como está na tela
+        <button class="btn-manter-lido" id="btn-usar-lido-camera" onclick="usarValorBrutoDaCamera()">
+          ⚠️ Mudar para o número lido na câmera
         </button>
       </div>
     </div>
@@ -527,7 +524,7 @@
   <div class="box" id="box-saldos-sessao" style="display: none;">
     <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
       <strong style="font-size:12px; color:var(--muted);">SALDO APONTADO AGORA</strong>
-      <span style="font-size:11px; color:var(--success); font-weight:700;">● SINCRONIZADO</span>
+      <span style="font-size:11px; color:var(--success); font-weight:700;">● FONTE CONFIÁVEL ATIVA</span>
     </div>
     <div id="lista-ao-vivo"></div>
   </div>
@@ -537,7 +534,6 @@
       ? ''
       : 'https://finart-wms.onrender.com';
 
-    // Limpa imediatamente qualquer rastro antigo de PT-7808 salvo no navegador do celular
     (function limparCodigoErradoCache() {
       try {
         const cat = JSON.parse(localStorage.getItem('finart_backup_catalogo') || '[]')
@@ -581,6 +577,26 @@
       return `${partes[0].slice(0, 6)}.${partes[1].slice(0, 1)}`.slice(0, 8);
     }
 
+    // Distância de dígitos no próprio celular para garantir a Fonte Confiável mesmo offline/lento
+    function distanciaLocal(a = '', b = '') {
+      const s1 = String(a).toUpperCase().trim();
+      const s2 = String(b).toUpperCase().trim();
+      if (s1 === s2) return 0;
+      if (!s1.length) return s2.length;
+      if (!s2.length) return s1.length;
+      const m = [];
+      for (let i = 0; i <= s2.length; i++) m[i] = [i];
+      for (let j = 0; j <= s1.length; j++) m[0][j] = j;
+      for (let i = 1; i <= s2.length; i++) {
+        for (let j = 1; j <= s1.length; j++) {
+          m[i][j] = s2.charAt(i - 1) === s1.charAt(j - 1)
+            ? m[i - 1][j - 1]
+            : Math.min(m[i - 1][j - 1] + 1, m[i][j - 1] + 1, m[i - 1][j] + 1);
+        }
+      }
+      return m[s2.length][s1.length];
+    }
+
     function mascaraPedidoColetor(input) {
       input.value = limparPedidoEstrito(input.value);
       if (input.value.length >= 5) {
@@ -592,7 +608,6 @@
       input.value = limparLoteEstrito(input.value);
     }
 
-    // GERADOR DE ÁUDIO PADRÃO COLETOR ZEBRA/HONEYWELL (Pulso limpo e encorpado com envelope suave)
     function criarSomColetorZebraBase64(notas = [{ f: 800, ini: 0.0, fim: 0.07 }, { f: 1180, ini: 0.075, fim: 0.19 }], duracao = 0.21) {
       const sampleRate = 44100;
       const numSamples = Math.floor(sampleRate * duracao);
@@ -623,7 +638,6 @@
           if (t >= n.ini && t <= n.fim) {
             const localT = t - n.ini;
             const dur = n.fim - n.ini;
-            // Ataque rápido de 5ms e decaimento exponencial limpo (sem chiado e sem ser estridente)
             const ataque = Math.min(1, localT / 0.005);
             const queda = Math.exp(-localT * (3.5 / dur));
             const env = ataque * queda;
@@ -719,7 +733,6 @@
       } catch (e) {}
     }
 
-    // AUTO-COMPLETE INTELIGENTE DO HISTÓRICO (Sem PT-7808)
     function fecharTodosAutocompletes(e) {
       if (e && e.target && e.target.tagName === 'INPUT') return;
       document.querySelectorAll('.autocomplete-list').forEach(el => el.style.display = 'none');
@@ -839,7 +852,6 @@
       }
     }
 
-    // LENTE MACRO DIRETA NO PRÓPRIO VISOR (Ativa Foco Contínuo de Perto + Zoom Macro 1.8x sem abrir outro app)
     async function iniciarCameraMacroDireta() {
       const video = document.getElementById('video-camera');
       try {
@@ -884,7 +896,6 @@
           adv.zoom = zoomIdeal;
           video.style.transform = 'scale(1)';
         } else {
-          // Se o navegador (ex: iOS) não expõe zoom via hardware, aplica recorte central HD de alta definição
           video.style.transform = macroZoomAtivo ? 'scale(1.45)' : 'scale(1)';
         }
         if (Object.keys(adv).length > 0) {
@@ -902,14 +913,12 @@
       aplicarConfiguracaoMacroNaLente();
     }
 
-    // Recorta o centro da imagem em alta definição quando o modo Macro Direta está ativo
     function prepararCanvasEtiquetaNitido(fonteImgOuVideo, wOrig, hOrig, usarRecorteMacro = false) {
       const canvas = document.createElement('canvas');
       const maxDim = 1200;
 
       let sx = 0, sy = 0, sw = wOrig, sh = hOrig;
       if (usarRecorteMacro && macroZoomAtivo) {
-        // Recorta a região central focada da etiqueta para leitura ultra nítida
         sw = Math.round(wOrig * 0.78);
         sh = Math.round(hOrig * 0.78);
         sx = Math.round((wOrig - sw) / 2);
@@ -947,6 +956,7 @@
       if (manual) prog.style.display = 'block';
 
       try {
+        await carregarDadosSilencioso();
         const canvas = prepararCanvasEtiquetaNitido(video, video.videoWidth, video.videoHeight, true);
         await reconhecerTextoEEnviar(canvas, manual);
       } finally {
@@ -967,6 +977,7 @@
         const img = new Image();
         img.onload = async () => {
           try {
+            await carregarDadosSilencioso();
             const canvas = prepararCanvasEtiquetaNitido(img, img.width, img.height, false);
             await reconhecerTextoEEnviar(canvas, true);
           } finally {
@@ -1003,10 +1014,10 @@
         const textoExtraido = (ocrRes && ocrRes.data && ocrRes.data.text) ? ocrRes.data.text : '';
         const tudo = `${codigoNativo}\n${textoExtraido}`;
 
-        const temDadosValidos = /PEDIDO|CLIENTE|DEVINTEX|FLORA|ITEM|PRODUTO|LOTE|006\d{3}|PT\s*-\s*\d|FR\s*-\s*\d|719935/i.test(tudo);
+        const temDadosValidos = /PEDIDO|CLIENTE|DEVINTEX|FLORA|ITEM|PRODUTO|LOTE|00\d{4}|PT\s*-\s*\d|FR\s*-\s*\d|719935/i.test(tudo);
         if (!temDadosValidos) {
           if (mostrarAlertaSeFalhar) {
-            alert('Etiqueta não identificada. Aproxime ou enquadre a etiqueta no tracejado e toque no botão azul.');
+            alert('Etiqueta não identificada. Enquadre a etiqueta no tracejado e toque no botão azul.');
           }
           return;
         }
@@ -1040,13 +1051,47 @@
     }
 
     function abrirTelaConfirmacao(data) {
-      const pedLimpo = limparPedidoEstrito(data.pedido || data.lote);
-      const loteLimpo = limparLoteEstrito(data.lote, pedLimpo);
+      let itemLido = (data.item === 'PT-7808' ? 'PT-7908' : (data.item || '')).toUpperCase();
+      let pedLimpo = limparPedidoEstrito(data.pedido || data.lote);
+      let loteLimpo = limparLoteEstrito(data.lote, pedLimpo);
+      let sugestao = data.sugestao_divergencia || null;
+
+      // DUPLA GARANTIA LOCAL NO CELULAR:
+      // Se o servidor não enviou alerta, mas o histórico local no celular já tem este Item com outro Lote (ex: 006332.1 vs 008332.1), trava na Fonte Confiável!
+      if (!sugestao && historicoMemoria.length > 0 && itemLido) {
+        const doMesmoItem = historicoMemoria.filter(h => h.item.toUpperCase() === itemLido);
+        const jaTemExato = doMesmoItem.some(h => limparLoteEstrito(h.lote, h.pedido) === loteLimpo);
+
+        if (doMesmoItem.length > 0 && !jaTemExato && loteLimpo) {
+          const confiavel = doMesmoItem.find(h => distanciaLocal(loteLimpo, limparLoteEstrito(h.lote, h.pedido)) <= 2) || doMesmoItem[0];
+          const loteConfiavel = limparLoteEstrito(confiavel.lote, confiavel.pedido);
+          const pedConfiavel = limparPedidoEstrito(confiavel.pedido || confiavel.lote);
+
+          sugestao = {
+            tipo: 'LOTE_AUTO_CORRIGIDO_PELA_BASE',
+            auto_corrigido: true,
+            mensagem: `A câmera leu Pedido "${pedLimpo}" / Lote "${loteLimpo}", mas este produto (${itemLido}) já tem saldo confirmado no Lote Confiável "${loteConfiavel}" (Ped: "${pedConfiavel}"). O sistema corrigiu automaticamente para "${loteConfiavel}"!`,
+            item_lido: itemLido,
+            item_sugerido: confiavel.item,
+            cliente_sugerido: confiavel.cliente,
+            produto_sugerido: confiavel.produto,
+            qtd_pecas_sugerida: confiavel.qtd_pecas_por_volume,
+            qtd_volumes_sugerida: confiavel.qtd_volumes_palete,
+            lote_lido: loteLimpo,
+            pedido_lido: pedLimpo,
+            lote_sugerido: loteConfiavel,
+            pedido_sugerido: pedConfiavel
+          };
+
+          loteLimpo = loteConfiavel;
+          pedLimpo = pedConfiavel;
+        }
+      }
 
       document.getElementById('conf-cliente').value = data.cliente || '';
       document.getElementById('conf-pedido').value = pedLimpo;
       document.getElementById('conf-lote').value = loteLimpo;
-      document.getElementById('conf-item').value = (data.item === 'PT-7808' ? 'PT-7908' : (data.item || ''));
+      document.getElementById('conf-item').value = itemLido;
       document.getElementById('conf-produto').value = data.produto || '';
       document.getElementById('conf-pecas').value = data.qtd_pecas_por_volume || '';
       document.getElementById('conf-vol-etiqueta').value = data.volume_etiqueta || '';
@@ -1054,13 +1099,13 @@
       document.getElementById('input-volumes').value = data.qtd_volumes_sugerida || 15;
 
       const boxDiv = document.getElementById('box-divergencia');
-      if (data.sugestao_divergencia) {
-        sugestaoAtual = data.sugestao_divergencia;
-        document.getElementById('texto-divergencia').innerText = sugestaoAtual.mensagem;
+      if (sugestao) {
+        sugestaoAtual = sugestao;
+        document.getElementById('texto-divergencia').innerText = sugestao.mensagem;
         document.getElementById('btn-aceitar-sugestao').innerText =
-          sugestaoAtual.tipo === 'LOTE_PARECIDO'
-            ? `✅ Corrigir para Lote ${sugestaoAtual.lote_sugerido}`
-            : `✅ Corrigir para ${sugestaoAtual.item_sugerido} (${sugestaoAtual.produto_sugerido.slice(0, 28)}...)`;
+          `✅ Manter Fonte Confiável: Lote ${sugestao.lote_sugerido} (Ped: ${sugestao.pedido_sugerido})`;
+        document.getElementById('btn-usar-lido-camera').innerText =
+          `⚠️ Usar o que a câmera leu (${sugestao.lote_lido || sugestao.item_lido})`;
         boxDiv.style.display = 'block';
       } else {
         sugestaoAtual = null;
@@ -1072,7 +1117,7 @@
       document.getElementById('tela-confirmacao').style.display = 'block';
     }
 
-    function aplicarSugestaoDivergencia() {
+    function aplicarSugestaoConfiavel() {
       if (!sugestaoAtual) return;
       document.getElementById('conf-item').value = sugestaoAtual.item_sugerido;
       document.getElementById('conf-cliente').value = sugestaoAtual.cliente_sugerido;
@@ -1090,11 +1135,23 @@
         document.getElementById('conf-pedido').value = sugestaoAtual.pedido_sugerido;
       }
       recalcularPreview();
-      fecharAlertaDivergencia();
+      document.getElementById('box-divergencia').style.display = 'none';
       tocarBipLeituraCurto();
     }
 
-    function fecharAlertaDivergencia() {
+    // Só altera para o número diferente se o operador clicar explicitamente que é um lote novo
+    function usarValorBrutoDaCamera() {
+      if (!sugestaoAtual) return;
+      if (sugestaoAtual.lote_lido) {
+        document.getElementById('conf-lote').value = sugestaoAtual.lote_lido;
+      }
+      if (sugestaoAtual.pedido_lido) {
+        document.getElementById('conf-pedido').value = sugestaoAtual.pedido_lido;
+      }
+      if (sugestaoAtual.item_lido) {
+        document.getElementById('conf-item').value = sugestaoAtual.item_lido;
+      }
+      recalcularPreview();
       document.getElementById('box-divergencia').style.display = 'none';
     }
 
@@ -1127,7 +1184,6 @@
         return alert('Verifique a quantidade de caixas e de peças por caixa!');
       }
 
-      // TOCA O SOM DE APONTAMENTO PROFISSIONAL ZEBRA/HONEYWELL
       tocarSomApontamentoZebra();
 
       const pedLimpo = limparPedidoEstrito(document.getElementById('conf-pedido').value);
@@ -1160,7 +1216,6 @@
         return;
       }
 
-      // SÓ AGORA LIBERA O QUADRO DE SALDO EMBAIXO NO CELULAR!
       jaBipouNestaSessao = true;
       document.getElementById('box-saldos-sessao').style.display = 'block';
 
@@ -1205,7 +1260,6 @@
           localStorage.setItem('finart_backup_catalogo', JSON.stringify(catalogoMemoria));
         }
 
-        // Só renderiza a caixa inferior se o usuário já tiver bipado pelo menos 1 palete agora
         if (jaBipouNestaSessao) {
           const div = document.getElementById('lista-ao-vivo');
           if (!consolidado || consolidado.length === 0) {
