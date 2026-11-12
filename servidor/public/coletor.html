@@ -33,6 +33,7 @@
       color: var(--text);
       padding: 10px;
       width: 100%;
+      min-height: 100vh;
       overflow-x: hidden;
       transition: background-color 0.2s ease;
     }
@@ -93,14 +94,26 @@
       background: #ecfdf5;
       color: var(--success);
       border: 1px solid #a7f3d0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .zoom-badge {
+      background: #0284c7;
+      color: #fff;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      cursor: pointer;
     }
 
     .visor-wrapper {
       position: relative;
       width: 100%;
-      height: 220px;
+      height: 270px;
       background: #0f172a;
-      border-radius: 10px;
+      border-radius: 12px;
       overflow: hidden;
       border: 2px solid var(--primary);
     }
@@ -108,23 +121,25 @@
       width: 100%;
       height: 100%;
       object-fit: cover;
+      transform-origin: center center;
+      transition: transform 0.2s ease;
     }
     .moldura-etiqueta {
       position: absolute;
-      inset: 12px;
+      inset: 14px;
       border: 2px dashed #38bdf8;
       border-radius: 8px;
       pointer-events: none;
       display: flex;
       align-items: flex-end;
       justify-content: center;
-      padding-bottom: 6px;
+      padding-bottom: 8px;
     }
     .moldura-etiqueta span {
       background: rgba(15, 23, 42, 0.85);
       color: #fff;
       font-size: 11px;
-      padding: 4px 8px;
+      padding: 4px 10px;
       border-radius: 4px;
       font-weight: 700;
       text-align: center;
@@ -142,7 +157,55 @@
       text-align: center;
     }
 
-    /* ALERTA INTELIGENTE DE DIVERGÊNCIA (Ex: Leu PT-7808 mas existe PT-7908) */
+    /* ÁREA INFERIOR COM O BOTÃO GIGANTE DE MACRO DIRETA */
+    .macro-bottom-zone {
+      margin-top: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .btn-macro-direta-gigante {
+      width: 100%;
+      min-height: 92px;
+      background: linear-gradient(135deg, #0284c7, #0369a1);
+      color: #ffffff;
+      border: none;
+      border-radius: 14px;
+      font-size: 18px;
+      font-weight: 900;
+      letter-spacing: 0.5px;
+      cursor: pointer;
+      box-shadow: 0 8px 20px rgba(2, 132, 199, 0.32);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      transition: transform 0.1s ease;
+    }
+    .btn-macro-direta-gigante:active {
+      transform: scale(0.98);
+    }
+    .btn-macro-direta-gigante small {
+      font-size: 12px;
+      font-weight: 600;
+      opacity: 0.9;
+    }
+
+    .btn-camera-externa-aux {
+      width: 100%;
+      padding: 11px;
+      background: #f1f5f9;
+      color: var(--muted);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    /* ALERTA INTELIGENTE DE DIVERGÊNCIA */
     .alerta-divergencia {
       display: none;
       background: var(--warning-bg);
@@ -155,9 +218,6 @@
       color: var(--warning-text);
       font-size: 14px;
       margin-bottom: 6px;
-      display: flex;
-      align-items: center;
-      gap: 6px;
     }
     .alerta-divergencia p {
       color: var(--text);
@@ -201,29 +261,18 @@
       cursor: pointer;
       margin-top: 8px;
     }
-    .btn-ler-agora {
-      background: var(--primary);
-      color: #fff;
-      font-size: 15px;
-      box-shadow: 0 4px 10px rgba(2, 132, 199, 0.25);
-    }
-    .btn-macro {
-      background: #0f172a;
-      color: #fff;
-      font-size: 14px;
-    }
     .btn-confirm {
       background: var(--success);
       color: #fff;
-      font-size: 15px;
-      padding: 15px;
+      font-size: 16px;
+      padding: 16px;
     }
     .btn-cancel {
       background: #e2e8f0;
       color: var(--text);
     }
 
-    /* CAMPO COM AUTO-COMPLETE FLUTUANTE DO HISTÓRICO */
+    /* AUTO-COMPLETE FLUTUANTE DO HISTÓRICO */
     .field-wrap {
       position: relative;
       width: 100%;
@@ -250,21 +299,10 @@
       font-size: 13px;
       text-align: left;
     }
-    .autocomplete-item:last-child {
-      border-bottom: none;
-    }
-    .autocomplete-item:active, .autocomplete-item:hover {
-      background: #e0f2fe;
-    }
-    .autocomplete-item strong {
-      color: var(--primary);
-      display: block;
-      font-size: 13px;
-    }
-    .autocomplete-item span {
-      color: var(--muted);
-      font-size: 11px;
-    }
+    .autocomplete-item:last-child { border-bottom: none; }
+    .autocomplete-item:active, .autocomplete-item:hover { background: #e0f2fe; }
+    .autocomplete-item strong { color: var(--primary); display: block; font-size: 13px; }
+    .autocomplete-item span { color: var(--muted); font-size: 11px; }
 
     label {
       display: block;
@@ -334,9 +372,7 @@
       font-size: 12px;
       gap: 8px;
     }
-    .live-item:last-child {
-      border-bottom: none;
-    }
+    .live-item:last-child { border-bottom: none; }
   </style>
 </head>
 <body ontouchstart="destravarSomMobile()" onclick="fecharTodosAutocompletes(event)">
@@ -346,48 +382,52 @@
 
   <div class="top-bar">
     <span class="logo">FINART</span>
-    <button class="btn-top" onclick="tocarBipConfirmacaoIndustrial()">🔊 Testar Bipe Industrial</button>
+    <button class="btn-top" onclick="tocarSomApontamentoZebra()">🔊 Testar Som</button>
     <a href="/" class="btn-top">Ver Painel</a>
   </div>
 
-  <!-- TELA 1: LEITOR DA ETIQUETA COMPLETA -->
+  <!-- TELA 1: VISOR COM LENTE MACRO DIRETA INTEGRADA + BOTÃO GRANDE EMBAIXO -->
   <div class="box" id="tela-scanner">
-    <div class="status-motor" id="status-motor">
-      ⚡ Iniciando leitor industrial FINART...
+    <div class="status-motor">
+      <span id="status-motor">⚡ Iniciando Lente Macro HD...</span>
+      <span class="zoom-badge" id="btn-zoom-toggle" onclick="alternarMacroZoom()">🔍 Macro 2.0x ON</span>
     </div>
 
     <div class="visor-wrapper">
       <video id="video-camera" autoplay playsinline muted></video>
       <div class="moldura-etiqueta">
-        <span>Enquadre a etiqueta (Bipe Industrial Médio-Grave)</span>
+        <span>Aponte para a etiqueta e aperte o botão azul abaixo</span>
       </div>
     </div>
 
     <div class="progresso-box" id="progresso-box">
-      🔍 Analisando etiqueta e conferindo histórico...
+      🔍 Captura Macro realizada! Lendo etiqueta...
     </div>
 
-    <button class="btn btn-ler-agora" onclick="capturarEtiquetaDoVisor(true)">
-      📸 LER ETIQUETA DO VISOR AGORA
-    </button>
+    <!-- BOTÃO GIGANTE NO ESPAÇO INFERIOR QUE JÁ USA A MACRO DIRETA SEM ABRIR OUTRO APP -->
+    <div class="macro-bottom-zone">
+      <button class="btn-macro-direta-gigante" onclick="capturarEtiquetaDoVisor(true)">
+        <span>🔍 APONTAR COM MACRO DIRETA</span>
+        <small>Captura em Foco Macro HD instantaneamente sem sair da tela</small>
+      </button>
 
-    <input type="file" accept="image/*" capture="environment" id="input-macro" style="display:none" onchange="lerFotoMacro(this)" />
-    <button class="btn btn-macro" onclick="tocarBipLeituraIndustrial(); document.getElementById('input-macro').click()">
-      🔍 TIRAR FOTO MACRO DO CELULAR
-    </button>
+      <input type="file" accept="image/*" capture="environment" id="input-macro" style="display:none" onchange="lerFotoMacro(this)" />
+      <button class="btn-camera-externa-aux" onclick="tocarBipLeituraCurto(); document.getElementById('input-macro').click()">
+        📷 Ou abrir aplicativo de câmera nativo do celular
+      </button>
+    </div>
   </div>
 
-  <!-- TELA 2: CONFERÊNCIA INTELIGENTE COM AUTO-COMPLETE E DETECTOR DE DIVERGÊNCIA -->
+  <!-- TELA 2: CONFERÊNCIA INTELIGENTE DO PALETE -->
   <div class="box" id="tela-confirmacao" style="display: none;">
     <h3 style="margin-bottom: 6px; font-size: 16px; color: var(--primary);">✅ Conferência Inteligente do Palete</h3>
 
-    <!-- ALERTA AUTOMÁTICO QUANDO LÊ CÓDIGO PARECIDO (Ex: PT-7808 vs PT-7908) -->
     <div class="alerta-divergencia" id="box-divergencia">
       <h4>⚠️ Dúvida Detectada na Leitura</h4>
       <p id="texto-divergencia"></p>
       <div class="alerta-botoes">
         <button class="btn-corrigir-sugestao" id="btn-aceitar-sugestao" onclick="aplicarSugestaoDivergencia()">
-          ✅ Corrigir para o item já apontado
+          ✅ Corrigir para o item oficial
         </button>
         <button class="btn-manter-lido" onclick="fecharAlertaDivergencia()">
           Manter como está na tela
@@ -416,13 +456,13 @@
     </div>
 
     <div class="field-wrap">
-      <label>Descrição do Produto (Digite p/ buscar no histórico):</label>
+      <label>Descrição do Produto (Auto-complete do histórico):</label>
       <input
         type="text"
         id="conf-produto"
         class="input-left"
         autocomplete="off"
-        placeholder="Digite parte do nome p/ auto-completar..."
+        placeholder="Digite parte do nome..."
         onfocus="mostrarAutocomplete('produto', this.value)"
         oninput="mostrarAutocomplete('produto', this.value)"
       />
@@ -483,19 +523,32 @@
     <button class="btn btn-cancel" onclick="voltarParaCamera()">🔄 Ler Outra Etiqueta</button>
   </div>
 
-  <!-- RESUMO DE SALDOS AO VIVO -->
-  <div class="box">
+  <!-- SÓ APARECE DEPOIS QUE VOCÊ BIPAR UM PALETE NESTA SESSÃO -->
+  <div class="box" id="box-saldos-sessao" style="display: none;">
     <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
-      <strong style="font-size:12px; color:var(--muted);">SALDOS SINCRONIZADOS</strong>
-      <span style="font-size:11px; color:var(--success); font-weight:700;">● AUTO-COMPLETE ATIVO</span>
+      <strong style="font-size:12px; color:var(--muted);">SALDO APONTADO AGORA</strong>
+      <span style="font-size:11px; color:var(--success); font-weight:700;">● SINCRONIZADO</span>
     </div>
-    <div id="lista-ao-vivo">Carregando saldos...</div>
+    <div id="lista-ao-vivo"></div>
   </div>
 
   <script>
     const API_BASE = window.location.protocol.startsWith('http')
       ? ''
       : 'https://finart-wms.onrender.com';
+
+    // Limpa imediatamente qualquer rastro antigo de PT-7808 salvo no navegador do celular
+    (function limparCodigoErradoCache() {
+      try {
+        const cat = JSON.parse(localStorage.getItem('finart_backup_catalogo') || '[]')
+          .filter(c => c.item !== 'PT-7808' && c.item !== 'PT7808');
+        localStorage.setItem('finart_backup_catalogo', JSON.stringify(cat));
+
+        const hist = JSON.parse(localStorage.getItem('finart_backup_paletes') || '[]')
+          .map(p => ({ ...p, item: (p.item === 'PT-7808' ? 'PT-7908' : p.item) }));
+        localStorage.setItem('finart_backup_paletes', JSON.stringify(hist));
+      } catch (e) {}
+    })();
 
     let ocrWorker = null;
     let motorPronto = false;
@@ -506,6 +559,8 @@
     let catalogoMemoria = [];
     let historicoMemoria = [];
     let sugestaoAtual = null;
+    let jaBipouNestaSessao = false;
+    let macroZoomAtivo = true;
 
     function limparPedidoEstrito(val = '') {
       return String(val).trim().split('.')[0].replace(/\D/g, '').slice(0, 6);
@@ -537,10 +592,10 @@
       input.value = limparLoteEstrito(input.value);
     }
 
-    // GERADOR DE BIPE INDUSTRIAL ENCORPADO MÉDIO-GRAVE (Sem ser agudo! Frequências: 880Hz a 1120Hz)
-    function criarWavIndustrialBase64(tons = [{ freq: 940, inicio: 0.0, fim: 0.11 }], duracaoTotal = 0.13) {
+    // GERADOR DE ÁUDIO PADRÃO COLETOR ZEBRA/HONEYWELL (Pulso limpo e encorpado com envelope suave)
+    function criarSomColetorZebraBase64(notas = [{ f: 800, ini: 0.0, fim: 0.07 }, { f: 1180, ini: 0.075, fim: 0.19 }], duracao = 0.21) {
       const sampleRate = 44100;
-      const numSamples = Math.floor(sampleRate * duracaoTotal);
+      const numSamples = Math.floor(sampleRate * duracao);
       const buffer = new ArrayBuffer(44 + numSamples * 2);
       const view = new DataView(buffer);
 
@@ -563,16 +618,22 @@
 
       for (let i = 0; i < numSamples; i++) {
         const t = i / sampleRate;
-        let val = 0;
-        tons.forEach((tom) => {
-          if (t >= tom.inicio && t <= tom.fim) {
-            // Mistura senoidal fundamental (peso grave/médio) + 3º harmônico suave (timbre de coletor Zebra/Honeywell sem apito agudo)
-            const s1 = Math.sin(2 * Math.PI * tom.freq * t);
-            const s3 = Math.sin(2 * Math.PI * (tom.freq * 2) * t) * 0.25;
-            val += (s1 + s3) * 0.78;
+        let sinal = 0;
+        notas.forEach((n) => {
+          if (t >= n.ini && t <= n.fim) {
+            const localT = t - n.ini;
+            const dur = n.fim - n.ini;
+            // Ataque rápido de 5ms e decaimento exponencial limpo (sem chiado e sem ser estridente)
+            const ataque = Math.min(1, localT / 0.005);
+            const queda = Math.exp(-localT * (3.5 / dur));
+            const env = ataque * queda;
+
+            const fundamental = Math.sin(2 * Math.PI * n.f * t);
+            const oitavaSuave = Math.sin(2 * Math.PI * (n.f * 1.5) * t) * 0.18;
+            sinal += (fundamental + oitavaSuave) * env * 0.85;
           }
         });
-        const intSample = Math.max(-32767, Math.min(32767, Math.floor(val * 32767)));
+        const intSample = Math.max(-32767, Math.min(32767, Math.floor(sinal * 32767)));
         view.setInt16(44 + i * 2, intSample, true);
       }
 
@@ -582,19 +643,17 @@
       return 'data:audio/wav;base64,' + btoa(binary);
     }
 
-    // Som 1: Bipe Industrial Único Seco (940Hz - Na leitura da etiqueta)
-    const wavBipLeituraURI = criarWavIndustrialBase64(
-      [{ freq: 940, inicio: 0.0, fim: 0.11 }],
-      0.13
+    const wavLeituraCurtoURI = criarSomColetorZebraBase64(
+      [{ f: 920, ini: 0.0, fim: 0.085 }],
+      0.10
     );
 
-    // Som 2: Duplo Bipe Industrial Firme (860Hz -> 1120Hz - Ao confirmar o apontamento do palete)
-    const wavBipConfirmacaoURI = criarWavIndustrialBase64(
+    const wavApontamentoZebraURI = criarSomColetorZebraBase64(
       [
-        { freq: 860, inicio: 0.00, fim: 0.09 },
-        { freq: 1120, inicio: 0.12, fim: 0.24 }
+        { f: 780, ini: 0.00, fim: 0.075 },
+        { f: 1170, ini: 0.08, fim: 0.21 }
       ],
-      0.26
+      0.23
     );
 
     function destravarSomMobile() {
@@ -606,77 +665,61 @@
         if (audioCtx.state === 'suspended') audioCtx.resume();
         const p1 = document.getElementById('player-bip-leitura');
         const p2 = document.getElementById('player-bip-confirmacao');
-        if (!p1.src) p1.src = wavBipLeituraURI;
-        if (!p2.src) p2.src = wavBipConfirmacaoURI;
+        if (!p1.src) p1.src = wavLeituraCurtoURI;
+        if (!p2.src) p2.src = wavApontamentoZebraURI;
       } catch (e) {}
     }
 
-    // Toca quando a câmera lê a etiqueta (1 bipe industrial médio-grave + vibração)
-    function tocarBipLeituraIndustrial() {
+    function tocarBipLeituraCurto() {
       try {
         destravarSomMobile();
-        if (navigator.vibrate) navigator.vibrate(180);
+        if (navigator.vibrate) navigator.vibrate(140);
         document.body.classList.add('flash-leitura');
-        setTimeout(() => document.body.classList.remove('flash-leitura'), 280);
-
-        if (audioCtx) {
-          if (audioCtx.state === 'suspended') audioCtx.resume();
-          const now = audioCtx.currentTime;
-          const osc = audioCtx.createOscillator();
-          const gain = audioCtx.createGain();
-          osc.type = 'triangle';
-          osc.frequency.setValueAtTime(940, now);
-          gain.gain.setValueAtTime(0.9, now);
-          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.11);
-          osc.connect(gain);
-          gain.connect(audioCtx.destination);
-          osc.start(now);
-          osc.stop(now + 0.11);
-        }
+        setTimeout(() => document.body.classList.remove('flash-leitura'), 240);
 
         const p1 = document.getElementById('player-bip-leitura');
-        if (!p1.src) p1.src = wavBipLeituraURI;
+        if (!p1.src) p1.src = wavLeituraCurtoURI;
         p1.volume = 1.0;
         p1.currentTime = 0;
         p1.play().catch(() => {});
       } catch (e) {}
     }
 
-    // Toca quando confirma o apontamento do palete (Duplo bipe industrial 860Hz -> 1120Hz + vibração dupla)
-    function tocarBipConfirmacaoIndustrial() {
+    function tocarSomApontamentoZebra() {
       try {
         destravarSomMobile();
-        if (navigator.vibrate) navigator.vibrate([140, 50, 180]);
+        if (navigator.vibrate) navigator.vibrate([100, 40, 160]);
 
         if (audioCtx) {
           if (audioCtx.state === 'suspended') audioCtx.resume();
           const now = audioCtx.currentTime;
           [
-            { f: 860, ini: 0.00, dur: 0.09 },
-            { f: 1120, ini: 0.12, dur: 0.12 }
-          ].forEach((b) => {
+            { f: 780, ini: 0.00, dur: 0.075 },
+            { f: 1170, ini: 0.08, dur: 0.13 }
+          ].forEach((n) => {
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
-            osc.type = 'triangle';
-            osc.frequency.setValueAtTime(b.f, now + b.ini);
-            gain.gain.setValueAtTime(0.95, now + b.ini);
-            gain.gain.exponentialRampToValueAtTime(0.01, now + b.ini + b.dur);
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(n.f, now + n.ini);
+            gain.gain.setValueAtTime(0.01, now + n.ini);
+            gain.gain.linearRampToValueAtTime(0.85, now + n.ini + 0.006);
+            gain.gain.exponentialRampToValueAtTime(0.008, now + n.ini + n.dur);
             osc.connect(gain);
             gain.connect(audioCtx.destination);
-            osc.start(now + b.ini);
-            osc.stop(now + b.ini + b.dur);
+            osc.start(now + n.ini);
+            osc.stop(now + n.ini + n.dur + 0.01);
           });
         }
 
         const p2 = document.getElementById('player-bip-confirmacao');
-        if (!p2.src) p2.src = wavBipConfirmacaoURI;
+        if (!p2.src) p2.src = wavApontamentoZebraURI;
         p2.volume = 1.0;
         p2.currentTime = 0;
         p2.play().catch(() => {});
       } catch (e) {}
     }
 
-    // AUTO-COMPLETE INTELIGENTE DO HISTÓRICO (Para Produto, Item, Cliente e Lote)
+    // AUTO-COMPLETE INTELIGENTE DO HISTÓRICO (Sem PT-7808)
     function fecharTodosAutocompletes(e) {
       if (e && e.target && e.target.tagName === 'INPUT') return;
       document.querySelectorAll('.autocomplete-list').forEach(el => el.style.display = 'none');
@@ -686,10 +729,9 @@
       document.querySelectorAll('.autocomplete-list').forEach(el => el.style.display = 'none');
       const termo = (valorDigitado || '').trim().toUpperCase();
 
-      // Une catálogo e histórico para ter todas as opções já usadas
-      const baseItens = [...catalogoMemoria];
+      const baseItens = catalogoMemoria.filter(c => c.item !== 'PT-7808');
       historicoMemoria.forEach(h => {
-        if (!baseItens.some(c => c.item === h.item)) {
+        if (h.item !== 'PT-7808' && !baseItens.some(c => c.item === h.item)) {
           baseItens.push({
             item: h.item,
             cliente: h.cliente,
@@ -737,7 +779,7 @@
         });
         if (lotesUnicos.length === 0) return;
 
-        box.innerHTML = lotesUnicos.slice(0, 6).map((h, idx) => `
+        box.innerHTML = lotesUnicos.slice(0, 6).map((h) => `
           <div class="autocomplete-item" onclick="selecionarLoteAutocomplete('${h.lote}', '${h.pedido}', '${h.item}')">
             <strong>Lote: ${h.lote} (Ped: ${h.pedido})</strong>
             <span>${h.item} — ${h.produto}</span>
@@ -791,40 +833,91 @@
         ocrWorker = await Tesseract.createWorker('eng');
         await ocrWorker.setParameters({ tessedit_pageseg_mode: '6' });
         motorPronto = true;
-        badge.innerText = '✅ Leitor Industrial Pronto (Verificação de Divergência Ativa)';
+        badge.innerText = '✅ Lente Macro HD Pronta';
       } catch (e) {
-        badge.innerText = '⚠️ Modo de leitura básico ativo';
+        badge.innerText = '⚠️ Leitor ativo';
       }
     }
 
-    async function iniciarCameraAoVivo() {
+    // LENTE MACRO DIRETA NO PRÓPRIO VISOR (Ativa Foco Contínuo de Perto + Zoom Macro 1.8x sem abrir outro app)
+    async function iniciarCameraMacroDireta() {
       const video = document.getElementById('video-camera');
       try {
         if (streamVideo) streamVideo.getTracks().forEach(t => t.stop());
         streamVideo = await navigator.mediaDevices.getUserMedia({
           video: {
             facingMode: { ideal: 'environment' },
-            width: { ideal: 1280 },
-            height: { ideal: 720 }
+            width: { ideal: 1920 },
+            height: { ideal: 1080 }
           },
           audio: false
         });
         video.srcObject = streamVideo;
+
+        aplicarConfiguracaoMacroNaLente();
 
         if (timerAutoScan) clearInterval(timerAutoScan);
         timerAutoScan = setInterval(() => {
           if (!lendoAgora && motorPronto && document.getElementById('tela-scanner').style.display !== 'none') {
             capturarEtiquetaDoVisor(false);
           }
-        }, 1400);
+        }, 1500);
       } catch (err) {}
     }
 
-    // Aumenta a nitidez das bordas dos números (evita confundir 8 com 9 na leitura)
-    function prepararCanvasEtiquetaNitido(fonteImgOuVideo, wOrig, hOrig) {
-      const maxDim = 1100;
-      let w = wOrig;
-      let h = hOrig;
+    async function aplicarConfiguracaoMacroNaLente() {
+      const video = document.getElementById('video-camera');
+      const btnZoom = document.getElementById('btn-zoom-toggle');
+      if (!streamVideo) return;
+
+      const track = streamVideo.getVideoTracks()[0];
+      if (!track) return;
+
+      try {
+        const caps = track.getCapabilities ? track.getCapabilities() : {};
+        const adv = {};
+        if (caps.focusMode && caps.focusMode.includes('continuous')) {
+          adv.focusMode = 'continuous';
+        }
+        if (caps.zoom) {
+          const zoomIdeal = macroZoomAtivo ? Math.min(caps.zoom.max, Math.max(caps.zoom.min, 1.8)) : caps.zoom.min;
+          adv.zoom = zoomIdeal;
+          video.style.transform = 'scale(1)';
+        } else {
+          // Se o navegador (ex: iOS) não expõe zoom via hardware, aplica recorte central HD de alta definição
+          video.style.transform = macroZoomAtivo ? 'scale(1.45)' : 'scale(1)';
+        }
+        if (Object.keys(adv).length > 0) {
+          await track.applyConstraints({ advanced: [adv] });
+        }
+      } catch (e) {
+        video.style.transform = macroZoomAtivo ? 'scale(1.45)' : 'scale(1)';
+      }
+
+      btnZoom.innerText = macroZoomAtivo ? '🔍 Macro 2.0x ON' : '🔍 Macro 1.0x';
+    }
+
+    function alternarMacroZoom() {
+      macroZoomAtivo = !macroZoomAtivo;
+      aplicarConfiguracaoMacroNaLente();
+    }
+
+    // Recorta o centro da imagem em alta definição quando o modo Macro Direta está ativo
+    function prepararCanvasEtiquetaNitido(fonteImgOuVideo, wOrig, hOrig, usarRecorteMacro = false) {
+      const canvas = document.createElement('canvas');
+      const maxDim = 1200;
+
+      let sx = 0, sy = 0, sw = wOrig, sh = hOrig;
+      if (usarRecorteMacro && macroZoomAtivo) {
+        // Recorta a região central focada da etiqueta para leitura ultra nítida
+        sw = Math.round(wOrig * 0.78);
+        sh = Math.round(hOrig * 0.78);
+        sx = Math.round((wOrig - sw) / 2);
+        sy = Math.round((hOrig - sh) / 2);
+      }
+
+      let w = sw;
+      let h = sh;
       if (w > maxDim || h > maxDim) {
         if (w > h) {
           h = Math.round((h * maxDim) / w);
@@ -834,12 +927,12 @@
           h = maxDim;
         }
       }
-      const canvas = document.createElement('canvas');
+
       canvas.width = w;
       canvas.height = h;
       const ctx = canvas.getContext('2d');
       ctx.filter = 'contrast(1.35) grayscale(0.5)';
-      ctx.drawImage(fonteImgOuVideo, 0, 0, w, h);
+      ctx.drawImage(fonteImgOuVideo, sx, sy, sw, sh, 0, 0, w, h);
       return canvas;
     }
 
@@ -848,13 +941,13 @@
       if (!video || !video.videoWidth || lendoAgora) return;
 
       destravarSomMobile();
-      if (manual) tocarBipLeituraIndustrial();
+      if (manual) tocarBipLeituraCurto();
       lendoAgora = true;
       const prog = document.getElementById('progresso-box');
       if (manual) prog.style.display = 'block';
 
       try {
-        const canvas = prepararCanvasEtiquetaNitido(video, video.videoWidth, video.videoHeight);
+        const canvas = prepararCanvasEtiquetaNitido(video, video.videoWidth, video.videoHeight, true);
         await reconhecerTextoEEnviar(canvas, manual);
       } finally {
         if (manual) prog.style.display = 'none';
@@ -874,7 +967,7 @@
         const img = new Image();
         img.onload = async () => {
           try {
-            const canvas = prepararCanvasEtiquetaNitido(img, img.width, img.height);
+            const canvas = prepararCanvasEtiquetaNitido(img, img.width, img.height, false);
             await reconhecerTextoEEnviar(canvas, true);
           } finally {
             prog.style.display = 'none';
@@ -887,7 +980,6 @@
       reader.readAsDataURL(input.files[0]);
     }
 
-    // Tenta usar também o detector nativo de códigos do celular na mesma imagem para precisão extra
     async function tentarBarcodeNativo(canvas) {
       if ('BarcodeDetector' in window) {
         try {
@@ -914,7 +1006,7 @@
         const temDadosValidos = /PEDIDO|CLIENTE|DEVINTEX|FLORA|ITEM|PRODUTO|LOTE|006\d{3}|PT\s*-\s*\d|FR\s*-\s*\d|719935/i.test(tudo);
         if (!temDadosValidos) {
           if (mostrarAlertaSeFalhar) {
-            alert('Etiqueta não identificada. Enquadre a etiqueta com foco nas letras.');
+            alert('Etiqueta não identificada. Aproxime ou enquadre a etiqueta no tracejado e toque no botão azul.');
           }
           return;
         }
@@ -940,8 +1032,7 @@
 
         if (timerAutoScan) clearInterval(timerAutoScan);
 
-        // Bipe industrial curto imediato ao concluir a leitura
-        tocarBipLeituraIndustrial();
+        tocarBipLeituraCurto();
         abrirTelaConfirmacao(data);
       } catch (e) {
         if (mostrarAlertaSeFalhar) alert('Erro ao processar leitura.');
@@ -955,14 +1046,13 @@
       document.getElementById('conf-cliente').value = data.cliente || '';
       document.getElementById('conf-pedido').value = pedLimpo;
       document.getElementById('conf-lote').value = loteLimpo;
-      document.getElementById('conf-item').value = data.item || '';
+      document.getElementById('conf-item').value = (data.item === 'PT-7808' ? 'PT-7908' : (data.item || ''));
       document.getElementById('conf-produto').value = data.produto || '';
       document.getElementById('conf-pecas').value = data.qtd_pecas_por_volume || '';
       document.getElementById('conf-vol-etiqueta').value = data.volume_etiqueta || '';
       document.getElementById('label-volumes').innerText = `Qtd ${data.tipoEmbalagem || 'CAIXA'}S (Padrão: ${data.qtd_volumes_sugerida || 15}):`;
       document.getElementById('input-volumes').value = data.qtd_volumes_sugerida || 15;
 
-      // Verifica se o servidor detectou código parecido (ex: PT-7808 vs PT-7908)
       const boxDiv = document.getElementById('box-divergencia');
       if (data.sugestao_divergencia) {
         sugestaoAtual = data.sugestao_divergencia;
@@ -1001,7 +1091,7 @@
       }
       recalcularPreview();
       fecharAlertaDivergencia();
-      tocarBipLeituraIndustrial();
+      tocarBipLeituraCurto();
     }
 
     function fecharAlertaDivergencia() {
@@ -1037,18 +1127,21 @@
         return alert('Verifique a quantidade de caixas e de peças por caixa!');
       }
 
-      // TOCA DUPLO BIPE INDUSTRIAL ENCORPADO AO CONFIRMAR O APONTAMENTO
-      tocarBipConfirmacaoIndustrial();
+      // TOCA O SOM DE APONTAMENTO PROFISSIONAL ZEBRA/HONEYWELL
+      tocarSomApontamentoZebra();
 
       const pedLimpo = limparPedidoEstrito(document.getElementById('conf-pedido').value);
       let loteLimpo = limparLoteEstrito(document.getElementById('conf-lote').value, pedLimpo);
       if (loteLimpo.endsWith('.')) loteLimpo += '1';
 
+      let itemFinal = (document.getElementById('conf-item').value || '').trim().toUpperCase();
+      if (itemFinal === 'PT-7808') itemFinal = 'PT-7908';
+
       const payload = {
         cliente: document.getElementById('conf-cliente').value,
         pedido: pedLimpo,
         lote: loteLimpo,
-        item: document.getElementById('conf-item').value,
+        item: itemFinal,
         produto: document.getElementById('conf-produto').value,
         qtd_volumes_palete: vols,
         qtd_pecas_por_volume: pecas,
@@ -1067,23 +1160,28 @@
         return;
       }
 
-      await atualizarResumoAoVivo();
+      // SÓ AGORA LIBERA O QUADRO DE SALDO EMBAIXO NO CELULAR!
+      jaBipouNestaSessao = true;
+      document.getElementById('box-saldos-sessao').style.display = 'block';
+
+      await carregarDadosSilencioso();
       voltarParaCamera();
     }
 
     function voltarParaCamera() {
       document.getElementById('tela-confirmacao').style.display = 'none';
       document.getElementById('tela-scanner').style.display = 'block';
-      iniciarCameraAoVivo();
+      iniciarCameraMacroDireta();
     }
 
-    async function atualizarResumoAoVivo() {
+    async function carregarDadosSilencioso() {
       try {
         const res = await fetch(`${API_BASE}/api/dashboard?t=${Date.now()}`, { cache: 'no-store' });
         const { consolidado, historico, catalogo } = await res.json();
 
         const backupSalvo = JSON.parse(localStorage.getItem('finart_backup_paletes') || '[]');
-        const catalogoSalvo = JSON.parse(localStorage.getItem('finart_backup_catalogo') || '[]');
+        const catalogoSalvo = JSON.parse(localStorage.getItem('finart_backup_catalogo') || '[]')
+          .filter(c => c.item !== 'PT-7808');
 
         if (historico.length === 0 && backupSalvo.length > 0) {
           const rRest = await fetch(`${API_BASE}/api/restaurar-backup`, {
@@ -1093,7 +1191,7 @@
           });
           const resJson = await rRest.json();
           if (resJson && resJson.restaurado) {
-            return atualizarResumoAoVivo();
+            return carregarDadosSilencioso();
           } else {
             localStorage.setItem('finart_backup_paletes', '[]');
           }
@@ -1101,38 +1199,41 @@
           localStorage.setItem('finart_backup_paletes', JSON.stringify(historico));
         }
 
-        historicoMemoria = historico || [];
+        historicoMemoria = (historico || []).filter(h => h.item !== 'PT-7808');
         if (catalogo && catalogo.length > 0) {
-          catalogoMemoria = catalogo;
-          localStorage.setItem('finart_backup_catalogo', JSON.stringify(catalogo));
+          catalogoMemoria = catalogo.filter(c => c.item !== 'PT-7808');
+          localStorage.setItem('finart_backup_catalogo', JSON.stringify(catalogoMemoria));
         }
 
-        const div = document.getElementById('lista-ao-vivo');
-        if (!consolidado || consolidado.length === 0) {
-          div.innerHTML = '<small style="color:var(--muted)">Nenhum palete bipado ainda.</small>';
-          return;
-        }
-        div.innerHTML = consolidado.slice(0, 8).map(r => `
-          <div class="live-item">
-            <div>
-              <strong>${r.cliente}</strong> <span class="badge-lote">Lote ${limparLoteEstrito(r.lote, r.pedido)}</span><br/>
-              <small style="color:var(--muted)">${r.item} • ${r.total_paletes} palete(s) (${r.total_caixas_ou_sacaria} vol.)</small>
+        // Só renderiza a caixa inferior se o usuário já tiver bipado pelo menos 1 palete agora
+        if (jaBipouNestaSessao) {
+          const div = document.getElementById('lista-ao-vivo');
+          if (!consolidado || consolidado.length === 0) {
+            div.innerHTML = '<small style="color:var(--muted)">Nenhum palete ativo.</small>';
+            return;
+          }
+          div.innerHTML = consolidado.slice(0, 6).map(r => `
+            <div class="live-item">
+              <div>
+                <strong>${r.cliente}</strong> <span class="badge-lote">Lote ${limparLoteEstrito(r.lote, r.pedido)}</span><br/>
+                <small style="color:var(--muted)">${r.item} • ${r.total_paletes} palete(s) (${r.total_caixas_ou_sacaria} vol.)</small>
+              </div>
+              <strong style="color:var(--success); font-size:14px; white-space:nowrap;">${r.saldo_total_pecas.toLocaleString('pt-BR')} pçs</strong>
             </div>
-            <strong style="color:var(--success); font-size:14px; white-space:nowrap;">${r.saldo_total_pecas.toLocaleString('pt-BR')} pçs</strong>
-          </div>
-        `).join('');
+          `).join('');
+        }
       } catch (e) {}
     }
 
     document.addEventListener('visibilitychange', () => {
-      if (!document.hidden) atualizarResumoAoVivo();
+      if (!document.hidden) carregarDadosSilencioso();
     });
-    setInterval(atualizarResumoAoVivo, 2500);
+    setInterval(carregarDadosSilencioso, 2500);
 
     window.onload = () => {
       inicializarMotorOptico();
-      iniciarCameraAoVivo();
-      atualizarResumoAoVivo();
+      iniciarCameraMacroDireta();
+      carregarDadosSilencioso();
     };
   </script>
 </body>

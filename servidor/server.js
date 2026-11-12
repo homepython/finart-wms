@@ -75,7 +75,25 @@ function sanitizarLote(valor = '', pedidoFallback = '') {
   return `${base}.${sufixo}`.slice(0, 8);
 }
 
-// Algoritmo de Similaridade (Distância de Levenshtein) para detectar ex: PT-7808 vs PT-7908
+// Corrige códigos lidos com 1 número trocado (Ex: converte PT-7808 automaticamente em PT-7908)
+function corrigirCodigoItem(itemBruto = '', produtoTexto = '') {
+  let cod = String(itemBruto || '').trim().toUpperCase().replace(/\s+/g, '');
+  const prod = String(produtoTexto || '').toUpperCase();
+
+  // Se no final do produto estiver escrito PT-7908MP (ou outro código MP), ele manda na leitura!
+  const matchMP = prod.match(/\b((?:PT|FR)-\d{4,6})MP\b/i);
+  if (matchMP) {
+    cod = matchMP[1].toUpperCase();
+  }
+
+  // Banimento definitivo de PT-7808 -> Sempre é PT-7908
+  if (cod === 'PT-7808' || cod === 'PT7808' || (prod.includes('1000 GRS') && prod.includes('REDONDO'))) {
+    return 'PT-7908';
+  }
+  if (cod === '19935') return '719935';
+  return cod;
+}
+
 function distanciaSimilaridade(a = '', b = '') {
   const s1 = String(a).toUpperCase().trim();
   const s2 = String(b).toUpperCase().trim();
@@ -173,6 +191,10 @@ db.serialize(() => {
     )
   `);
 
+  // Remove permanentemente o código incorreto PT-7808 do catálogo e converte qualquer palete antigo para PT-7908
+  db.run(`DELETE FROM catalogo_itens WHERE item = 'PT-7808' OR item = 'PT7808'`);
+  db.run(`UPDATE paletes_bipados SET item = 'PT-7908' WHERE item = 'PT-7808' OR item = 'PT7808'`);
+
   const stmt = db.prepare(`
     INSERT OR REPLACE INTO catalogo_itens (item, cliente, produto, padrao_volumes_palete, qtd_padrao_pecas, tipo_embalagem)
     VALUES (?, ?, ?, ?, ?, ?)
@@ -196,7 +218,7 @@ function calcularPadraoPalete(cliente = '', item = '', produto = '', padraoSalvo
   return 20;
 }
 
-// 1. INTERPRETADOR COM CONFERÊNCIA TRIPLA E DETECTOR DE SIMILARIDADE (PT-7808 vs PT-7908)
+// 1. INTERPRETADOR INTELIGENTE DE ETIQUETA
 app.post('/api/interpretar-bipe', (req, res) => {
   const { codigoLido, textoEtiqueta } = req.body;
   const brCode = (codigoLido || '').trim();
@@ -229,11 +251,9 @@ app.post('/api/interpretar-bipe', (req, res) => {
   let produtoLido = '';
   let volumeLido = '';
 
-  // 1) Coleta todos os códigos candidatos na etiqueta (ITEM:, final MP do produto, e linha do código de barras)
   const mBarcode = texto.match(/([A-Z]{2}\s*-\s*\d{4,6}|\d{5,7})\s*[;:,]\s*(\d{6,8})\s*[;:,]\s*(\d{2,4})/i);
   if (mBarcode) {
     let codBar = mBarcode[1].replace(/\s+/g, '').toUpperCase();
-    if (codBar === '19935') codBar = '719935';
     candidatosItem.push(codBar);
 
     const lb = mBarcode[2].trim();
@@ -242,7 +262,6 @@ app.post('/api/interpretar-bipe', (req, res) => {
     qtdPorVolume = parseInt(mBarcode[3].trim(), 10) || 0;
   }
 
-  // Coleta todas as ocorrências de PT-XXXX ou FR-XXXX na etiqueta (às vezes "ITEM:" borra, mas no fim do produto "PT-7908MP" está nítido!)
   const regexTodosPrefixados = /\b((?:PT|FR)\s*-?\s*\d{4,6})(?:MP)?\b/gi;
   let matchPref;
   while ((matchPref = regexTodosPrefixados.exec(texto)) !== null) {
@@ -254,11 +273,9 @@ app.post('/api/interpretar-bipe', (req, res) => {
   const mItemGenerico = texto.match(/ITEM[:.\s]*([A-Z0-9\-]{4,12})/i) || texto.match(/\b(719935|19935)\b/);
   if (mItemGenerico) {
     let cand = mItemGenerico[1].trim().toUpperCase();
-    if (cand === '19935') cand = '719935';
     if (!cand.startsWith('006')) candidatosItem.push(cand);
   }
 
-  // Lote e Pedido
   if (!lote) {
     const mLoteDireto =
       texto.match(/LOTE[:.\s]*(\d{5,6}\s*[\.,]\s*\d)/i) ||
@@ -278,7 +295,6 @@ app.post('/api/interpretar-bipe', (req, res) => {
     }
   }
 
-  // Cliente
   if (/DEVINTEX|COSMETICOS/i.test(texto)) {
     clienteLido = 'DEVINTEX COSMETICOS';
   } else if (/FLORA\s*PRODS|FLORA\s*24|HIG\s*E\s*LIM|P[OÓ]S\s*DANOS/i.test(texto)) {
@@ -288,7 +304,6 @@ app.post('/api/interpretar-bipe', (req, res) => {
     if (mCli) clienteLido = mCli[1].split('\n')[0].trim().toUpperCase();
   }
 
-  // Produto Completo
   const mBlocoProduto =
     texto.match(/PRODUTO[:.\s]*([\s\S]{5,140}?)(?=\bQTD\b|\bLOTE\b|\bVALIDADE\b|\b00\d{4}\.\d\b|$)/i) ||
     texto.match(/\b((?:PT|FRA)\s+\d{2,4}\s*(?:GRS|ML)[\s\S]{5,110}?)(?=\bQTD\b|\bLOTE\b|\bVALIDADE\b|$)/i);
@@ -307,7 +322,6 @@ app.post('/api/interpretar-bipe', (req, res) => {
     if (prodLimpo.length >= 6) produtoLido = prodLimpo;
   }
 
-  // QTD por Caixa
   if (!qtdPorVolume) {
     const mQtdDireta = texto.match(/QTD[:.\s\n]*(\d{2,4})\b/i);
     if (mQtdDireta) {
@@ -320,24 +334,22 @@ app.post('/api/interpretar-bipe', (req, res) => {
     if (mEntreProdELote) qtdPorVolume = parseInt(mEntreProdELote[1], 10);
   }
 
-  // Volume
   const mVol = texto.match(/\b(\d{2,3}\s*\/\s*\d{3})\b/);
   if (mVol) volumeLido = mVol[1].replace(/\s+/g, '');
 
   const pedidoLimpo = sanitizarPedido(pedido || lote);
   const loteLimpo = sanitizarLote(lote, pedidoLimpo);
 
-  // CRUZA COM CATÁLOGO E HISTÓRICO PARA DETECTAR DIVERGÊNCIAS (Ex: PT-7808 vs PT-7908)
-  db.all(`SELECT * FROM catalogo_itens`, [], (errCat, catalogoRows) => {
+  db.all(`SELECT * FROM catalogo_itens WHERE item != 'PT-7808'`, [], (errCat, catalogoRows) => {
     if (errCat) return res.status(500).json({ erro: errCat.message });
 
     db.all(`SELECT * FROM paletes_bipados ORDER BY id DESC LIMIT 100`, [], (errHist, histRows) => {
       const historico = histRows || [];
-      let itemEscolhido = candidatosItem[0] || '';
+      let itemEscolhido = corrigirCodigoItem(candidatosItem[0] || '', produtoLido);
       let itemMemoriaExato = null;
 
-      // 1º: Se na mesma etiqueta um dos candidatos bate 100% com o catálogo (ex: leu PT-7808 em cima, mas PT-7908MP embaixo), usa o que existe no catálogo!
-      for (const cand of candidatosItem) {
+      for (const candBruto of candidatosItem) {
+        const cand = corrigirCodigoItem(candBruto, produtoLido);
         const achou = catalogoRows.find((r) => r.item.toUpperCase() === cand.toUpperCase());
         if (achou) {
           itemEscolhido = achou.item;
@@ -346,11 +358,9 @@ app.post('/api/interpretar-bipe', (req, res) => {
         }
       }
 
-      // 2º: Se não achou exato pelo código, mas o texto do produto diz claramente "1000 GRS REDONDO" ou "MAIONESE MATIZADOR"
       let sugestaoDivergencia = null;
 
       if (!itemMemoriaExato && itemEscolhido) {
-        // Procura item muito parecido no catálogo ou histórico (Distância de 1 ou 2 caracteres: ex PT-7808 vs PT-7908)
         let melhorCandidato = null;
         let menorDist = 99;
 
@@ -362,7 +372,6 @@ app.post('/api/interpretar-bipe', (req, res) => {
           }
         });
 
-        // Também verifica se o Lote lido já pertence a um item apontado hoje!
         const mesmoLoteNoHistorico = loteLimpo
           ? historico.find((h) => h.lote === loteLimpo)
           : null;
@@ -371,7 +380,7 @@ app.post('/api/interpretar-bipe', (req, res) => {
           const catDoLote = catalogoRows.find((c) => c.item === mesmoLoteNoHistorico.item) || mesmoLoteNoHistorico;
           sugestaoDivergencia = {
             tipo: 'ITEM_DIVERGENTE_NO_LOTE',
-            mensagem: `A câmera leu "${itemEscolhido}", mas o Lote ${loteLimpo} já foi apontado como "${mesmoLoteNoHistorico.item}". Qual é o correto?`,
+            mensagem: `A câmera leu "${itemEscolhido}", mas o Lote ${loteLimpo} pertence ao item "${mesmoLoteNoHistorico.item}". Deseja corrigir?`,
             item_lido: itemEscolhido,
             item_sugerido: mesmoLoteNoHistorico.item,
             cliente_sugerido: catDoLote.cliente,
@@ -384,7 +393,7 @@ app.post('/api/interpretar-bipe', (req, res) => {
         } else if (melhorCandidato) {
           sugestaoDivergencia = {
             tipo: 'ITEM_PARECIDO',
-            mensagem: `A câmera leu "${itemEscolhido}", que é muito parecido com o item já cadastrado "${melhorCandidato.item}" (${melhorCandidato.produto}). Deseja corrigir para ${melhorCandidato.item}?`,
+            mensagem: `A câmera leu "${itemEscolhido}", que é parecido com o item oficial "${melhorCandidato.item}" (${melhorCandidato.produto}). Corrigir para ${melhorCandidato.item}?`,
             item_lido: itemEscolhido,
             item_sugerido: melhorCandidato.item,
             cliente_sugerido: melhorCandidato.cliente,
@@ -394,31 +403,6 @@ app.post('/api/interpretar-bipe', (req, res) => {
             lote_sugerido: loteLimpo,
             pedido_sugerido: pedidoLimpo
           };
-        }
-      }
-
-      // 3º: Verifica se o Lote lido é 1 dígito diferente de um Lote já ativo para este mesmo Produto (ex: leu 006338.1 mas já apontou 006332.1 para PT-7908)
-      const itemRef = itemMemoriaExato ? itemMemoriaExato.item : itemEscolhido;
-      if (itemRef && loteLimpo && !sugestaoDivergencia) {
-        const lotesDoMesmoItem = historico.filter((h) => h.item === itemRef);
-        const temExato = lotesDoMesmoItem.some((h) => h.lote === loteLimpo);
-        if (!temExato && lotesDoMesmoItem.length > 0) {
-          const loteParecido = lotesDoMesmoItem.find((h) => distanciaSimilaridade(loteLimpo, h.lote) === 1);
-          if (loteParecido) {
-            sugestaoDivergencia = {
-              tipo: 'LOTE_PARECIDO',
-              mensagem: `A câmera leu o Lote "${loteLimpo}", mas você já apontou o Lote "${loteParecido.lote}" para o item ${itemRef}. Confirmar qual Lote?`,
-              item_lido: itemRef,
-              item_sugerido: itemRef,
-              cliente_sugerido: loteParecido.cliente,
-              produto_sugerido: loteParecido.produto,
-              qtd_pecas_sugerida: loteParecido.qtd_pecas_por_volume,
-              qtd_volumes_sugerida: loteParecido.qtd_volumes_palete,
-              lote_lido: loteLimpo,
-              lote_sugerido: loteParecido.lote,
-              pedido_sugerido: loteParecido.pedido
-            };
-          }
         }
       }
 
@@ -468,7 +452,7 @@ app.post('/api/interpretar-bipe', (req, res) => {
   });
 });
 
-// 2. SALVAR PALETE E UNIFICAR SALDO AUTOMATICAMENTE SE FOR DO MESMO LOTE + ITEM
+// 2. SALVAR PALETE E UNIFICAR SALDO AUTOMATICAMENTE
 app.post('/api/paletes', (req, res) => {
   const {
     pedido,
@@ -482,7 +466,7 @@ app.post('/api/paletes', (req, res) => {
   } = req.body;
 
   const volumes = Number(qtd_volumes_palete);
-  const itemLimpo = String(item || '').trim().toUpperCase();
+  const itemLimpo = corrigirCodigoItem(item, produto);
   const pedidoLimpo = sanitizarPedido(pedido || lote);
   const loteLimpo = sanitizarLote(lote, pedidoLimpo);
 
@@ -541,7 +525,7 @@ app.post('/api/paletes', (req, res) => {
   });
 });
 
-// 3. AUTO-RESTAURAÇÃO DE BACKUP
+// 3. AUTO-RESTAURAÇÃO DE BACKUP (FILTRANDO ITENS BANIDOS COMO PT-7808)
 app.post('/api/restaurar-backup', (req, res) => {
   const { historico, catalogo } = req.body;
 
@@ -552,7 +536,10 @@ app.post('/api/restaurar-backup', (req, res) => {
         VALUES (?, ?, ?, ?, ?, ?)
       `);
       catalogo.forEach((c) => {
-        stmtCat.run(c.item, c.cliente, c.produto, c.padrao_volumes_palete || 15, c.qtd_padrao_pecas || 0, c.tipo_embalagem || 'CAIXA');
+        const codCorrigido = corrigirCodigoItem(c.item, c.produto);
+        if (codCorrigido !== 'PT-7808') {
+          stmtCat.run(codCorrigido, c.cliente, c.produto, c.padrao_volumes_palete || 15, c.qtd_padrao_pecas || 0, c.tipo_embalagem || 'CAIXA');
+        }
       });
       stmtCat.finalize();
     }
@@ -582,8 +569,9 @@ app.post('/api/restaurar-backup', (req, res) => {
         validos.forEach((p) => {
           const pedOk = sanitizarPedido(p.pedido || p.lote);
           const loteOk = sanitizarLote(p.lote, pedOk);
+          const itemOk = corrigirCodigoItem(p.item, p.produto);
           stmt.run(
-            p.id, pedOk, loteOk, p.item, p.cliente, p.produto,
+            p.id, pedOk, loteOk, itemOk, p.cliente, p.produto,
             p.qtd_pecas_por_volume, p.qtd_volumes_palete, p.saldo_total_pecas,
             p.volume_etiqueta || '', p.data_hora
           );
@@ -616,7 +604,7 @@ app.get('/api/dashboard', (req, res) => {
   `;
 
   const queryHistorico = `SELECT * FROM paletes_bipados ORDER BY id DESC LIMIT 400`;
-  const queryCatalogo = `SELECT * FROM catalogo_itens ORDER BY item ASC`;
+  const queryCatalogo = `SELECT * FROM catalogo_itens WHERE item != 'PT-7808' ORDER BY item ASC`;
 
   db.all(queryConsolidado, [], (err, consolidado) => {
     if (err) return res.status(500).json({ erro: err.message });
@@ -645,7 +633,7 @@ app.put('/api/paletes/:id', (req, res) => {
 
   const pedidoLimpo = sanitizarPedido(pedido || lote);
   const loteLimpo = sanitizarLote(lote, pedidoLimpo);
-  const itemLimpo = String(item || '').trim().toUpperCase();
+  const itemLimpo = corrigirCodigoItem(item, produto);
   const clienteLimpo = String(cliente || '').trim().toUpperCase();
   const produtoLimpo = String(produto || '').trim().toUpperCase();
   const novoSaldoTotal = pecasUn * volumes;

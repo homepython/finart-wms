@@ -122,6 +122,63 @@
     .list-row:last-child { border-bottom: none; }
     .list-row.selecionado { background: #e0f2fe; }
 
+    /* ESTILO DO GRUPO EXPANSÍVEL POR ITEM NA ABA DE EDIÇÃO/EXCLUSÃO */
+    .grupo-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px;
+      background: #ffffff;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      transition: background 0.15s ease;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .grupo-header:hover {
+      background: #f8fafc;
+    }
+    .grupo-header.aberto {
+      background: #f0f9ff;
+      border-bottom: 1px solid #bae6fd;
+    }
+    .seta-expansao {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 26px;
+      height: 26px;
+      border-radius: 6px;
+      background: var(--primary-light);
+      color: var(--primary);
+      font-weight: 900;
+      font-size: 13px;
+      transition: transform 0.2s ease;
+    }
+    .grupo-header.aberto .seta-expansao {
+      transform: rotate(90deg);
+      background: var(--primary);
+      color: #fff;
+    }
+    .gaveta-paletes {
+      display: none;
+      background: #f8fafc;
+      border-bottom: 2px solid #cbd5e1;
+      padding-left: 12px;
+    }
+    .gaveta-paletes.aberta {
+      display: block;
+    }
+    .sub-barra-grupo {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 16px;
+      background: #f1f5f9;
+      border-bottom: 1px solid var(--border);
+      font-size: 12px;
+    }
+
     .row-left-wrap { display: flex; align-items: center; gap: 12px; flex: 1; min-width: 220px; width: 100%; }
     .row-main { flex: 1; min-width: 0; }
     .row-top { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; flex-wrap: wrap; }
@@ -197,7 +254,6 @@
     }
     .form-group input:focus { border-color: var(--primary); background: #fff; outline: none; }
 
-    /* Lista Flutuante de Auto-Complete no Modal */
     .ac-dropdown {
       display: none; position: absolute; top: 100%; left: 0; right: 0;
       background: #fff; border: 2px solid var(--primary); border-radius: 8px;
@@ -251,11 +307,12 @@
       <div id="lista-consolidado"></div>
     </div>
 
+    <!-- ABA 2: AGRUPADA POR ITEM (SÓ ABRE OS PALETES DO ITEM QUANDO VOCÊ CLICA NELE) -->
     <div class="list-container" id="secao-historico" style="display: none;">
       <div class="bulk-bar">
         <label class="check-label">
           <input type="checkbox" class="checkbox-item" id="check-todos" onchange="alternarSelecionarTodos(this.checked)" />
-          <span>Selecionar Tudo</span>
+          <span>Selecionar Todos os Paletes</span>
         </label>
         <div style="display: flex; gap: 8px; flex-wrap: wrap;">
           <button class="btn-danger-solid" id="btn-excluir-selecionados" disabled onclick="excluirSelecionados()">
@@ -324,10 +381,20 @@
       ? ''
       : 'https://finart-wms.onrender.com';
 
+    // Remove PT-7808 do cache local do navegador
+    (function limparCacheErrado() {
+      try {
+        const cat = JSON.parse(localStorage.getItem('finart_backup_catalogo') || '[]')
+          .filter(c => c.item !== 'PT-7808' && c.item !== 'PT7808');
+        localStorage.setItem('finart_backup_catalogo', JSON.stringify(cat));
+      } catch (e) {}
+    })();
+
     let consolidadoCache = [];
     let historicoCache = [];
     let catalogoCache = [];
     let idsSelecionados = new Set();
+    let gruposAbertos = new Set(); // Guarda quais itens estão expandidos na aba Histórico
     let assinaturaAnterior = '';
 
     function limparPedidoEstrito(val = '') {
@@ -371,8 +438,10 @@
       const drop = document.getElementById(tipo === 'item' ? 'drop-item' : 'drop-produto');
 
       const filtrados = catalogoCache.filter(c =>
-        c.item.toUpperCase().includes(termo) ||
-        c.produto.toUpperCase().includes(termo)
+        c.item !== 'PT-7808' && (
+          c.item.toUpperCase().includes(termo) ||
+          c.produto.toUpperCase().includes(termo)
+        )
       );
       if (filtrados.length === 0) return;
 
@@ -409,6 +478,22 @@
       document.getElementById('btn-aba-historico').classList.toggle('active', aba === 'historico');
     }
 
+    // Se clicar num item na aba principal de saldos, já abre os paletes daquele item específico!
+    function abrirGrupoEspecificoNoHistorico(chaveGrupo) {
+      gruposAbertos.add(chaveGrupo);
+      alternarAba('historico');
+      renderizarListas();
+    }
+
+    function alternarGrupoExpandido(chaveGrupo) {
+      if (gruposAbertos.has(chaveGrupo)) {
+        gruposAbertos.delete(chaveGrupo);
+      } else {
+        gruposAbertos.add(chaveGrupo);
+      }
+      renderizarListas();
+    }
+
     async function carregarDashboard(forcarRender = false) {
       try {
         const res = await fetch(`${API_BASE}/api/dashboard?t=${Date.now()}`, {
@@ -417,7 +502,8 @@
         const { consolidado, historico, catalogo } = await res.json();
 
         const backupLocal = JSON.parse(localStorage.getItem('finart_backup_paletes') || '[]');
-        const catalogoLocal = JSON.parse(localStorage.getItem('finart_backup_catalogo') || '[]');
+        const catalogoLocal = JSON.parse(localStorage.getItem('finart_backup_catalogo') || '[]')
+          .filter(c => c.item !== 'PT-7808');
 
         if (historico.length === 0 && backupLocal.length > 0) {
           const rRest = await fetch(`${API_BASE}/api/restaurar-backup`, {
@@ -436,8 +522,8 @@
         }
 
         if (catalogo && catalogo.length > 0) {
-          catalogoCache = catalogo;
-          localStorage.setItem('finart_backup_catalogo', JSON.stringify(catalogo));
+          catalogoCache = catalogo.filter(c => c.item !== 'PT-7808');
+          localStorage.setItem('finart_backup_catalogo', JSON.stringify(catalogoCache));
         }
 
         const novaAssinatura = JSON.stringify({ consolidado, historico });
@@ -476,6 +562,7 @@
     function renderizarListas() {
       const termo = (document.getElementById('campo-busca').value || '').toLowerCase();
 
+      // 1. ABA SALDOS CONSOLIDADOS
       const divCons = document.getElementById('lista-consolidado');
       const consFiltrado = consolidadoCache.filter(r =>
         r.cliente.toLowerCase().includes(termo) ||
@@ -487,78 +574,183 @@
       if (consFiltrado.length === 0) {
         divCons.innerHTML = `<div class="empty-state">Nenhum palete bipado até o momento. Clique em "+ Lançar Palete" ou bipe pelo celular.</div>`;
       } else {
-        divCons.innerHTML = consFiltrado.map(r => `
-          <div class="list-row">
-            <div class="row-left-wrap">
-              <div class="row-main">
-                <div class="row-top">
-                  <span class="cliente-nome">${r.cliente}</span>
-                  <span class="tag tag-lote">Lote: ${limparLoteEstrito(r.lote, r.pedido)}</span>
-                  <span class="tag tag-item">${r.item}</span>
-                  <span class="tag tag-pedido">Ped: ${limparPedidoEstrito(r.pedido || r.lote)}</span>
+        divCons.innerHTML = consFiltrado.map(r => {
+          const loteFormatado = limparLoteEstrito(r.lote, r.pedido);
+          const chaveGrupo = `${r.item}__${loteFormatado}`;
+          return `
+            <div class="list-row" onclick="abrirGrupoEspecificoNoHistorico('${chaveGrupo}')" style="cursor:pointer;" title="Clique para ver ou editar os paletes deste item">
+              <div class="row-left-wrap">
+                <div class="row-main">
+                  <div class="row-top">
+                    <span class="cliente-nome">${r.cliente}</span>
+                    <span class="tag tag-lote">Lote: ${loteFormatado}</span>
+                    <span class="tag tag-item">${r.item}</span>
+                    <span class="tag tag-pedido">Ped: ${limparPedidoEstrito(r.pedido || r.lote)}</span>
+                  </div>
+                  <div class="produto-desc">${r.produto} <small style="color:var(--primary); font-weight:600;">(Toque p/ ver paletes)</small></div>
                 </div>
-                <div class="produto-desc">${r.produto}</div>
+              </div>
+              <div class="row-metrics">
+                <div class="metric-box"><small>Paletes</small><strong>${r.total_paletes}</strong></div>
+                <div class="metric-box"><small>Volumes</small><strong>${r.total_caixas_ou_sacaria}</strong></div>
+                <div class="metric-box"><small>Pçs/Vol</small><strong>${r.qtd_pecas_por_volume}</strong></div>
+                <div class="saldo-box"><small>Saldo Total</small><strong>${r.saldo_total_pecas.toLocaleString('pt-BR')}</strong></div>
               </div>
             </div>
-            <div class="row-metrics">
-              <div class="metric-box"><small>Paletes</small><strong>${r.total_paletes}</strong></div>
-              <div class="metric-box"><small>Volumes</small><strong>${r.total_caixas_ou_sacaria}</strong></div>
-              <div class="metric-box"><small>Pçs/Vol</small><strong>${r.qtd_pecas_por_volume}</strong></div>
-              <div class="saldo-box"><small>Saldo Total</small><strong>${r.saldo_total_pecas.toLocaleString('pt-BR')}</strong></div>
-            </div>
-          </div>
-        `).join('');
+          `;
+        }).join('');
       }
 
+      // 2. ABA HISTÓRICO: AGRUPADA POR ITEM E LOTE (SÓ ABRE OS PALETES QUANDO CLICA NO ITEM!)
       const divHist = document.getElementById('lista-historico');
       const histFiltrado = historicoCache.filter(i =>
         i.cliente.toLowerCase().includes(termo) ||
         i.lote.toLowerCase().includes(termo) ||
-        i.item.toLowerCase().includes(termo)
+        i.item.toLowerCase().includes(termo) ||
+        i.produto.toLowerCase().includes(termo)
       );
 
       atualizarBarraSelecao(histFiltrado);
 
       if (histFiltrado.length === 0) {
         divHist.innerHTML = `<div class="empty-state">Nenhum registro encontrado no histórico.</div>`;
-      } else {
-        divHist.innerHTML = histFiltrado.map(item => {
-          const idNum = Number(item.id);
-          const marcado = idsSelecionados.has(idNum);
-          return `
-            <div class="list-row ${marcado ? 'selecionado' : ''}">
+        return;
+      }
+
+      // Agrupa os paletes por Item + Lote para não formar uma lista gigante
+      const mapaGrupos = new Map();
+      histFiltrado.forEach(item => {
+        const loteOk = limparLoteEstrito(item.lote, item.pedido);
+        const chave = `${item.item}__${loteOk}`;
+        if (!mapaGrupos.has(chave)) {
+          mapaGrupos.set(chave, {
+            chave,
+            item: item.item,
+            lote: loteOk,
+            pedido: limparPedidoEstrito(item.pedido || item.lote),
+            cliente: item.cliente,
+            produto: item.produto,
+            paletes: [],
+            somaVolumes: 0,
+            somaPecas: 0
+          });
+        }
+        const g = mapaGrupos.get(chave);
+        g.paletes.push(item);
+        g.somaVolumes += Number(item.qtd_volumes_palete);
+        g.somaPecas += Number(item.saldo_total_pecas);
+      });
+
+      divHist.innerHTML = Array.from(mapaGrupos.values()).map(grupo => {
+        const estaAberto = gruposAbertos.has(grupo.chave) || termo.length > 0;
+        const todosDoGrupoMarcados = grupo.paletes.every(p => idsSelecionados.has(Number(p.id)));
+        const idsGrupoJson = JSON.stringify(grupo.paletes.map(p => Number(p.id)));
+
+        return `
+          <div>
+            <!-- LINHA PRINCIPAL DO ITEM (CLIQUE PARA ABRIR OU FECHAR OS PALETES DELE) -->
+            <div class="grupo-header ${estaAberto ? 'aberto' : ''}" onclick="alternarGrupoExpandido('${grupo.chave}')">
               <div class="row-left-wrap">
                 <input
                   type="checkbox"
                   class="checkbox-item"
-                  ${marcado ? 'checked' : ''}
-                  onchange="alternarSelecaoItem(${idNum}, this.checked)"
+                  ${todosDoGrupoMarcados ? 'checked' : ''}
+                  onclick="event.stopPropagation()"
+                  onchange="selecionarTodosDoGrupo(${idsGrupoJson}, this.checked)"
                 />
-                <div class="row-main" onclick="alternarSelecaoItem(${idNum}, !idsSelecionados.has(${idNum}))" style="cursor:pointer;">
+                <span class="seta-expansao">▶</span>
+                <div class="row-main">
                   <div class="row-top">
-                    <span class="tag tag-pedido">#${idNum}</span>
-                    <span class="cliente-nome">${item.cliente}</span>
-                    <span class="tag tag-lote">Lote: ${limparLoteEstrito(item.lote, item.pedido)}</span>
-                    <span class="tag tag-item">${item.item}</span>
+                    <span class="tag tag-item">${grupo.item}</span>
+                    <span class="cliente-nome">${grupo.cliente}</span>
+                    <span class="tag tag-lote">Lote: ${grupo.lote}</span>
+                    <span class="tag tag-pedido">${grupo.paletes.length} palete(s)</span>
                   </div>
                   <div class="produto-desc">
-                    ${item.produto} ${item.volume_etiqueta ? `• Vol: ${item.volume_etiqueta}` : ''} • ${new Date(item.data_hora).toLocaleString('pt-BR')}
+                    ${grupo.produto} • <strong style="color:var(--primary)">${estaAberto ? 'Clique p/ recolher lista' : 'Clique p/ abrir os paletes deste item'}</strong>
                   </div>
                 </div>
               </div>
               <div class="row-metrics">
-                <div class="metric-box"><small>Volumes</small><strong>${item.qtd_volumes_palete}</strong></div>
-                <div class="metric-box"><small>Pçs/Vol</small><strong>${item.qtd_pecas_por_volume}</strong></div>
-                <div class="saldo-box"><small>Total Palete</small><strong>${item.saldo_total_pecas.toLocaleString('pt-BR')}</strong></div>
-                <div class="acoes-mobile">
-                  <button class="btn-outline" onclick="abrirModalEdicao(${idNum})">Editar</button>
-                  <button class="btn-danger-outline" onclick="excluirPalete(${idNum})">🗑️ Excluir</button>
-                </div>
+                <div class="metric-box"><small>Paletes</small><strong>${grupo.paletes.length}</strong></div>
+                <div class="metric-box"><small>Volumes</small><strong>${grupo.somaVolumes}</strong></div>
+                <div class="saldo-box"><small>Saldo Item</small><strong>${grupo.somaPecas.toLocaleString('pt-BR')}</strong></div>
               </div>
             </div>
-          `;
-        }).join('');
-      }
+
+            <!-- GAVETA COM OS PALETES INDIVIDUAIS DESTE ITEM ESPECÍFICO -->
+            <div class="gaveta-paletes ${estaAberto ? 'aberta' : ''}">
+              <div class="sub-barra-grupo">
+                <span>Mostrando os <strong>${grupo.paletes.length} palete(s)</strong> do item <strong>${grupo.item}</strong> (Lote ${grupo.lote})</span>
+                <button class="btn-danger-outline" style="padding:4px 10px;" onclick="excluirGrupoInteiro(${idsGrupoJson}, '${grupo.item}')">
+                  🗑️ Excluir Todos deste Item
+                </button>
+              </div>
+              ${grupo.paletes.map(item => {
+                const idNum = Number(item.id);
+                const marcado = idsSelecionados.has(idNum);
+                return `
+                  <div class="list-row ${marcado ? 'selecionado' : ''}">
+                    <div class="row-left-wrap">
+                      <input
+                        type="checkbox"
+                        class="checkbox-item"
+                        ${marcado ? 'checked' : ''}
+                        onchange="alternarSelecaoItem(${idNum}, this.checked)"
+                      />
+                      <div class="row-main" onclick="alternarSelecaoItem(${idNum}, !idsSelecionados.has(${idNum}))" style="cursor:pointer;">
+                        <div class="row-top">
+                          <span class="tag tag-pedido">Palete #${idNum}</span>
+                          <span class="tag tag-item">${item.item}</span>
+                          <span class="tag tag-lote">Lote: ${grupo.lote}</span>
+                        </div>
+                        <div class="produto-desc">
+                          Apontado em ${new Date(item.data_hora).toLocaleString('pt-BR')} ${item.volume_etiqueta ? `• Vol Etiqueta: ${item.volume_etiqueta}` : ''}
+                        </div>
+                      </div>
+                    </div>
+                    <div class="row-metrics">
+                      <div class="metric-box"><small>Volumes</small><strong>${item.qtd_volumes_palete}</strong></div>
+                      <div class="metric-box"><small>Pçs/Vol</small><strong>${item.qtd_pecas_por_volume}</strong></div>
+                      <div class="saldo-box"><small>Total Palete</small><strong>${item.saldo_total_pecas.toLocaleString('pt-BR')}</strong></div>
+                      <div class="acoes-mobile">
+                        <button class="btn-outline" onclick="abrirModalEdicao(${idNum})">Editar</button>
+                        <button class="btn-danger-outline" onclick="excluirPalete(${idNum})">🗑️ Excluir</button>
+                      </div>
+                    </div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function selecionarTodosDoGrupo(idsArray, marcar) {
+      idsArray.forEach(id => {
+        if (marcar) idsSelecionados.add(Number(id));
+        else idsSelecionados.delete(Number(id));
+      });
+      renderizarListas();
+    }
+
+    async function excluirGrupoInteiro(idsArray, nomeItem) {
+      const setRemover = new Set(idsArray.map(Number));
+      historicoCache = historicoCache.filter(p => !setRemover.has(Number(p.id)));
+      localStorage.setItem('finart_backup_paletes', JSON.stringify(historicoCache));
+      idsArray.forEach(id => idsSelecionados.delete(Number(id)));
+      renderizarListas();
+
+      try {
+        await fetch(`${API_BASE}/api/paletes/excluir-multiplos`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ids: idsArray })
+        });
+      } catch (e) {}
+
+      await carregarDashboard(true);
     }
 
     function alternarSelecaoItem(id, marcado) {
