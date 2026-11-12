@@ -1212,6 +1212,118 @@
         document.getElementById('input-volumes').value = 20;
       }
       recalcularPreview();
+    }function abrirTelaConfirmacao(data) {
+      let itemLido = (data.item === 'PT-7808' ? 'PT-7908' : (data.item || '')).toUpperCase();
+      let pedLimpo = limparPedidoEstrito(data.pedido || data.lote);
+      let loteLimpo = limparLoteEstrito(data.lote, pedLimpo);
+      let sugestao = data.sugestao_divergencia || null;
+
+      // Busca todos os paletes já apontados/corrigidos deste mesmo item na memória do celular
+      const doMesmoItem = itemLido
+        ? historicoMemoria.filter(h => h.item.toUpperCase() === itemLido)
+        : [];
+      const catDoItem = itemLido
+        ? catalogoMemoria.find(c => c.item.toUpperCase() === itemLido)
+        : null;
+
+      // Se você corrigiu o 1º palete (ex: de 22 para 15), puxa exatamente a quantidade corrigida (15) da base!
+      let volumesSugeridos = data.qtd_volumes_sugerida || 15;
+      if (doMesmoItem.length > 0 && doMesmoItem[0].qtd_volumes_palete > 0) {
+        volumesSugeridos = doMesmoItem[0].qtd_volumes_palete;
+      } else if (catDoItem && catDoItem.padrao_volumes_palete > 0) {
+        volumesSugeridos = catDoItem.padrao_volumes_palete;
+      }
+
+      const tipoEmb = volumesSugeridos === 22 ? 'SACARIA' : 'CAIXA';
+
+      if (!sugestao && doMesmoItem.length > 0 && loteLimpo) {
+        const jaTemExato = doMesmoItem.some(h => limparLoteEstrito(h.lote, h.pedido) === loteLimpo);
+        if (!jaTemExato) {
+          const confiavel = doMesmoItem.find(h => distanciaLocal(loteLimpo, limparLoteEstrito(h.lote, h.pedido)) <= 2);
+          if (confiavel) {
+            const loteConfiavel = limparLoteEstrito(confiavel.lote, confiavel.pedido);
+            const pedConfiavel = limparPedidoEstrito(confiavel.pedido || confiavel.lote);
+
+            sugestao = {
+              tipo: 'LOTE_AUTO_CORRIGIDO_PELA_BASE',
+              auto_corrigido: true,
+              mensagem: `A câmera leu Pedido "${pedLimpo}" / Lote "${loteLimpo}", mas este produto (${itemLido}) já tem saldo confirmado no Lote Confiável "${loteConfiavel}" (Ped: "${pedConfiavel}"). O sistema corrigiu automaticamente para "${loteConfiavel}"!`,
+              item_lido: itemLido,
+              item_sugerido: confiavel.item,
+              cliente_sugerido: confiavel.cliente,
+              produto_sugerido: confiavel.produto,
+              qtd_pecas_sugerida: confiavel.qtd_pecas_por_volume,
+              qtd_volumes_sugerida: confiavel.qtd_volumes_palete,
+              lote_lido: loteLimpo,
+              pedido_lido: pedLimpo,
+              lote_sugerido: loteConfiavel,
+              pedido_sugerido: pedConfiavel
+            };
+
+            loteLimpo = loteConfiavel;
+            pedLimpo = pedConfiavel;
+          }
+        }
+      }
+
+      document.getElementById('conf-cliente').value = data.cliente || '';
+      document.getElementById('conf-pedido').value = pedLimpo;
+      document.getElementById('conf-lote').value = loteLimpo;
+      document.getElementById('conf-item').value = itemLido;
+      document.getElementById('conf-produto').value = data.produto || '';
+      document.getElementById('conf-pecas').value = data.qtd_pecas_por_volume || '';
+      document.getElementById('conf-vol-etiqueta').value = data.volume_etiqueta || '';
+      document.getElementById('label-volumes').innerText = `Qtd ${tipoEmb}S (Padrão: ${volumesSugeridos}):`;
+      document.getElementById('input-volumes').value = volumesSugeridos;
+
+      const boxDiv = document.getElementById('box-divergencia');
+      if (sugestao) {
+        sugestaoAtual = sugestao;
+        document.getElementById('texto-divergencia').innerText = sugestao.mensagem;
+        document.getElementById('btn-aceitar-sugestao').innerText =
+          `✅ Manter Fonte Confiável: Lote ${sugestao.lote_sugerido} (Ped: ${sugestao.pedido_sugerido})`;
+        document.getElementById('btn-usar-lido-camera').innerText =
+          `⚠️ Usar o que a câmera leu (${sugestao.lote_lido || sugestao.item_lido})`;
+        boxDiv.style.display = 'block';
+      } else {
+        sugestaoAtual = null;
+        boxDiv.style.display = 'none';
+      }
+
+      recalcularPreview();
+      document.getElementById('tela-scanner').style.display = 'none';
+      document.getElementById('tela-confirmacao').style.display = 'block';
+    }
+
+    function atualizarRegraClienteManual() {
+      const cli = (document.getElementById('conf-cliente').value || '').toUpperCase();
+      const item = (document.getElementById('conf-item').value || '').toUpperCase();
+      const prod = (document.getElementById('conf-produto').value || '').toUpperCase();
+
+      // 1º Prioridade: Verifica se já existe um palete apontado/corrigido ou salvo no catálogo para este item
+      const jaApontado = historicoMemoria.find(h => h.item.toUpperCase() === item);
+      const noCatalogo = catalogoMemoria.find(c => c.item.toUpperCase() === item);
+
+      if (jaApontado && jaApontado.qtd_volumes_palete > 0) {
+        document.getElementById('input-volumes').value = jaApontado.qtd_volumes_palete;
+        recalcularPreview();
+        return;
+      }
+      if (noCatalogo && noCatalogo.padrao_volumes_palete > 0) {
+        document.getElementById('input-volumes').value = noCatalogo.padrao_volumes_palete;
+        recalcularPreview();
+        return;
+      }
+
+      // 2º Regra inicial para item inédito
+      if (cli.includes('DEVINTEX') && (item === 'PT-7908' || (prod.includes('1000 GRS') && prod.includes('REDONDO')))) {
+        document.getElementById('input-volumes').value = 22;
+      } else if (cli.includes('DEVINTEX')) {
+        document.getElementById('input-volumes').value = 15;
+      } else if (cli.length > 2) {
+        document.getElementById('input-volumes').value = 20;
+      }
+      recalcularPreview();
     }
 
     function recalcularPreview() {

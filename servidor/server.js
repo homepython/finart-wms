@@ -159,6 +159,13 @@ const CATALOGO_OFICIAL = {
     padrao_volumes: 15,
     qtd_pecas: 180,
     embalagem: 'CAIXA'
+  },
+  'PT-12590': {
+    cliente: 'DEVINTEX COSMETICOS',
+    produto: 'PT 500 GRS REDONDO 3 ENTRADAS BRANCO 2515 PT-12590MP',
+    padrao_volumes: 15,
+    qtd_pecas: 120,
+    embalagem: 'CAIXA'
   }
 };
 
@@ -198,6 +205,8 @@ db.serialize(() => {
 
   db.run(`DELETE FROM catalogo_itens WHERE item = 'PT-7808' OR item = 'PT7808'`);
   db.run(`UPDATE paletes_bipados SET item = 'PT-7908' WHERE item = 'PT-7808' OR item = 'PT7808'`);
+  // Garante que o PT-12590 (Pote 500g) fique salvo com padrão 15 caixas
+  db.run(`UPDATE catalogo_itens SET padrao_volumes_palete = 15, tipo_embalagem = 'CAIXA' WHERE item = 'PT-12590'`);
 
   const stmt = db.prepare(`
     INSERT OR REPLACE INTO catalogo_itens (item, cliente, produto, padrao_volumes_palete, qtd_padrao_pecas, tipo_embalagem)
@@ -209,20 +218,28 @@ db.serialize(() => {
   stmt.finalize();
 });
 
+// PRIORIDADE 1 ABSOLUTA: Usa SEMPRE o valor salvo/corrigido pelo operador na base confiável!
 function calcularPadraoPalete(cliente = '', item = '', produto = '', padraoSalvo = 0) {
+  if (padraoSalvo && Number(padraoSalvo) > 0) {
+    return Number(padraoSalvo);
+  }
+
   const cli = cliente.toUpperCase();
   const it = item.toUpperCase();
   const prod = produto.toUpperCase();
 
-  if (cli.includes('DEVINTEX') && (it === 'PT-7908' || prod.includes('1000 GRS') || prod.includes('REDONDO'))) {
+  // Apenas o Pote 1000g Redondo (PT-7908) tem padrão inicial 22
+  if (cli.includes('DEVINTEX') && (it === 'PT-7908' || (prod.includes('1000 GRS') && prod.includes('REDONDO')))) {
     return 22;
   }
-  if (padraoSalvo && padraoSalvo > 0) return padraoSalvo;
-  if (cli.includes('DEVINTEX')) return 15;
+  // Demais itens Devintex (como PT-12590 de 500g, PT-12236 de 300g, frascos, etc.) = 15 caixas
+  if (cli.includes('DEVINTEX')) {
+    return 15;
+  }
   return 20;
 }
 
-// 1. INTERPRETADOR ULTRA RÁPIDO E COMPLETO (LÊ 100% DOS CAMPOS SEM CORTAR NOMES LONGOS)
+// 1. INTERPRETADOR QUE RESPEITA A CORREÇÃO FEITA NO PRIMEIRO PALETE
 app.post('/api/interpretar-bipe', (req, res) => {
   const { codigoLido, textoEtiqueta } = req.body;
   const brCode = (codigoLido || '').trim();
@@ -232,7 +249,6 @@ app.post('/api/interpretar-bipe', (req, res) => {
     return res.status(400).json({ erro: 'Nenhuma imagem recebida.' });
   }
 
-  // Normaliza falhas de OCR quando a borda da etiqueta está próxima
   let texto = `${brCode}\n${ocrRaw}`
     .replace(/\r/g, '')
     .replace(/\bPA[A-Z]{2,5}\s*\d{4,9}\b/gi, ' ')
@@ -257,7 +273,6 @@ app.post('/api/interpretar-bipe', (req, res) => {
   let produtoLido = '';
   let volumeLido = '';
 
-  // FONTE 1: Código de Barras ou QR Code (Ex: 721467;0062061;252 ou PT-7908;0066431;59)
   const mBarcode = texto.match(/([A-Z]{2}\s*-\s*\d{4,6}|\d{5,7})\s*[;:,]\s*(\d{6,8})\s*[;:,]\s*(\d{2,4})/i);
   if (mBarcode) {
     candidatosItem.push(mBarcode[1].replace(/\s+/g, '').toUpperCase());
@@ -269,7 +284,6 @@ app.post('/api/interpretar-bipe', (req, res) => {
     qtdPorVolume = parseInt(mBarcode[3].trim(), 10) || 0;
   }
 
-  // FONTE 2: Pedido
   const regexPedidos = /PEDIDO[:.\s]*(\d{4,6})(?!\.\d)/gi;
   let mPed;
   while ((mPed = regexPedidos.exec(texto)) !== null) {
@@ -280,7 +294,6 @@ app.post('/api/interpretar-bipe', (req, res) => {
     }
   }
 
-  // FONTE 3: Lote
   const regexLotes = /(?:LOTE[:.\s]*(\d{4,6}\s*[\.,]\s*\d)|\b(00\d{4}\s*\.\s*\d)\b)/gi;
   let mLote;
   while ((mLote = regexLotes.exec(texto)) !== null) {
@@ -299,7 +312,6 @@ app.post('/api/interpretar-bipe', (req, res) => {
     candidatosLote.push(sanitizarLote('', p));
   }
 
-  // FONTE 4: Código do Item (Suporta PT-XXXX, FR-XXXX e códigos numéricos de 6 dígitos como 721467 e 719935)
   const regexTodosPrefixados = /\b((?:PT|FR)\s*-?\s*\d{4,6})(?:MP)?\b/gi;
   let matchPref;
   while ((matchPref = regexTodosPrefixados.exec(texto)) !== null) {
@@ -314,7 +326,6 @@ app.post('/api/interpretar-bipe', (req, res) => {
     if (!cand.startsWith('00')) candidatosItem.push(cand);
   }
 
-  // Captura qualquer código numérico de 6 dígitos de item (ex: 721467, 719935) mesmo que a palavra "ITEM:" tenha falhado
   const regexSeisDigitos = /\b([1-9]\d{5})\b/g;
   let mSeis;
   while ((mSeis = regexSeisDigitos.exec(texto)) !== null) {
@@ -324,14 +335,12 @@ app.post('/api/interpretar-bipe', (req, res) => {
     }
   }
 
-  // Se o texto tiver o código interno específico da etiqueta 721467 (04.001.04.0498) ou 719935 (22908/2)
   if (/04\.001\.04\.0498|VERDE\s*CLARO/i.test(texto)) {
     candidatosItem.unshift('721467');
   } else if (/22908\/2|P[OÓ]S\s*DANOS/i.test(texto)) {
     candidatosItem.unshift('719935');
   }
 
-  // Cliente
   if (/DEVINTEX|COSMETICOS/i.test(texto)) {
     clienteLido = 'DEVINTEX COSMETICOS';
   } else if (/FLORA\s*PRODS|FLORA\s*24|HIG\s*E\s*LIM|P[OÓ]S\s*DANOS|VERDE\s*CLARO/i.test(texto)) {
@@ -341,7 +350,6 @@ app.post('/api/interpretar-bipe', (req, res) => {
     if (mCli) clienteLido = mCli[1].split('\n')[0].trim().toUpperCase();
   }
 
-  // Produto Completo (Captura todas as linhas entre PRODUTO: e QTD: / LOTE: sem cortar códigos como 04.001.04.0498 ATIVADOR)
   const mBlocoProduto =
     texto.match(/PRODUTO[:.\s]*([\s\S]{5,160}?)(?=\bQTD[:\s]|\bLOTE[:\s]|\bVALIDADE[:\s]|\b00\d{4}\.\d\b|$)/i) ||
     texto.match(/\b((?:PT|FRA)\s+\d{2,4}\s*(?:GRS|ML)[\s\S]{5,140}?)(?=\bQTD[:\s]|\bLOTE[:\s]|\bVALIDADE[:\s]|\b00\d{4}\.\d\b|$)/i);
@@ -359,7 +367,6 @@ app.post('/api/interpretar-bipe', (req, res) => {
     if (prodLimpo.length >= 6) produtoLido = prodLimpo;
   }
 
-  // QTD por Caixa
   if (!qtdPorVolume) {
     const mQtdDireta = texto.match(/QTD[:.\s\n]*(\d{2,4})\b/i);
     if (mQtdDireta) {
@@ -377,7 +384,6 @@ app.post('/api/interpretar-bipe', (req, res) => {
   const mVol = texto.match(/\b(\d{2,3}\s*\/\s*\d{3})\b/);
   if (mVol) volumeLido = mVol[1].replace(/\s+/g, '');
 
-  // CRUZA COM A FONTE CONFIÁVEL (PALETES JÁ BIPADOS + CATÁLOGO)
   db.all(`SELECT * FROM catalogo_itens WHERE item != 'PT-7808'`, [], (errCat, catalogoRows) => {
     if (errCat) return res.status(500).json({ erro: errCat.message });
 
@@ -398,7 +404,6 @@ app.post('/api/interpretar-bipe', (req, res) => {
         }
       }
 
-      // Se a câmera não leu o código do item, mas leu um Pedido/Lote que já foi apontado hoje, descobre o Item pelo Lote!
       let loteLidoNaCamera = candidatosLote[0] || '';
       let pedidoLidoNaCamera = candidatosPedido[0] || sanitizarPedido(loteLidoNaCamera);
 
@@ -436,7 +441,6 @@ app.post('/api/interpretar-bipe', (req, res) => {
                    distanciaSimilaridade(pedidoLidoNaCamera, h.pedido) <= 2
           );
 
-          // Só força auto-correção se for erro de leitura de 1 ou 2 dígitos no mesmo item (ex: 008332 vs 006332)
           if (loteConfiavelParecido) {
             loteFinal = loteConfiavelParecido.lote;
             pedidoFinal = loteConfiavelParecido.pedido;
@@ -463,24 +467,26 @@ app.post('/api/interpretar-bipe', (req, res) => {
         }
       }
 
-      const refItemConfiavel = itemMemoriaExato || paletesDesteItem[0];
+      const catItem = catalogoRows.find((r) => r.item.toUpperCase() === itemEscolhido.toUpperCase());
+      const ultimoPaleteDoItem = paletesDesteItem[0] || null;
+      const refItemConfiavel = ultimoPaleteDoItem || catItem;
 
       const clienteFinal =
         (refItemConfiavel && refItemConfiavel.cliente) ||
         clienteLido ||
         (itemEscolhido.startsWith('PT-') || itemEscolhido.startsWith('FR-') ? 'DEVINTEX COSMETICOS' : 'FLORA PRODS DE HIG E LIM');
 
-      // Se o produto já existe no catálogo ou histórico, usa SEMPRE o nome completo oficial (nunca vem cortado!)
       const produtoFinal =
-        (refItemConfiavel && refItemConfiavel.produto) ||
+        (catItem && catItem.produto) ||
+        (ultimoPaleteDoItem && ultimoPaleteDoItem.produto) ||
         produtoLido ||
         '';
 
       const qtdPecasFinal =
-        (paletesDesteItem[0] && paletesDesteItem[0].qtd_pecas_por_volume > 0 ? paletesDesteItem[0].qtd_pecas_por_volume : 0) ||
-        (itemMemoriaExato && itemMemoriaExato.qtd_padrao_pecas > 0 ? itemMemoriaExato.qtd_padrao_pecas : 0) ||
+        (ultimoPaleteDoItem && ultimoPaleteDoItem.qtd_pecas_por_volume > 0 ? ultimoPaleteDoItem.qtd_pecas_por_volume : 0) ||
+        (catItem && catItem.qtd_padrao_pecas > 0 ? catItem.qtd_padrao_pecas : 0) ||
         qtdPorVolume ||
-        (clienteFinal.includes('FLORA') ? 252 : 0);
+        0;
 
       if (!itemEscolhido && !pedidoFinal && !loteFinal && !produtoFinal) {
         return res.status(422).json({
@@ -488,13 +494,16 @@ app.post('/api/interpretar-bipe', (req, res) => {
         });
       }
 
+      // USA SEMPRE A QUANTIDADE DE CAIXAS QUE FOI CORRIGIDA OU APONTADA NO PALETE ANTERIOR DESTE ITEM!
+      const volumesDaBaseConfiavel =
+        (ultimoPaleteDoItem && ultimoPaleteDoItem.qtd_volumes_palete > 0 ? ultimoPaleteDoItem.qtd_volumes_palete : 0) ||
+        (catItem && catItem.padrao_volumes_palete > 0 ? catItem.padrao_volumes_palete : 0);
+
       const padraoVolumes = calcularPadraoPalete(
         clienteFinal,
         itemEscolhido,
         produtoFinal,
-        (paletesDesteItem[0] && paletesDesteItem[0].qtd_volumes_palete >= 12)
-          ? paletesDesteItem[0].qtd_volumes_palete
-          : (itemMemoriaExato ? itemMemoriaExato.padrao_volumes_palete : 0)
+        volumesDaBaseConfiavel
       );
       const tipoEmbalagem = padraoVolumes === 22 ? 'SACARIA' : 'CAIXA';
 
@@ -515,7 +524,7 @@ app.post('/api/interpretar-bipe', (req, res) => {
   });
 });
 
-// 2. SALVAR PALETE E ENSINAR NOVOS ITENS
+// 2. SALVAR PALETE E GRAVAR O PADRÃO DE CAIXAS ESCOLHIDO COMO NOVA BASE
 app.post('/api/paletes', (req, res) => {
   const {
     pedido,
@@ -535,7 +544,7 @@ app.post('/api/paletes', (req, res) => {
 
   db.get(`SELECT * FROM catalogo_itens WHERE UPPER(TRIM(item)) = ?`, [itemLimpo], (errCat, catRow) => {
     db.get(
-      `SELECT * FROM paletes_bipados WHERE UPPER(TRIM(lote)) = ? AND UPPER(TRIM(item)) = ? LIMIT 1`,
+      `SELECT * FROM paletes_bipados WHERE UPPER(TRIM(lote)) = ? AND UPPER(TRIM(item)) = ? ORDER BY id DESC LIMIT 1`,
       [loteLimpo, itemLimpo],
       (errLote, loteRow) => {
         const clienteUnificado = String(cliente || '').trim().toUpperCase() || (loteRow && loteRow.cliente) || (catRow && catRow.cliente);
@@ -548,9 +557,10 @@ app.post('/api/paletes', (req, res) => {
 
         const saldoTotalPecas = pecasUnificada * volumes;
 
-        const padraoParaAprender = volumes >= 12
+        // Se o palete confirmado tem 10 ou mais volumes (ex: 15, 20, 22), atualiza imediatamente o padrão do item no catálogo!
+        const padraoParaAprender = volumes >= 10
           ? volumes
-          : calcularPadraoPalete(clienteUnificado, itemLimpo, produtoUnificado, catRow ? catRow.padrao_volumes_palete : 0);
+          : (catRow ? catRow.padrao_volumes_palete : calcularPadraoPalete(clienteUnificado, itemLimpo, produtoUnificado));
         const tipoEmb = padraoParaAprender === 22 ? 'SACARIA' : 'CAIXA';
 
         db.run(
@@ -685,7 +695,7 @@ app.get('/api/dashboard', (req, res) => {
   });
 });
 
-// 5. EDITAR PALETE
+// 5. EDITAR PALETE: QUANDO VOCÊ CORRIGE UM PALETE (EX: DE 22 PARA 15), ELE ATUALIZA A BASE CONFIÁVEL DO ITEM!
 app.put('/api/paletes/:id', (req, res) => {
   const { id } = req.params;
   const { lote, pedido, cliente, item, produto, qtd_pecas_por_volume, qtd_volumes_palete, volume_etiqueta } = req.body;
@@ -717,14 +727,19 @@ app.put('/api/paletes/:id', (req, res) => {
         [clienteLimpo, produtoLimpo, pecasUn, pecasUn, loteLimpo, itemLimpo]
       );
 
-      const padrao = volumes >= 12 ? volumes : calcularPadraoPalete(clienteLimpo, itemLimpo, produtoLimpo);
-      db.run(
-        `INSERT OR REPLACE INTO catalogo_itens (item, cliente, produto, padrao_volumes_palete, qtd_padrao_pecas) VALUES (?, ?, ?, ?, ?)`,
-        [itemLimpo, clienteLimpo, produtoLimpo, padrao, pecasUn]
-      );
+      // Grava a quantidade corrigida (ex: 15) como o novo padrão oficial daquele item no catálogo!
+      const padraoCorrigido = volumes >= 10 ? volumes : calcularPadraoPalete(clienteLimpo, itemLimpo, produtoLimpo);
+      const tipoEmb = padraoCorrigido === 22 ? 'SACARIA' : 'CAIXA';
 
-      notificarTelasInstantaneamente();
-      res.json({ sucesso: true, saldo_recalculado: novoSaldoTotal });
+      db.run(
+        `INSERT OR REPLACE INTO catalogo_itens (item, cliente, produto, padrao_volumes_palete, qtd_padrao_pecas, tipo_embalagem)
+         VALUES (?, ?, ?, ?, ?, ?)`,
+        [itemLimpo, clienteLimpo, produtoLimpo, padraoCorrigido, pecasUn, tipoEmb],
+        () => {
+          notificarTelasInstantaneamente();
+          res.json({ sucesso: true, saldo_recalculado: novoSaldoTotal });
+        }
+      );
     }
   );
 });
