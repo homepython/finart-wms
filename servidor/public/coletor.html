@@ -31,6 +31,11 @@
       padding: 10px;
       width: 100%;
       overflow-x: hidden;
+      transition: background-color 0.25s ease;
+    }
+
+    body.flash-leitura {
+      background-color: #bbf7d0 !important;
     }
 
     .top-bar {
@@ -237,11 +242,11 @@
 </head>
 <body ontouchstart="destravarSomMobile()" onclick="destravarSomMobile()">
 
-  <audio id="player-bip" preload="auto"></audio>
+  <audio id="player-chime" preload="auto"></audio>
 
   <div class="top-bar">
     <span class="logo">FINART</span>
-    <button class="btn-top" onclick="tocarBipImediato()">🔊 Testar Bipe</button>
+    <button class="btn-top" onclick="tocarSomConfirmacaoAgradavel()">🎵 Testar Som</button>
     <a href="/" class="btn-top">Ver Painel</a>
   </div>
 
@@ -254,7 +259,7 @@
     <div class="visor-wrapper">
       <video id="video-camera" autoplay playsinline muted></video>
       <div class="moldura-etiqueta">
-        <span>Enquadre a etiqueta (Bipa na hora que lê!)</span>
+        <span>Enquadre a etiqueta (Vibra ao ler!)</span>
       </div>
     </div>
 
@@ -267,12 +272,12 @@
     </button>
 
     <input type="file" accept="image/*" capture="environment" id="input-macro" style="display:none" onchange="lerFotoMacro(this)" />
-    <button class="btn btn-macro" onclick="destravarSomMobile(); document.getElementById('input-macro').click()">
+    <button class="btn btn-macro" onclick="vibrarLeitura(); document.getElementById('input-macro').click()">
       🔍 TIRAR FOTO MACRO DO CELULAR
     </button>
   </div>
 
-  <!-- TELA 2: CONFERÊNCIA COM APRENDIZADO INTELIGENTE E TRAVA DE LOTE -->
+  <!-- TELA 2: CONFERÊNCIA COM UNIFICAÇÃO INTELIGENTE -->
   <div class="box" id="tela-confirmacao" style="display: none;">
     <h3 style="margin-bottom: 6px; font-size: 16px; color: var(--primary);">✅ Etiqueta Lida — Confira os Dados</h3>
 
@@ -329,7 +334,7 @@
   <div class="box">
     <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
       <strong style="font-size:12px; color:var(--muted);">SALDOS SINCRONIZADOS</strong>
-      <span style="font-size:11px; color:var(--success); font-weight:700;">● MEMÓRIA ATIVA</span>
+      <span style="font-size:11px; color:var(--success); font-weight:700;">● UNIFICAÇÃO ATIVA</span>
     </div>
     <div id="lista-ao-vivo">Carregando saldos...</div>
   </div>
@@ -347,12 +352,10 @@
     let audioCtx = null;
     let catalogoMemoria = [];
 
-    // TRAVA ESTRITA DE PEDIDO (Apenas números, máx 6 dígitos: "006437")
     function limparPedidoEstrito(val = '') {
       return String(val).trim().split('.')[0].replace(/\D/g, '').slice(0, 6);
     }
 
-    // TRAVA ESTRITA DE LOTE (Máx 8 caracteres e 1 único ponto: "006437.1")
     function limparLoteEstrito(val = '', pedidoRef = '') {
       let limpo = String(val).replace(/,/g, '.').replace(/[^0-9.]/g, '');
       const partes = limpo.split('.').filter(Boolean);
@@ -379,12 +382,14 @@
       input.value = limparLoteEstrito(input.value);
     }
 
-    // GERADOR DE BIPE INSTANTÂNEO (Dispara em 0ms assim que a etiqueta é lida!)
-    function criarWavBipBase64(freq = 2450, duracaoMs = 200) {
+    // GERA UM ACORDE MUSICAL SUAVE E AGRADÁVEL EM .WAV (Estilo Apple Pay / Sucesso Moderno: Dó5 -> Mi5 -> Sol5 -> Dó6)
+    function criarWavAcordeSuaveBase64() {
       const sampleRate = 44100;
-      const numSamples = Math.floor((sampleRate * duracaoMs) / 1000);
+      const duracaoSeg = 0.48;
+      const numSamples = Math.floor(sampleRate * duracaoSeg);
       const buffer = new ArrayBuffer(44 + numSamples * 2);
       const view = new DataView(buffer);
+
       const writeStr = (offset, str) => {
         for (let i = 0; i < str.length; i++) view.setUint8(offset + i, str.charCodeAt(i));
       };
@@ -402,18 +407,35 @@
       writeStr(36, 'data');
       view.setUint32(40, numSamples * 2, true);
 
+      // Notas suaves em onda senoidal pura com fade-out natural
+      const notas = [
+        { freq: 523.25, inicio: 0.00, fim: 0.14 }, // C5
+        { freq: 659.25, inicio: 0.09, fim: 0.24 }, // E5
+        { freq: 783.99, inicio: 0.18, fim: 0.48 }, // G5
+        { freq: 1046.50, inicio: 0.22, fim: 0.48 } // C6
+      ];
+
       for (let i = 0; i < numSamples; i++) {
         const t = i / sampleRate;
-        const onda = Math.sin(2 * Math.PI * freq * t) >= 0 ? 32767 : -32767;
-        view.setInt16(44 + i * 2, onda, true);
+        let sample = 0;
+        notas.forEach((n) => {
+          if (t >= n.inicio && t <= n.fim) {
+            const progresso = (t - n.inicio) / (n.fim - n.inicio);
+            const envelope = Math.sin(progresso * Math.PI); // Subida e descida macia sem estalo
+            sample += Math.sin(2 * Math.PI * n.freq * t) * envelope * 0.42;
+          }
+        });
+        const intSample = Math.max(-32767, Math.min(32767, Math.floor(sample * 32767)));
+        view.setInt16(44 + i * 2, intSample, true);
       }
+
       let binary = '';
       const bytes = new Uint8Array(buffer);
       for (let i = 0; i < bytes.byteLength; i++) binary += String.fromCharCode(bytes[i]);
       return 'data:audio/wav;base64,' + btoa(binary);
     }
 
-    const wavURI = criarWavBipBase64(2450, 210);
+    const wavAcordeURI = criarWavAcordeSuaveBase64();
 
     function destravarSomMobile() {
       try {
@@ -422,32 +444,50 @@
           audioCtx = new AC();
         }
         if (audioCtx.state === 'suspended') audioCtx.resume();
-        const player = document.getElementById('player-bip');
-        if (!player.src) player.src = wavURI;
+        const player = document.getElementById('player-chime');
+        if (!player.src) player.src = wavAcordeURI;
       } catch (e) {}
     }
 
-    // Toca tanto por WebAudio (latência zero) quanto pelo Player WAV no volume máximo
-    function tocarBipImediato() {
+    // 1. VIBRAÇÃO + FLASH VISUAL QUANDO LÊ A IMAGEM DA ETIQUETA
+    function vibrarLeitura() {
       try {
-        if (navigator.vibrate) navigator.vibrate([160, 40, 120]);
+        if (navigator.vibrate) {
+          navigator.vibrate([220, 60, 220]);
+        }
+        document.body.classList.add('flash-leitura');
+        setTimeout(() => document.body.classList.remove('flash-leitura'), 350);
+      } catch (e) {}
+    }
+
+    // 2. SOM MUSICAL AGRADÁVEL + VIBRAÇÃO AO CONFIRMAR O APONTAMENTO DO PALETE
+    function tocarSomConfirmacaoAgradavel() {
+      try {
+        destravarSomMobile();
+        if (navigator.vibrate) navigator.vibrate([120, 50, 180]);
+
         if (audioCtx) {
           if (audioCtx.state === 'suspended') audioCtx.resume();
           const now = audioCtx.currentTime;
-          const osc = audioCtx.createOscillator();
-          const gain = audioCtx.createGain();
-          osc.type = 'square';
-          osc.frequency.setValueAtTime(2450, now);
-          gain.gain.setValueAtTime(1.0, now);
-          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.18);
-          osc.connect(gain);
-          gain.connect(audioCtx.destination);
-          osc.start(now);
-          osc.stop(now + 0.18);
+          const notas = [523.25, 659.25, 783.99, 1046.50];
+          notas.forEach((freq, idx) => {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(freq, now + idx * 0.08);
+            gain.gain.setValueAtTime(0.001, now + idx * 0.08);
+            gain.gain.linearRampToValueAtTime(0.35, now + idx * 0.08 + 0.03);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.08 + 0.28);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start(now + idx * 0.08);
+            osc.stop(now + idx * 0.08 + 0.29);
+          });
         }
-        const player = document.getElementById('player-bip');
-        if (!player.src) player.src = wavURI;
-        player.volume = 1.0;
+
+        const player = document.getElementById('player-chime');
+        if (!player.src) player.src = wavAcordeURI;
+        player.volume = 0.9;
         player.currentTime = 0;
         player.play().catch(() => {});
       } catch (e) {}
@@ -459,7 +499,7 @@
         ocrWorker = await Tesseract.createWorker('eng');
         await ocrWorker.setParameters({ tessedit_pageseg_mode: '6' });
         motorPronto = true;
-        badge.innerText = '✅ Leitor Inteligente Pronto (Bipa assim que lê)';
+        badge.innerText = '✅ Leitor Inteligente Pronto (Vibra ao ler)';
       } catch (e) {
         badge.innerText = '⚠️ Modo de leitura básico ativo';
       }
@@ -514,6 +554,7 @@
       if (!video || !video.videoWidth || lendoAgora) return;
 
       destravarSomMobile();
+      if (manual) vibrarLeitura();
       lendoAgora = true;
       const prog = document.getElementById('progresso-box');
       if (manual) prog.style.display = 'block';
@@ -571,9 +612,6 @@
           return;
         }
 
-        // TOCA O BIPE NO EXATO MILISSEGUNDO EM QUE CONSEGUIU LER A ETIQUETA (Sem esperar a internet!)
-        tocarBipImediato();
-
         const res = await fetch(`${API_BASE}/api/interpretar-bipe`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -591,6 +629,9 @@
         }
 
         if (timerAutoScan) clearInterval(timerAutoScan);
+
+        // VIBRA O CELULAR E PISCA VERDE ASSIM QUE LÊ A ETIQUETA
+        vibrarLeitura();
         abrirTelaConfirmacao(data);
       } catch (e) {
         if (mostrarAlertaSeFalhar) alert('Erro ao processar leitura.');
@@ -616,7 +657,6 @@
       document.getElementById('tela-confirmacao').style.display = 'block';
     }
 
-    // Se você digitar um código que o sistema já aprendeu, ele preenche tudo sozinho!
     function autoCompletarItemAprendido() {
       const cod = (document.getElementById('conf-item').value || '').trim().toUpperCase();
       const mem = catalogoMemoria.find(c => c.item.toUpperCase() === cod);
@@ -660,6 +700,9 @@
         return alert('Verifique a quantidade de caixas e de peças por caixa!');
       }
 
+      // TOCA O SOM MUSICAL AGRADÁVEL ASSIM QUE VOCÊ CONFIRMA O APONTAMENTO DO PALETE
+      tocarSomConfirmacaoAgradavel();
+
       const pedLimpo = limparPedidoEstrito(document.getElementById('conf-pedido').value);
       let loteLimpo = limparLoteEstrito(document.getElementById('conf-lote').value, pedLimpo);
       if (loteLimpo.endsWith('.')) loteLimpo += '1';
@@ -687,7 +730,6 @@
         return;
       }
 
-      tocarBipImediato();
       await atualizarResumoAoVivo();
       voltarParaCamera();
     }
@@ -707,17 +749,21 @@
         const catalogoSalvo = JSON.parse(localStorage.getItem('finart_backup_catalogo') || '[]');
 
         if (historico.length === 0 && backupSalvo.length > 0) {
-          await fetch(`${API_BASE}/api/restaurar-backup`, {
+          const rRest = await fetch(`${API_BASE}/api/restaurar-backup`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ historico: backupSalvo, catalogo: catalogoSalvo })
           });
-          return atualizarResumoAoVivo();
-        }
-
-        if (historico.length > 0) {
+          const resJson = await rRest.json();
+          if (resJson && resJson.restaurado) {
+            return atualizarResumoAoVivo();
+          } else {
+            localStorage.setItem('finart_backup_paletes', '[]');
+          }
+        } else {
           localStorage.setItem('finart_backup_paletes', JSON.stringify(historico));
         }
+
         if (catalogo && catalogo.length > 0) {
           catalogoMemoria = catalogo;
           localStorage.setItem('finart_backup_catalogo', JSON.stringify(catalogo));
@@ -745,7 +791,7 @@
     document.addEventListener('visibilitychange', () => {
       if (!document.hidden) atualizarResumoAoVivo();
     });
-    setInterval(atualizarResumoAoVivo, 2000);
+    setInterval(atualizarResumoAoVivo, 2500);
 
     window.onload = () => {
       inicializarMotorOptico();

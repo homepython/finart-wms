@@ -30,6 +30,8 @@ app.get('/coletor.html', (req, res) => {
 });
 
 let clientesTempoReal = [];
+// Controla se o usuário já limpou/excluiu dados para que o backup do celular nunca restaure itens apagados
+let versaoExclusao = Date.now();
 
 function notificarTelasInstantaneamente() {
   clientesTempoReal.forEach((cliente) => {
@@ -50,13 +52,11 @@ app.get('/api/stream', (req, res) => {
   });
 });
 
-// TRAVA ESTRITA DE PEDIDO (Apenas dígitos, sem ponto, máx 6 caracteres: ex "006437")
 function sanitizarPedido(valor = '') {
   const semPonto = String(valor).trim().split('.')[0];
   return semPonto.replace(/\D/g, '').slice(0, 6);
 }
 
-// TRAVA ESTRITA DE LOTE (Máx 8 caracteres e exatamente 1 ponto: ex "006437.1", nunca "006437.1.1")
 function sanitizarLote(valor = '', pedidoFallback = '') {
   let limpo = String(valor).trim().replace(/,/g, '.').replace(/[^0-9.]/g, '');
   const partes = limpo.split('.').filter(Boolean);
@@ -65,16 +65,12 @@ function sanitizarLote(valor = '', pedidoFallback = '') {
     const ped = sanitizarPedido(pedidoFallback);
     return ped ? `${ped}.1` : '';
   }
-
   if (partes.length === 1) {
     const num = partes[0];
-    if (num.length === 7) {
-      return `${num.slice(0, 6)}.${num.slice(6, 7)}`;
-    }
+    if (num.length === 7) return `${num.slice(0, 6)}.${num.slice(6, 7)}`;
     const base = num.slice(0, 6);
     return base ? `${base}.1` : '';
   }
-
   const base = partes[0].slice(0, 6);
   const sufixo = partes[1].slice(0, 1) || '1';
   return `${base}.${sufixo}`.slice(0, 8);
@@ -85,8 +81,39 @@ const db = new sqlite3.Database('./finart.db', (err) => {
   else console.log('✅ Banco FINART conectado.');
 });
 
+// Catálogo base oficial (protegido contra erros de leitura de câmera)
+const CATALOGO_OFICIAL = {
+  'FR-12588': {
+    cliente: 'DEVINTEX COSMETICOS',
+    produto: 'FRA 300 ML CÔNICO ATIV. R 28 410 TP PUSH PULL BRANCO 2515 -MP-FR-12588MP',
+    padrao_volumes: 15,
+    qtd_pecas: 220,
+    embalagem: 'CAIXA'
+  },
+  '719935': {
+    cliente: 'FLORA PRODS DE HIG E LIM',
+    produto: 'FRA 300 ML FLORA 24 410 PUSH PULL ROSA 22908/2 CPP PÓS DANOS SOL. MAR E',
+    padrao_volumes: 20,
+    qtd_pecas: 252,
+    embalagem: 'CAIXA'
+  },
+  'PT-7908': {
+    cliente: 'DEVINTEX COSMETICOS',
+    produto: 'PT 1000 GRS REDONDO 3 ENTRADAS BRANCO 2515 PT-7908MP',
+    padrao_volumes: 22,
+    qtd_pecas: 59,
+    embalagem: 'SACARIA'
+  },
+  'PT-12236': {
+    cliente: 'DEVINTEX COSMETICOS',
+    produto: 'PT 300 GRS MAIONESE MATIZADOR NATURAL PT-12236MP',
+    padrao_volumes: 15,
+    qtd_pecas: 180,
+    embalagem: 'CAIXA'
+  }
+};
+
 db.serialize(() => {
-  // Catálogo Inteligente de Itens (Aprende novos códigos automaticamente)
   db.run(`
     CREATE TABLE IF NOT EXISTS catalogo_itens (
       item TEXT PRIMARY KEY,
@@ -95,14 +122,6 @@ db.serialize(() => {
       padrao_volumes_palete INTEGER NOT NULL,
       qtd_padrao_pecas INTEGER DEFAULT 0,
       tipo_embalagem TEXT DEFAULT 'CAIXA'
-    )
-  `);
-
-  // Memória Inteligente de Clientes (Aprende o padrão de caixas de clientes novos)
-  db.run(`
-    CREATE TABLE IF NOT EXISTS clientes_regras (
-      cliente TEXT PRIMARY KEY,
-      padrao_volumes_palete INTEGER NOT NULL
     )
   `);
 
@@ -122,27 +141,30 @@ db.serialize(() => {
     )
   `);
 
+  // Tabela que grava IDs excluídos para que nenhum celular restaure itens apagados
+  db.run(`
+    CREATE TABLE IF NOT EXISTS ids_excluidos (
+      id INTEGER PRIMARY KEY
+    )
+  `);
+
   const stmt = db.prepare(`
-    INSERT OR IGNORE INTO catalogo_itens (item, cliente, produto, padrao_volumes_palete, qtd_padrao_pecas, tipo_embalagem)
+    INSERT OR REPLACE INTO catalogo_itens (item, cliente, produto, padrao_volumes_palete, qtd_padrao_pecas, tipo_embalagem)
     VALUES (?, ?, ?, ?, ?, ?)
   `);
-  stmt.run('FR-12588', 'DEVINTEX COSMETICOS', 'FRA 300 ML CÔNICO ATIV. R 28 410 TP PUSH PULL BRANCO 2515 -MP-FR-12588MP', 15, 220, 'CAIXA');
-  stmt.run('719935', 'FLORA PRODS DE HIG E LIM', 'FRA 300 ML FLORA 24 410 PUSH PULL ROSA 22908/2 CPP PÓS DANOS SOL. MAR E', 20, 252, 'CAIXA');
-  stmt.run('PT-7908', 'DEVINTEX COSMETICOS', 'PT 1000 GRS REDONDO 3 ENTRADAS BRANCO 2515 PT-7908MP', 22, 59, 'SACARIA');
-  stmt.run('PT-12236', 'DEVINTEX COSMETICOS', 'PT 300 GRS MAIONESE MATIZADOR NATURAL PT-12236MP', 15, 180, 'CAIXA');
+  Object.entries(CATALOGO_OFICIAL).forEach(([cod, d]) => {
+    stmt.run(cod, d.cliente, d.produto, d.padrao_volumes, d.qtd_pecas, d.embalagem);
+  });
   stmt.finalize();
 
-  // Auto-correção de registros antigos que tenham ficado com ".1.1" no banco
-  db.all(`SELECT id, pedido, lote FROM paletes_bipados`, [], (err, rows) => {
-    if (!err && rows) {
-      rows.forEach((r) => {
-        const pedCorreto = sanitizarPedido(r.pedido || r.lote);
-        const loteCorreto = sanitizarLote(r.lote, pedCorreto);
-        if (r.pedido !== pedCorreto || r.lote !== loteCorreto) {
-          db.run(`UPDATE paletes_bipados SET pedido = ?, lote = ? WHERE id = ?`, [pedCorreto, loteCorreto, r.id]);
-        }
-      });
-    }
+  // Unifica automaticamente registros antigos divergentes do mesmo Item/Lote (ex: PT-7908 com 50 vs 59 peças)
+  Object.entries(CATALOGO_OFICIAL).forEach(([cod, d]) => {
+    db.run(
+      `UPDATE paletes_bipados 
+       SET cliente = ?, produto = ?, qtd_pecas_por_volume = ?, saldo_total_pecas = qtd_volumes_palete * ?
+       WHERE UPPER(TRIM(item)) = ?`,
+      [d.cliente, d.produto, d.qtd_pecas, d.qtd_pecas, cod]
+    );
   });
 });
 
@@ -154,16 +176,12 @@ function calcularPadraoPalete(cliente = '', item = '', produto = '', padraoSalvo
   if (cli.includes('DEVINTEX') && (it === 'PT-7908' || prod.includes('1000 GRS') || prod.includes('REDONDO'))) {
     return 22;
   }
-  if (padraoSalvo && padraoSalvo > 0) {
-    return padraoSalvo;
-  }
-  if (cli.includes('DEVINTEX')) {
-    return 15;
-  }
+  if (padraoSalvo && padraoSalvo > 0) return padraoSalvo;
+  if (cli.includes('DEVINTEX')) return 15;
   return 20;
 }
 
-// 1. INTERPRETADOR INTELIGENTE COM MEMÓRIA APRENDIDA
+// 1. INTERPRETADOR COM UNIFICAÇÃO INTELIGENTE POR LOTE E CÓDIGO DO ITEM
 app.post('/api/interpretar-bipe', (req, res) => {
   const { codigoLido, textoEtiqueta } = req.body;
   const brCode = (codigoLido || '').trim();
@@ -196,7 +214,6 @@ app.post('/api/interpretar-bipe', (req, res) => {
   let produtoLido = '';
   let volumeLido = '';
 
-  // A) Linha de código de barras (Ex: PT-12236;0064371;180)
   const mBarcode = texto.match(/([A-Z]{2}\s*-\s*\d{4,6}|\d{5,7})\s*[;:,]\s*(\d{6,8})\s*[;:,]\s*(\d{2,4})/i);
   if (mBarcode) {
     item = mBarcode[1].replace(/\s+/g, '').toUpperCase();
@@ -207,7 +224,6 @@ app.post('/api/interpretar-bipe', (req, res) => {
     qtdPorVolume = parseInt(mBarcode[3].trim(), 10) || 0;
   }
 
-  // B) Lote e Pedido com proteção contra ".1.1"
   if (!lote) {
     const mLoteDireto =
       texto.match(/LOTE[:.\s]*(\d{5,6}\s*[\.,]\s*\d)/i) ||
@@ -219,7 +235,6 @@ app.post('/api/interpretar-bipe', (req, res) => {
   }
 
   if (!pedido) {
-    // Nunca captura o ".1" dentro do pedido
     const mPed =
       texto.match(/PEDIDO[:.\s]*(\d{5,6})(?!\.\d)/i) ||
       texto.match(/\b(00\d{4})\b/);
@@ -229,7 +244,6 @@ app.post('/api/interpretar-bipe', (req, res) => {
     }
   }
 
-  // C) Código do Item (reconhece PT-XXXX, FR-XXXX ou qualquer código aprendido no catálogo)
   if (!item) {
     const mItemPrefixado =
       texto.match(/\b((?:PT|FR)\s*-\s*\d{4,6})(?:MP)?\b/i) ||
@@ -250,7 +264,6 @@ app.post('/api/interpretar-bipe', (req, res) => {
     }
   }
 
-  // D) Cliente
   if (/DEVINTEX|COSMETICOS/i.test(texto)) {
     clienteLido = 'DEVINTEX COSMETICOS';
   } else if (/FLORA\s*PRODS|FLORA\s*24|HIG\s*E\s*LIM|P[OÓ]S\s*DANOS/i.test(texto)) {
@@ -260,7 +273,6 @@ app.post('/api/interpretar-bipe', (req, res) => {
     if (mCli) clienteLido = mCli[1].split('\n')[0].trim().toUpperCase();
   }
 
-  // E) Produto Completo (2 linhas)
   const mBlocoProduto =
     texto.match(/PRODUTO[:.\s]*([\s\S]{5,140}?)(?=\bQTD\b|\bLOTE\b|\bVALIDADE\b|\b00\d{4}\.\d\b|$)/i) ||
     texto.match(/\b((?:PT|FRA)\s+\d{2,4}\s*(?:GRS|ML)[\s\S]{5,110}?)(?=\bQTD\b|\bLOTE\b|\bVALIDADE\b|$)/i);
@@ -279,7 +291,6 @@ app.post('/api/interpretar-bipe', (req, res) => {
     if (prodLimpo.length >= 6) produtoLido = prodLimpo;
   }
 
-  // F) QTD por Caixa
   if (!qtdPorVolume) {
     const mQtdDireta = texto.match(/QTD[:.\s\n]*(\d{2,4})\b/i);
     if (mQtdDireta) {
@@ -291,65 +302,87 @@ app.post('/api/interpretar-bipe', (req, res) => {
     const mEntreProdELote = texto.match(/(?:MP|MAR\s*E)[\s\S]{0,30}?\b(\d{2,4})\b[\s\S]{0,30}?(?:LOTE|00\d{4})/i);
     if (mEntreProdELote) qtdPorVolume = parseInt(mEntreProdELote[1], 10);
   }
-  if (!qtdPorVolume && lote) {
-    const regexAntesDoLote = new RegExp(`\\b(\\d{2,3})\\b[\\s\\nLOTE:]*${lote.replace('.', '\\.')}`, 'i');
-    const mAntes = texto.match(regexAntesDoLote);
-    if (mAntes) qtdPorVolume = parseInt(mAntes[1], 10);
-  }
 
-  // G) Volume da Etiqueta
   const mVol = texto.match(/\b(\d{2,3}\s*\/\s*\d{3})\b/);
   if (mVol) volumeLido = mVol[1].replace(/\s+/g, '');
 
-  // H) Cruza com toda a memória aprendida no banco (Catálogo de Itens + Clientes)
-  db.all(`SELECT * FROM catalogo_itens`, [], (err, catalogoRows) => {
-    if (err) return res.status(500).json({ erro: err.message });
+  const pedidoLimpo = sanitizarPedido(pedido || lote);
+  const loteLimpo = sanitizarLote(lote, pedidoLimpo);
 
-    // Se o código do item não foi pego diretamente pela regex, verifica se algum código já aprendido aparece no texto da etiqueta!
-    let itemMemoria = null;
-    if (item) {
-      itemMemoria = catalogoRows.find((r) => r.item.toUpperCase() === item.toUpperCase());
-    } else {
-      itemMemoria = catalogoRows.find((r) => r.item.length >= 4 && texto.toUpperCase().includes(r.item.toUpperCase()));
-      if (itemMemoria) item = itemMemoria.item;
-    }
+  // INTELIGÊNCIA DE UNIFICAÇÃO:
+  // 1º Verifica se já existe um palete bipado com esse mesmo Lote (ou Pedido) -> Usa exatamente os mesmos dados!
+  // 2º Verifica se o Código do Item já existe no Catálogo -> Trava o nome do produto e a quantidade oficial!
+  db.get(
+    `SELECT * FROM paletes_bipados WHERE (lote = ? AND lote != '') OR (item = ? AND item != '') ORDER BY id DESC LIMIT 1`,
+    [loteLimpo, item],
+    (errP, paleteExistente) => {
+      db.all(`SELECT * FROM catalogo_itens`, [], (err, catalogoRows) => {
+        if (err) return res.status(500).json({ erro: err.message });
 
-    const clienteFinal = clienteLido || (itemMemoria ? itemMemoria.cliente : (item.startsWith('PT-') || item.startsWith('FR-') ? 'DEVINTEX COSMETICOS' : ''));
-    const produtoFinal = produtoLido || (itemMemoria ? itemMemoria.produto : '');
-    const qtdPecasFinal = qtdPorVolume || (itemMemoria ? itemMemoria.qtd_padrao_pecas : 0);
+        let itemMemoria = null;
+        if (item) {
+          itemMemoria = catalogoRows.find((r) => r.item.toUpperCase() === item.toUpperCase());
+        } else {
+          itemMemoria = catalogoRows.find((r) => r.item.length >= 4 && texto.toUpperCase().includes(r.item.toUpperCase()));
+          if (itemMemoria) item = itemMemoria.item;
+        }
 
-    if (!item && !pedido && !lote && !produtoFinal) {
-      return res.status(422).json({
-        erro: 'Etiqueta não enquadrada. Aponte para a etiqueta inteira e tente novamente.'
+        // Se o Lote já foi bipado antes e o item bate (ou não foi lido), herda 100% do lote já aberto
+        const mesmoLoteAberto = paleteExistente && paleteExistente.lote === loteLimpo && (!item || paleteExistente.item === item);
+
+        const itemFinal = item || (mesmoLoteAberto ? paleteExistente.item : (itemMemoria ? itemMemoria.item : ''));
+
+        // PRIORIDADE TOTAL AO CATÁLOGO / LOTE ABERTO para nunca dividir saldo por causa de 1 número lido diferente no nome ou QTD
+        const clienteFinal =
+          (itemMemoria && itemMemoria.cliente) ||
+          (mesmoLoteAberto && paleteExistente.cliente) ||
+          clienteLido ||
+          (itemFinal.startsWith('PT-') || itemFinal.startsWith('FR-') ? 'DEVINTEX COSMETICOS' : '');
+
+        const produtoFinal =
+          (itemMemoria && itemMemoria.produto) ||
+          (mesmoLoteAberto && paleteExistente.produto) ||
+          produtoLido ||
+          '';
+
+        const qtdPecasFinal =
+          (itemMemoria && itemMemoria.qtd_padrao_pecas > 0 ? itemMemoria.qtd_padrao_pecas : 0) ||
+          (mesmoLoteAberto && paleteExistente.qtd_pecas_por_volume > 0 ? paleteExistente.qtd_pecas_por_volume : 0) ||
+          qtdPorVolume ||
+          0;
+
+        if (!itemFinal && !pedidoLimpo && !loteLimpo && !produtoFinal) {
+          return res.status(422).json({
+            erro: 'Etiqueta não enquadrada. Aponte para a etiqueta inteira e tente novamente.'
+          });
+        }
+
+        const padraoVolumes = calcularPadraoPalete(
+          clienteFinal,
+          itemFinal,
+          produtoFinal,
+          itemMemoria ? itemMemoria.padrao_volumes_palete : 0
+        );
+        const tipoEmbalagem = padraoVolumes === 22 ? 'SACARIA' : 'CAIXA';
+
+        res.json({
+          item: itemFinal,
+          pedido: pedidoLimpo,
+          lote: loteLimpo,
+          cliente: clienteFinal || 'DEVINTEX COSMETICOS',
+          produto: produtoFinal || (itemFinal ? `PRODUTO ITEM ${itemFinal}` : ''),
+          tipoEmbalagem,
+          volume_etiqueta: volumeLido,
+          qtd_pecas_por_volume: qtdPecasFinal,
+          qtd_volumes_sugerida: padraoVolumes,
+          saldo_previsto: qtdPecasFinal * padraoVolumes
+        });
       });
     }
-
-    const pedidoLimpo = sanitizarPedido(pedido || lote);
-    const loteLimpo = sanitizarLote(lote, pedidoLimpo);
-    const padraoVolumes = calcularPadraoPalete(
-      clienteFinal,
-      item,
-      produtoFinal,
-      itemMemoria ? itemMemoria.padrao_volumes_palete : 0
-    );
-    const tipoEmbalagem = padraoVolumes === 22 ? 'SACARIA' : 'CAIXA';
-
-    res.json({
-      item: item || (itemMemoria ? itemMemoria.item : ''),
-      pedido: pedidoLimpo,
-      lote: loteLimpo,
-      cliente: clienteFinal || 'DEVINTEX COSMETICOS',
-      produto: produtoFinal || (item ? `PRODUTO ITEM ${item}` : ''),
-      tipoEmbalagem,
-      volume_etiqueta: volumeLido,
-      qtd_pecas_por_volume: qtdPecasFinal,
-      qtd_volumes_sugerida: padraoVolumes,
-      saldo_previsto: qtdPecasFinal * padraoVolumes
-    });
-  });
+  );
 });
 
-// 2. SALVAR PALETE E ENSINAR NOVOS ITENS/CLIENTES AO SISTEMA
+// 2. SALVAR PALETE E UNIFICAR SALDO AUTOMATICAMENTE SE FOR DO MESMO LOTE + ITEM
 app.post('/api/paletes', (req, res) => {
   const {
     pedido,
@@ -362,83 +395,77 @@ app.post('/api/paletes', (req, res) => {
     volume_etiqueta
   } = req.body;
 
-  const pecasUn = Number(qtd_pecas_por_volume);
   const volumes = Number(qtd_volumes_palete);
   const itemLimpo = String(item || '').trim().toUpperCase();
-  const clienteLimpo = String(cliente || '').trim().toUpperCase();
-  const produtoLimpo = String(produto || '').trim().toUpperCase();
   const pedidoLimpo = sanitizarPedido(pedido || lote);
   const loteLimpo = sanitizarLote(lote, pedidoLimpo);
 
-  if (!loteLimpo || !itemLimpo || !clienteLimpo || pecasUn <= 0 || volumes <= 0) {
-    return res.status(400).json({ erro: 'Confirme Cliente, Lote, Item e Quantidades antes de salvar.' });
-  }
-
-  const saldoTotalPecas = pecasUn * volumes;
-
-  if (volume_etiqueta && volume_etiqueta.trim() !== '') {
+  // Verifica se já existe esse Item no catálogo ou no mesmo Lote para padronizar Nome e Peças/Volume
+  db.get(`SELECT * FROM catalogo_itens WHERE UPPER(TRIM(item)) = ?`, [itemLimpo], (errCat, catRow) => {
     db.get(
-      `SELECT id FROM paletes_bipados WHERE lote = ? AND item = ? AND volume_etiqueta = ?`,
-      [loteLimpo, itemLimpo, volume_etiqueta.trim()],
-      (err, duplicado) => {
-        if (duplicado) {
-          return res.status(409).json({
-            erro: `Atenção: O palete Volume ${volume_etiqueta} do Lote ${loteLimpo} já foi bipado!`
-          });
+      `SELECT * FROM paletes_bipados WHERE UPPER(TRIM(lote)) = ? AND UPPER(TRIM(item)) = ? LIMIT 1`,
+      [loteLimpo, itemLimpo],
+      (errLote, loteRow) => {
+        const clienteUnificado = (loteRow && loteRow.cliente) || (catRow && catRow.cliente) || String(cliente || '').trim().toUpperCase();
+        const produtoUnificado = (loteRow && loteRow.produto) || (catRow && catRow.produto) || String(produto || '').trim().toUpperCase();
+        const pecasUnificada = Number(qtd_pecas_por_volume) || (loteRow && loteRow.qtd_pecas_por_volume) || (catRow && catRow.qtd_padrao_pecas) || 0;
+
+        if (!loteLimpo || !itemLimpo || !clienteUnificado || pecasUnificada <= 0 || volumes <= 0) {
+          return res.status(400).json({ erro: 'Confirme Cliente, Lote, Item e Quantidades antes de salvar.' });
         }
-        inserirPalete();
+
+        const saldoTotalPecas = pecasUnificada * volumes;
+
+        const padraoParaAprender = volumes >= 12
+          ? volumes
+          : calcularPadraoPalete(clienteUnificado, itemLimpo, produtoUnificado, catRow ? catRow.padrao_volumes_palete : 0);
+        const tipoEmb = padraoParaAprender === 22 ? 'SACARIA' : 'CAIXA';
+
+        // Salva no catálogo caso seja um produto novo
+        db.run(
+          `INSERT OR REPLACE INTO catalogo_itens (item, cliente, produto, padrao_volumes_palete, qtd_padrao_pecas, tipo_embalagem)
+           VALUES (?, ?, ?, ?, ?, ?)`,
+          [itemLimpo, clienteUnificado, produtoUnificado, padraoParaAprender, pecasUnificada, tipoEmb]
+        );
+
+        // Garante que todos os paletes já bipados deste mesmo Lote + Item tenham exatamente o mesmo nome e peças/vol
+        db.run(
+          `UPDATE paletes_bipados 
+           SET cliente = ?, produto = ?, qtd_pecas_por_volume = ?, saldo_total_pecas = qtd_volumes_palete * ?
+           WHERE UPPER(TRIM(lote)) = ? AND UPPER(TRIM(item)) = ?`,
+          [clienteUnificado, produtoUnificado, pecasUnificada, pecasUnificada, loteLimpo, itemLimpo]
+        );
+
+        db.run(
+          `INSERT INTO paletes_bipados 
+          (pedido, lote, item, cliente, produto, qtd_pecas_por_volume, qtd_volumes_palete, saldo_total_pecas, volume_etiqueta)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          [pedidoLimpo, loteLimpo, itemLimpo, clienteUnificado, produtoUnificado, pecasUnificada, volumes, saldoTotalPecas, volume_etiqueta || ''],
+          function (err) {
+            if (err) return res.status(500).json({ erro: err.message });
+            notificarTelasInstantaneamente();
+            res.json({
+              sucesso: true,
+              id: this.lastID,
+              pedido: pedidoLimpo,
+              lote: loteLimpo,
+              saldo_total_pecas: saldoTotalPecas
+            });
+          }
+        );
       }
     );
-  } else {
-    inserirPalete();
-  }
-
-  function inserirPalete() {
-    // APRENDIZADO INTELIGENTE: Se não for picadeira (ex: >= 12 volumes), aprende o padrão do item e do cliente!
-    const padraoParaAprender = volumes >= 12
-      ? volumes
-      : calcularPadraoPalete(clienteLimpo, itemLimpo, produtoLimpo);
-    const tipoEmb = padraoParaAprender === 22 ? 'SACARIA' : 'CAIXA';
-
-    db.run(
-      `INSERT OR REPLACE INTO catalogo_itens (item, cliente, produto, padrao_volumes_palete, qtd_padrao_pecas, tipo_embalagem)
-       VALUES (?, ?, ?, ?, ?, ?)`,
-      [itemLimpo, clienteLimpo, produtoLimpo, padraoParaAprender, pecasUn, tipoEmb]
-    );
-
-    db.run(
-      `INSERT OR REPLACE INTO clientes_regras (cliente, padrao_volumes_palete) VALUES (?, ?)`,
-      [clienteLimpo, padraoParaAprender]
-    );
-
-    db.run(
-      `INSERT INTO paletes_bipados 
-      (pedido, lote, item, cliente, produto, qtd_pecas_por_volume, qtd_volumes_palete, saldo_total_pecas, volume_etiqueta)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [pedidoLimpo, loteLimpo, itemLimpo, clienteLimpo, produtoLimpo, pecasUn, volumes, saldoTotalPecas, volume_etiqueta || ''],
-      function (err) {
-        if (err) return res.status(500).json({ erro: err.message });
-        notificarTelasInstantaneamente();
-        res.json({
-          sucesso: true,
-          id: this.lastID,
-          pedido: pedidoLimpo,
-          lote: loteLimpo,
-          saldo_total_pecas: saldoTotalPecas
-        });
-      }
-    );
-  }
+  });
 });
 
-// 3. AUTO-RESTAURAÇÃO DE BACKUP (SALDOS + CATÁLOGO APRENDIDO NUNCA SOMEM)
+// 3. AUTO-RESTAURAÇÃO DE BACKUP (RESPEITA ITENS EXCLUÍDOS PARA NUNCA VOLTAREM)
 app.post('/api/restaurar-backup', (req, res) => {
   const { historico, catalogo } = req.body;
 
   db.serialize(() => {
     if (Array.isArray(catalogo) && catalogo.length > 0) {
       const stmtCat = db.prepare(`
-        INSERT OR REPLACE INTO catalogo_itens (item, cliente, produto, padrao_volumes_palete, qtd_padrao_pecas, tipo_embalagem)
+        INSERT OR IGNORE INTO catalogo_itens (item, cliente, produto, padrao_volumes_palete, qtd_padrao_pecas, tipo_embalagem)
         VALUES (?, ?, ?, ?, ?, ?)
       `);
       catalogo.forEach((c) => {
@@ -456,38 +483,52 @@ app.post('/api/restaurar-backup', (req, res) => {
         return res.json({ restaurado: false });
       }
 
-      const stmt = db.prepare(`
-        INSERT OR IGNORE INTO paletes_bipados
-        (id, pedido, lote, item, cliente, produto, qtd_pecas_por_volume, qtd_volumes_palete, saldo_total_pecas, volume_etiqueta, data_hora)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `);
-      historico.forEach((p) => {
-        const pedOk = sanitizarPedido(p.pedido || p.lote);
-        const loteOk = sanitizarLote(p.lote, pedOk);
-        stmt.run(
-          p.id, pedOk, loteOk, p.item, p.cliente, p.produto,
-          p.qtd_pecas_por_volume, p.qtd_volumes_palete, p.saldo_total_pecas,
-          p.volume_etiqueta || '', p.data_hora
-        );
-      });
-      stmt.finalize(() => {
-        notificarTelasInstantaneamente();
-        res.json({ restaurado: true, quantidade: historico.length });
+      db.all(`SELECT id FROM ids_excluidos`, [], (errEx, excluidosRows) => {
+        const setExcluidos = new Set((excluidosRows || []).map((r) => Number(r.id)));
+        const validos = historico.filter((p) => !setExcluidos.has(Number(p.id)));
+
+        if (validos.length === 0) {
+          return res.json({ restaurado: false });
+        }
+
+        const stmt = db.prepare(`
+          INSERT OR IGNORE INTO paletes_bipados
+          (id, pedido, lote, item, cliente, produto, qtd_pecas_por_volume, qtd_volumes_palete, saldo_total_pecas, volume_etiqueta, data_hora)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `);
+        validos.forEach((p) => {
+          const pedOk = sanitizarPedido(p.pedido || p.lote);
+          const loteOk = sanitizarLote(p.lote, pedOk);
+          stmt.run(
+            p.id, pedOk, loteOk, p.item, p.cliente, p.produto,
+            p.qtd_pecas_por_volume, p.qtd_volumes_palete, p.saldo_total_pecas,
+            p.volume_etiqueta || '', p.data_hora
+          );
+        });
+        stmt.finalize(() => {
+          notificarTelasInstantaneamente();
+          res.json({ restaurado: true, quantidade: validos.length });
+        });
       });
     });
   });
 });
 
-// 4. DASHBOARD + CATÁLOGO INTELIGENTE
+// 4. DASHBOARD: AGRUPA ESTRITAMENTE POR (LOTE + ITEM) PARA NUNCA DIVIDIR O MESMO PRODUTO EM 2 LINHAS
 app.get('/api/dashboard', (req, res) => {
   const queryConsolidado = `
     SELECT 
-      lote, pedido, item, cliente, produto, qtd_pecas_por_volume,
+      UPPER(TRIM(lote)) AS lote,
+      MAX(pedido) AS pedido,
+      UPPER(TRIM(item)) AS item,
+      MAX(cliente) AS cliente,
+      MAX(produto) AS produto,
+      MAX(qtd_pecas_por_volume) AS qtd_pecas_por_volume,
       COUNT(id) AS total_paletes,
       SUM(qtd_volumes_palete) AS total_caixas_ou_sacaria,
       SUM(saldo_total_pecas) AS saldo_total_pecas
     FROM paletes_bipados
-    GROUP BY lote, item, cliente, qtd_pecas_por_volume
+    GROUP BY UPPER(TRIM(lote)), UPPER(TRIM(item))
     ORDER BY MAX(id) DESC
   `;
 
@@ -499,13 +540,18 @@ app.get('/api/dashboard', (req, res) => {
     db.all(queryHistorico, [], (err2, historico) => {
       if (err2) return res.status(500).json({ erro: err2.message });
       db.all(queryCatalogo, [], (err3, catalogo) => {
-        res.json({ consolidado, historico, catalogo: catalogo || [] });
+        res.json({
+          consolidado,
+          historico,
+          catalogo: catalogo || [],
+          versaoExclusao
+        });
       });
     });
   });
 });
 
-// 5. EDITAR FALHA OPERACIONAL (COM TRAVA DE LOTE E APRENDIZADO)
+// 5. EDITAR PALETE (E UNIFICAR DADOS DO MESMO LOTE + ITEM)
 app.put('/api/paletes/:id', (req, res) => {
   const { id } = req.params;
   const { lote, pedido, cliente, item, produto, qtd_pecas_por_volume, qtd_volumes_palete, volume_etiqueta } = req.body;
@@ -530,7 +576,14 @@ app.put('/api/paletes/:id', (req, res) => {
     function (err) {
       if (err) return res.status(500).json({ erro: err.message });
 
-      // Atualiza também o aprendizado do catálogo quando você edita um item
+      // Padroniza qualquer outro palete do mesmo Lote + Item para manter 1 única linha somada
+      db.run(
+        `UPDATE paletes_bipados 
+         SET cliente = ?, produto = ?, qtd_pecas_por_volume = ?, saldo_total_pecas = qtd_volumes_palete * ?
+         WHERE UPPER(TRIM(lote)) = ? AND UPPER(TRIM(item)) = ?`,
+        [clienteLimpo, produtoLimpo, pecasUn, pecasUn, loteLimpo, itemLimpo]
+      );
+
       const padrao = volumes >= 12 ? volumes : calcularPadraoPalete(clienteLimpo, itemLimpo, produtoLimpo);
       db.run(
         `INSERT OR REPLACE INTO catalogo_itens (item, cliente, produto, padrao_volumes_palete, qtd_padrao_pecas) VALUES (?, ?, ?, ?, ?)`,
@@ -546,12 +599,21 @@ app.put('/api/paletes/:id', (req, res) => {
 // 6. EXCLUIR MÚLTIPLOS PALETES OU SELECIONAR TUDO DE UMA VEZ
 app.post('/api/paletes/excluir-multiplos', (req, res) => {
   const { ids, todos } = req.body;
+  versaoExclusao = Date.now();
 
   if (todos) {
-    db.run(`DELETE FROM paletes_bipados`, [], function (err) {
-      if (err) return res.status(500).json({ erro: err.message });
-      notificarTelasInstantaneamente();
-      res.json({ sucesso: true, excluidos: this.changes });
+    db.all(`SELECT id FROM paletes_bipados`, [], (err, rows) => {
+      db.serialize(() => {
+        const stmt = db.prepare(`INSERT OR IGNORE INTO ids_excluidos (id) VALUES (?)`);
+        (rows || []).forEach((r) => stmt.run(r.id));
+        stmt.finalize();
+
+        db.run(`DELETE FROM paletes_bipados`, [], function (errDel) {
+          if (errDel) return res.status(500).json({ erro: errDel.message });
+          notificarTelasInstantaneamente();
+          res.json({ sucesso: true, excluidos: this.changes, versaoExclusao });
+        });
+      });
     });
     return;
   }
@@ -560,20 +622,33 @@ app.post('/api/paletes/excluir-multiplos', (req, res) => {
     return res.status(400).json({ erro: 'Nenhum palete selecionado.' });
   }
 
-  const placeholders = ids.map(() => '?').join(',');
-  db.run(`DELETE FROM paletes_bipados WHERE id IN (${placeholders})`, ids, function (err) {
-    if (err) return res.status(500).json({ erro: err.message });
-    notificarTelasInstantaneamente();
-    res.json({ sucesso: true, excluidos: this.changes });
+  const idsNum = ids.map((n) => Number(n)).filter(Boolean);
+  db.serialize(() => {
+    const stmt = db.prepare(`INSERT OR IGNORE INTO ids_excluidos (id) VALUES (?)`);
+    idsNum.forEach((id) => stmt.run(id));
+    stmt.finalize();
+
+    const placeholders = idsNum.map(() => '?').join(',');
+    db.run(`DELETE FROM paletes_bipados WHERE id IN (${placeholders})`, idsNum, function (err) {
+      if (err) return res.status(500).json({ erro: err.message });
+      notificarTelasInstantaneamente();
+      res.json({ sucesso: true, excluidos: this.changes, versaoExclusao });
+    });
   });
 });
 
 // 7. EXCLUIR UM ÚNICO PALETE
 app.delete('/api/paletes/:id', (req, res) => {
-  db.run(`DELETE FROM paletes_bipados WHERE id = ?`, [req.params.id], function (err) {
-    if (err) return res.status(500).json({ erro: err.message });
-    notificarTelasInstantaneamente();
-    res.json({ sucesso: true });
+  const idNum = Number(req.params.id);
+  versaoExclusao = Date.now();
+
+  db.serialize(() => {
+    db.run(`INSERT OR IGNORE INTO ids_excluidos (id) VALUES (?)`, [idNum]);
+    db.run(`DELETE FROM paletes_bipados WHERE id = ?`, [idNum], function (err) {
+      if (err) return res.status(500).json({ erro: err.message });
+      notificarTelasInstantaneamente();
+      res.json({ sucesso: true, versaoExclusao });
+    });
   });
 });
 
