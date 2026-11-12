@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>FINART - Controle de Paletes e Saldos</title>
   <style>
     :root {
@@ -18,6 +18,7 @@
       --warning-bg: #fef3c7;
       --warning-text: #b45309;
       --danger: #dc2626;
+      --danger-bg: #fef2f2;
     }
 
     * {
@@ -27,16 +28,19 @@
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     }
 
-    body {
+    html, body {
       background-color: var(--bg-page);
       color: var(--text-main);
-      padding: 24px 16px;
+      padding: 16px 12px;
       line-height: 1.4;
+      overflow-x: hidden;
+      width: 100%;
     }
 
     .container {
       max-width: 1020px;
       margin: 0 auto;
+      width: 100%;
     }
 
     header {
@@ -44,11 +48,11 @@
       justify-content: space-between;
       align-items: center;
       background: var(--bg-card);
-      padding: 16px 24px;
-      border-radius: 10px;
+      padding: 16px 18px;
+      border-radius: 12px;
       border: 1px solid var(--border);
       box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
-      margin-bottom: 16px;
+      margin-bottom: 14px;
       flex-wrap: wrap;
       gap: 12px;
     }
@@ -83,7 +87,14 @@
     .header-actions {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
+      flex-wrap: wrap;
+      width: 100%;
+      justify-content: flex-end;
+    }
+
+    @media (min-width: 641px) {
+      .header-actions { width: auto; }
     }
 
     .status-pill {
@@ -110,27 +121,34 @@
       justify-content: space-between;
       align-items: center;
       margin-bottom: 12px;
-      gap: 12px;
+      gap: 10px;
       flex-wrap: wrap;
     }
 
     .tabs {
-      display: flex;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
       background: #e2e8f0;
       padding: 4px;
       border-radius: 8px;
       gap: 4px;
+      width: 100%;
+    }
+
+    @media (min-width: 641px) {
+      .tabs { width: auto; display: flex; }
     }
 
     .tab-btn {
       border: none;
       background: transparent;
-      padding: 8px 16px;
+      padding: 9px 14px;
       border-radius: 6px;
       font-size: 13px;
       font-weight: 600;
       color: var(--text-muted);
       cursor: pointer;
+      text-align: center;
     }
 
     .tab-btn.active {
@@ -140,56 +158,101 @@
     }
 
     .search-input {
-      padding: 8px 14px;
+      padding: 10px 14px;
       border: 1px solid var(--border);
       border-radius: 8px;
       background: var(--bg-card);
       font-size: 13px;
-      width: 280px;
+      width: 100%;
       color: var(--text-main);
       outline: none;
+    }
+
+    @media (min-width: 641px) {
+      .search-input { width: 280px; }
     }
 
     .search-input:focus {
       border-color: var(--primary);
     }
 
+    /* Barra de Seleção em Massa (Selecionar Tudo + Excluir) */
+    .bulk-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #f8fafc;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .check-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-main);
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .checkbox-item {
+      width: 19px;
+      height: 19px;
+      accent-color: var(--primary);
+      cursor: pointer;
+    }
+
     .list-container {
       background: var(--bg-card);
       border: 1px solid var(--border);
-      border-radius: 10px;
+      border-radius: 12px;
       box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
       overflow: hidden;
+      width: 100%;
     }
 
     .list-row {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 16px 20px;
+      padding: 16px;
       border-bottom: 1px solid var(--border);
-      gap: 16px;
+      gap: 14px;
       flex-wrap: wrap;
+      width: 100%;
     }
 
     .list-row:last-child {
       border-bottom: none;
     }
 
-    .list-row:hover {
-      background: #f8fafc;
+    .list-row.selecionado {
+      background: #f0f9ff;
+    }
+
+    .row-left-wrap {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      flex: 1;
+      min-width: 220px;
+      width: 100%;
     }
 
     .row-main {
       flex: 1;
-      min-width: 240px;
+      min-width: 0;
     }
 
     .row-top {
       display: flex;
       align-items: center;
-      gap: 8px;
-      margin-bottom: 4px;
+      gap: 6px;
+      margin-bottom: 6px;
       flex-wrap: wrap;
     }
 
@@ -202,8 +265,9 @@
     .tag {
       font-size: 12px;
       font-weight: 700;
-      padding: 2px 8px;
+      padding: 3px 8px;
       border-radius: 5px;
+      white-space: nowrap;
     }
 
     .tag-lote {
@@ -225,24 +289,27 @@
     .produto-desc {
       font-size: 13px;
       color: var(--text-muted);
+      word-break: break-word;
     }
 
+    /* Métricas 100% responsivas: nunca cortam no celular */
     .row-metrics {
       display: flex;
       align-items: center;
-      gap: 24px;
+      gap: 16px;
       text-align: right;
     }
 
     .metric-box {
-      min-width: 70px;
+      min-width: 58px;
     }
 
     .metric-box small {
       display: block;
-      font-size: 11px;
+      font-size: 10px;
       color: var(--text-muted);
       text-transform: uppercase;
+      font-weight: 600;
     }
 
     .metric-box strong {
@@ -252,9 +319,9 @@
 
     .saldo-box {
       background: var(--success-bg);
-      padding: 8px 14px;
+      padding: 8px 12px;
       border-radius: 8px;
-      min-width: 120px;
+      min-width: 105px;
       text-align: right;
     }
 
@@ -267,16 +334,47 @@
     }
 
     .saldo-box strong {
-      font-size: 18px;
+      font-size: 17px;
       font-weight: 800;
       color: var(--success);
+    }
+
+    /* Ajuste específico para telas de Celular (Evita cortar o Saldo Total na direita) */
+    @media (max-width: 640px) {
+      .header-actions {
+        justify-content: space-between;
+      }
+      .row-metrics {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        width: 100%;
+        gap: 6px;
+        padding-top: 10px;
+        border-top: 1px dashed var(--border);
+        text-align: center;
+      }
+      .metric-box {
+        min-width: 0;
+      }
+      .saldo-box {
+        min-width: 0;
+        text-align: center;
+        padding: 6px 4px;
+      }
+      .acoes-mobile {
+        grid-column: span 4;
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+        margin-top: 6px;
+      }
     }
 
     .btn-primary {
       background: var(--primary);
       color: #fff;
       border: none;
-      padding: 9px 16px;
+      padding: 9px 14px;
       border-radius: 7px;
       font-weight: 600;
       font-size: 13px;
@@ -288,7 +386,7 @@
       background: #fff;
       color: var(--text-main);
       border: 1px solid var(--border);
-      padding: 6px 12px;
+      padding: 7px 12px;
       border-radius: 6px;
       font-size: 12px;
       font-weight: 600;
@@ -296,11 +394,27 @@
       text-decoration: none;
     }
 
+    .btn-danger-solid {
+      background: var(--danger);
+      color: #fff;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 7px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .btn-danger-solid:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
     .btn-danger-outline {
       background: #fff;
       color: var(--danger);
       border: 1px solid #fecaca;
-      padding: 6px 10px;
+      padding: 7px 10px;
       border-radius: 6px;
       font-size: 12px;
       font-weight: 600;
@@ -308,7 +422,7 @@
     }
 
     .empty-state {
-      padding: 40px;
+      padding: 36px 20px;
       text-align: center;
       color: var(--text-muted);
       font-size: 14px;
@@ -322,26 +436,28 @@
       align-items: center;
       justify-content: center;
       z-index: 100;
-      padding: 16px;
+      padding: 14px;
     }
 
     .modal {
       background: var(--bg-card);
       border-radius: 12px;
-      padding: 24px;
+      padding: 20px;
       width: 100%;
       max-width: 460px;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
+      max-height: 92vh;
+      overflow-y: auto;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
     }
 
     .modal h3 {
       font-size: 17px;
-      margin-bottom: 16px;
+      margin-bottom: 14px;
       color: var(--text-main);
     }
 
     .form-group {
-      margin-bottom: 12px;
+      margin-bottom: 10px;
     }
 
     .form-group label {
@@ -372,7 +488,7 @@
       display: flex;
       justify-content: flex-end;
       gap: 10px;
-      margin-top: 20px;
+      margin-top: 16px;
     }
   </style>
 </head>
@@ -417,8 +533,19 @@
       <div id="lista-consolidado"></div>
     </div>
 
-    <!-- ABA 2: HISTÓRICO INDIVIDUAL PARA CORREÇÃO OPERACIONAL -->
+    <!-- ABA 2: HISTÓRICO INDIVIDUAL COM "SELECIONAR TUDO" E EXCLUSÃO EM MASSA -->
     <div class="list-container" id="secao-historico" style="display: none;">
+      <div class="bulk-bar">
+        <label class="check-label">
+          <input type="checkbox" class="checkbox-item" id="check-todos" onchange="alternarSelecionarTodos(this.checked)" />
+          <span>Selecionar Tudo</span>
+        </label>
+        <div style="display: flex; gap: 8px;">
+          <button class="btn-danger-solid" id="btn-excluir-selecionados" disabled onclick="excluirSelecionados()">
+            🗑️ Excluir Selecionados (0)
+          </button>
+        </div>
+      </div>
       <div id="lista-historico"></div>
     </div>
   </div>
@@ -430,40 +557,30 @@
       <input type="hidden" id="edit-id" />
 
       <div class="form-group">
-        <label>Leitura Rápida (Opcional - ex: FR-12588;0065801;220)</label>
-        <input
-          type="text"
-          id="edit-barcode"
-          placeholder="Cole o código ou dados da etiqueta..."
-          oninput="preencherPorBarcode(this.value)"
-        />
+        <label>Código do Item (Auto-completa se já conhecido)</label>
+        <input type="text" id="edit-item" list="lista-itens-aprendidos" placeholder="Ex: PT-12236, FR-12588, 719935" oninput="autoCompletarPorItem(this.value)" />
+        <datalist id="lista-itens-aprendidos"></datalist>
       </div>
 
       <div class="form-group">
         <label>Cliente</label>
-        <input type="text" id="edit-cliente" />
+        <input type="text" id="edit-cliente" placeholder="Ex: DEVINTEX COSMETICOS" oninput="autoAjustarVolumesPorCliente()" />
       </div>
 
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
         <div class="form-group">
-          <label>Pedido</label>
-          <input type="text" id="edit-pedido" />
+          <label>Pedido (Só números)</label>
+          <input type="text" id="edit-pedido" maxlength="6" placeholder="006437" oninput="mascaraPedido(this)" />
         </div>
         <div class="form-group">
-          <label>Nº do Lote</label>
-          <input type="text" id="edit-lote" />
+          <label>Nº do Lote (Máx 1 ponto)</label>
+          <input type="text" id="edit-lote" maxlength="8" placeholder="006437.1" oninput="mascaraLoteUnicoPonto(this)" />
         </div>
       </div>
 
-      <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 10px;">
-        <div class="form-group">
-          <label>Item</label>
-          <input type="text" id="edit-item" />
-        </div>
-        <div class="form-group">
-          <label>Produto</label>
-          <input type="text" id="edit-produto" />
-        </div>
+      <div class="form-group">
+        <label>Descrição do Produto</label>
+        <input type="text" id="edit-produto" />
       </div>
 
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
@@ -491,6 +608,40 @@
 
     let consolidadoCache = [];
     let historicoCache = [];
+    let catalogoCache = [];
+    let idsSelecionados = new Set();
+
+    // GARANTE QUE PEDIDO NUNCA TENHA PONTO (Ex: "006437")
+    function limparPedidoEstrito(val = '') {
+      return String(val).trim().split('.')[0].replace(/\D/g, '').slice(0, 6);
+    }
+
+    // GARANTE QUE LOTE TENHA NO MÁXIMO 8 CARACTERES E 1 ÚNICO PONTO (Ex: "006437.1")
+    function limparLoteEstrito(val = '', pedidoRef = '') {
+      let limpo = String(val).replace(/,/g, '.').replace(/[^0-9.]/g, '');
+      const partes = limpo.split('.').filter(Boolean);
+      if (partes.length === 0) {
+        const p = limparPedidoEstrito(pedidoRef);
+        return p ? `${p}.1` : '';
+      }
+      if (partes.length === 1) {
+        const n = partes[0];
+        if (n.length === 7) return `${n.slice(0, 6)}.${n.slice(6, 7)}`;
+        return limpo.includes('.') ? `${n.slice(0, 6)}.` : n.slice(0, 6);
+      }
+      return `${partes[0].slice(0, 6)}.${partes[1].slice(0, 1)}`.slice(0, 8);
+    }
+
+    function mascaraPedido(input) {
+      input.value = limparPedidoEstrito(input.value);
+      if (input.value.length >= 5) {
+        document.getElementById('edit-lote').value = `${input.value}.1`;
+      }
+    }
+
+    function mascaraLoteUnicoPonto(input) {
+      input.value = limparLoteEstrito(input.value);
+    }
 
     function alternarAba(aba) {
       document.getElementById('secao-saldos').style.display = aba === 'saldos' ? 'block' : 'none';
@@ -504,15 +655,16 @@
         const res = await fetch(`${API_BASE}/api/dashboard?t=${Date.now()}`, {
           cache: 'no-store'
         });
-        const { consolidado, historico } = await res.json();
+        const { consolidado, historico, catalogo } = await res.json();
 
-        // Proteção contra reinício do servidor gratuito Render: restaura os saldos automaticamente
         const backupLocal = JSON.parse(localStorage.getItem('finart_backup_paletes') || '[]');
+        const catalogoLocal = JSON.parse(localStorage.getItem('finart_backup_catalogo') || '[]');
+
         if (historico.length === 0 && backupLocal.length > 0) {
           await fetch(`${API_BASE}/api/restaurar-backup`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ historico: backupLocal })
+            body: JSON.stringify({ historico: backupLocal, catalogo: catalogoLocal })
           });
           return carregarDashboard();
         }
@@ -520,17 +672,63 @@
         if (historico.length > 0) {
           localStorage.setItem('finart_backup_paletes', JSON.stringify(historico));
         }
+        if (catalogo && catalogo.length > 0) {
+          catalogoCache = catalogo;
+          localStorage.setItem('finart_backup_catalogo', JSON.stringify(catalogo));
+          atualizarDatalistCatalogo();
+        }
 
         consolidadoCache = consolidado;
         historicoCache = historico;
+
+        // Remove da seleção IDs que já foram excluídos
+        const idsAtuais = new Set(historico.map(h => h.id));
+        idsSelecionados.forEach(id => {
+          if (!idsAtuais.has(id)) idsSelecionados.delete(id);
+        });
+
         renderizarListas();
       } catch (e) {
         console.error('Erro ao buscar dados:', e);
       }
     }
 
+    function atualizarDatalistCatalogo() {
+      const dl = document.getElementById('lista-itens-aprendidos');
+      if (!dl) return;
+      dl.innerHTML = catalogoCache.map(c => `<option value="${c.item}">${c.cliente} - ${c.produto}</option>`).join('');
+    }
+
+    function autoCompletarPorItem(codigoDigitado) {
+      const cod = (codigoDigitado || '').trim().toUpperCase();
+      const encontrado = catalogoCache.find(c => c.item.toUpperCase() === cod);
+      if (encontrado) {
+        document.getElementById('edit-cliente').value = encontrado.cliente;
+        document.getElementById('edit-produto').value = encontrado.produto;
+        document.getElementById('edit-volumes').value = encontrado.padrao_volumes_palete;
+        if (encontrado.qtd_padrao_pecas > 0) {
+          document.getElementById('edit-pecas').value = encontrado.qtd_padrao_pecas;
+        }
+      }
+    }
+
+    function autoAjustarVolumesPorCliente() {
+      const cli = (document.getElementById('edit-cliente').value || '').toUpperCase();
+      const item = (document.getElementById('edit-item').value || '').toUpperCase();
+      const prod = (document.getElementById('edit-produto').value || '').toUpperCase();
+      if (cli.includes('DEVINTEX') && (item === 'PT-7908' || prod.includes('1000 GRS'))) {
+        document.getElementById('edit-volumes').value = 22;
+      } else if (cli.includes('DEVINTEX')) {
+        document.getElementById('edit-volumes').value = 15;
+      } else if (cli.length > 2 && !document.getElementById('edit-volumes').value) {
+        document.getElementById('edit-volumes').value = 20;
+      }
+    }
+
     function renderizarListas() {
       const termo = (document.getElementById('campo-busca').value || '').toLowerCase();
+
+      // 1. ABA SALDOS CONSOLIDADOS
       const divCons = document.getElementById('lista-consolidado');
       const consFiltrado = consolidadoCache.filter(r =>
         r.cliente.toLowerCase().includes(termo) ||
@@ -544,14 +742,16 @@
       } else {
         divCons.innerHTML = consFiltrado.map(r => `
           <div class="list-row">
-            <div class="row-main">
-              <div class="row-top">
-                <span class="cliente-nome">${r.cliente}</span>
-                <span class="tag tag-lote">Lote: ${r.lote}</span>
-                <span class="tag tag-item">${r.item}</span>
-                <span class="tag tag-pedido">Ped: ${r.pedido}</span>
+            <div class="row-left-wrap">
+              <div class="row-main">
+                <div class="row-top">
+                  <span class="cliente-nome">${r.cliente}</span>
+                  <span class="tag tag-lote">Lote: ${limparLoteEstrito(r.lote, r.pedido)}</span>
+                  <span class="tag tag-item">${r.item}</span>
+                  <span class="tag tag-pedido">Ped: ${limparPedidoEstrito(r.pedido || r.lote)}</span>
+                </div>
+                <div class="produto-desc">${r.produto}</div>
               </div>
-              <div class="produto-desc">${r.produto}</div>
             </div>
             <div class="row-metrics">
               <div class="metric-box"><small>Paletes</small><strong>${r.total_paletes}</strong></div>
@@ -563,6 +763,7 @@
         `).join('');
       }
 
+      // 2. ABA HISTÓRICO COM SELEÇÃO MÚLTIPLA
       const divHist = document.getElementById('lista-historico');
       const histFiltrado = historicoCache.filter(i =>
         i.cliente.toLowerCase().includes(termo) ||
@@ -570,59 +771,106 @@
         i.item.toLowerCase().includes(termo)
       );
 
+      atualizarBarraSelecao(histFiltrado);
+
       if (histFiltrado.length === 0) {
         divHist.innerHTML = `<div class="empty-state">Nenhum registro encontrado no histórico.</div>`;
       } else {
-        divHist.innerHTML = histFiltrado.map(item => `
-          <div class="list-row">
-            <div class="row-main">
-              <div class="row-top">
-                <span class="tag tag-pedido">#${item.id}</span>
-                <span class="cliente-nome">${item.cliente}</span>
-                <span class="tag tag-lote">Lote: ${item.lote}</span>
-                <span class="tag tag-item">${item.item}</span>
+        divHist.innerHTML = histFiltrado.map(item => {
+          const marcado = idsSelecionados.has(item.id);
+          return `
+            <div class="list-row ${marcado ? 'selecionado' : ''}">
+              <div class="row-left-wrap">
+                <input
+                  type="checkbox"
+                  class="checkbox-item"
+                  ${marcado ? 'checked' : ''}
+                  onchange="alternarSelecaoItem(${item.id}, this.checked)"
+                />
+                <div class="row-main">
+                  <div class="row-top">
+                    <span class="tag tag-pedido">#${item.id}</span>
+                    <span class="cliente-nome">${item.cliente}</span>
+                    <span class="tag tag-lote">Lote: ${limparLoteEstrito(item.lote, item.pedido)}</span>
+                    <span class="tag tag-item">${item.item}</span>
+                  </div>
+                  <div class="produto-desc">
+                    ${item.produto} ${item.volume_etiqueta ? `• Vol: ${item.volume_etiqueta}` : ''} • ${new Date(item.data_hora).toLocaleString('pt-BR')}
+                  </div>
+                </div>
               </div>
-              <div class="produto-desc">
-                ${item.produto} ${item.volume_etiqueta ? `• Vol: ${item.volume_etiqueta}` : ''} • ${new Date(item.data_hora).toLocaleString('pt-BR')}
+              <div class="row-metrics">
+                <div class="metric-box"><small>Volumes</small><strong>${item.qtd_volumes_palete}</strong></div>
+                <div class="metric-box"><small>Pçs/Vol</small><strong>${item.qtd_pecas_por_volume}</strong></div>
+                <div class="saldo-box"><small>Total Palete</small><strong>${item.saldo_total_pecas.toLocaleString('pt-BR')}</strong></div>
+                <div class="acoes-mobile">
+                  <button class="btn-outline" onclick="abrirModalEdicao(${item.id})">Editar</button>
+                  <button class="btn-danger-outline" onclick="excluirPalete(${item.id})">Excluir</button>
+                </div>
               </div>
             </div>
-            <div class="row-metrics">
-              <div class="metric-box"><small>Caixas/Sacos</small><strong>${item.qtd_volumes_palete}</strong></div>
-              <div class="metric-box"><small>Peças/Un</small><strong>${item.qtd_pecas_por_volume}</strong></div>
-              <div class="metric-box"><small>Total Palete</small><strong style="color: var(--success)">${item.saldo_total_pecas.toLocaleString('pt-BR')}</strong></div>
-              <div style="display: flex; gap: 6px;">
-                <button class="btn-outline" onclick="abrirModalEdicao(${item.id})">Editar</button>
-                <button class="btn-danger-outline" onclick="excluirPalete(${item.id})">Excluir</button>
-              </div>
-            </div>
-          </div>
-        `).join('');
+          `;
+        }).join('');
       }
     }
 
-    async function preencherPorBarcode(codigo) {
-      if (!codigo || codigo.length < 4) return;
-      const res = await fetch(`${API_BASE}/api/interpretar-bipe`, {
+    function alternarSelecaoItem(id, marcado) {
+      if (marcado) idsSelecionados.add(id);
+      else idsSelecionados.delete(id);
+      renderizarListas();
+    }
+
+    function alternarSelecionarTodos(marcarTodos) {
+      const termo = (document.getElementById('campo-busca').value || '').toLowerCase();
+      const visiveis = historicoCache.filter(i =>
+        i.cliente.toLowerCase().includes(termo) ||
+        i.lote.toLowerCase().includes(termo) ||
+        i.item.toLowerCase().includes(termo)
+      );
+      visiveis.forEach(i => {
+        if (marcarTodos) idsSelecionados.add(i.id);
+        else idsSelecionados.delete(i.id);
+      });
+      renderizarListas();
+    }
+
+    function atualizarBarraSelecao(listaVisivel) {
+      const btn = document.getElementById('btn-excluir-selecionados');
+      const checkTodos = document.getElementById('check-todos');
+      const qtd = idsSelecionados.size;
+
+      btn.innerText = `🗑️ Excluir Selecionados (${qtd})`;
+      btn.disabled = qtd === 0;
+
+      if (listaVisivel.length > 0 && listaVisivel.every(i => idsSelecionados.has(i.id))) {
+        checkTodos.checked = true;
+      } else {
+        checkTodos.checked = false;
+      }
+    }
+
+    async function excluirSelecionados() {
+      const ids = Array.from(idsSelecionados);
+      if (ids.length === 0) return;
+
+      if (!confirm(`Confirma a exclusão de ${ids.length} palete(s) selecionado(s)?`)) return;
+
+      const atualizado = historicoCache.filter(p => !idsSelecionados.has(p.id));
+      localStorage.setItem('finart_backup_paletes', JSON.stringify(atualizado));
+
+      await fetch(`${API_BASE}/api/paletes/excluir-multiplos`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ codigoLido: codigo })
+        body: JSON.stringify({ ids })
       });
-      if (res.ok) {
-        const d = await res.json();
-        document.getElementById('edit-cliente').value = d.cliente;
-        document.getElementById('edit-pedido').value = d.pedido;
-        document.getElementById('edit-lote').value = d.lote;
-        document.getElementById('edit-item').value = d.item;
-        document.getElementById('edit-produto').value = d.produto;
-        document.getElementById('edit-volumes').value = d.qtd_volumes_sugerida;
-        document.getElementById('edit-pecas').value = d.qtd_pecas_por_volume;
-      }
+
+      idsSelecionados.clear();
+      carregarDashboard();
     }
 
     function abrirModalNovo() {
       document.getElementById('modal-titulo').innerText = 'Lançar Palete - FINART';
       document.getElementById('edit-id').value = '';
-      document.getElementById('edit-barcode').value = '';
       document.getElementById('edit-cliente').value = '';
       document.getElementById('edit-pedido').value = '';
       document.getElementById('edit-lote').value = '';
@@ -636,12 +884,14 @@
     function abrirModalEdicao(id) {
       const reg = historicoCache.find(r => r.id === id);
       if (!reg) return;
+      const pedLimpo = limparPedidoEstrito(reg.pedido || reg.lote);
+      const loteLimpo = limparLoteEstrito(reg.lote, pedLimpo);
+
       document.getElementById('modal-titulo').innerText = `Corrigir Palete #${id}`;
       document.getElementById('edit-id').value = reg.id;
-      document.getElementById('edit-barcode').value = '';
       document.getElementById('edit-cliente').value = reg.cliente;
-      document.getElementById('edit-pedido').value = reg.pedido;
-      document.getElementById('edit-lote').value = reg.lote;
+      document.getElementById('edit-pedido').value = pedLimpo;
+      document.getElementById('edit-lote').value = loteLimpo;
       document.getElementById('edit-item').value = reg.item;
       document.getElementById('edit-produto').value = reg.produto;
       document.getElementById('edit-volumes').value = reg.qtd_volumes_palete;
@@ -655,10 +905,14 @@
 
     async function salvarEdicao() {
       const id = document.getElementById('edit-id').value;
+      const pedLimpo = limparPedidoEstrito(document.getElementById('edit-pedido').value);
+      let loteLimpo = limparLoteEstrito(document.getElementById('edit-lote').value, pedLimpo);
+      if (loteLimpo.endsWith('.')) loteLimpo += '1';
+
       const payload = {
         cliente: document.getElementById('edit-cliente').value,
-        pedido: document.getElementById('edit-pedido').value,
-        lote: document.getElementById('edit-lote').value,
+        pedido: pedLimpo,
+        lote: loteLimpo,
         item: document.getElementById('edit-item').value,
         produto: document.getElementById('edit-produto').value,
         qtd_volumes_palete: Number(document.getElementById('edit-volumes').value),
@@ -685,9 +939,9 @@
 
     async function excluirPalete(id) {
       if (!confirm(`Deseja realmente excluir o lançamento do Palete #${id}?`)) return;
-      // Atualiza o backup local antes de recarregar para não restaurar o palete excluído
       const atualizado = historicoCache.filter(p => p.id !== id);
       localStorage.setItem('finart_backup_paletes', JSON.stringify(atualizado));
+      idsSelecionados.delete(id);
 
       await fetch(`${API_BASE}/api/paletes/${id}`, { method: 'DELETE' });
       carregarDashboard();

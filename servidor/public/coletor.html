@@ -7,7 +7,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="apple-mobile-web-app-title" content="FINART Coletor" />
   <meta name="mobile-web-app-capable" content="yes" />
-  <title>FINART - Coletor de Etiquetas</title>
+  <title>FINART - Coletor Inteligente</title>
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
   <style>
     :root {
@@ -19,140 +19,286 @@
       --success: #059669;
       --border: #e2e8f0;
     }
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
-    body { background: var(--bg); color: var(--text); padding: 12px; }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+    html, body {
+      background: var(--bg);
+      color: var(--text);
+      padding: 10px;
+      width: 100%;
+      overflow-x: hidden;
+    }
 
     .top-bar {
-      background: var(--card); padding: 10px 14px; border-radius: 10px;
-      border: 1px solid var(--border); display: flex; justify-content: space-between;
-      align-items: center; margin-bottom: 10px; gap: 8px;
+      background: var(--card);
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      gap: 6px;
+      flex-wrap: wrap;
     }
-    .logo { background: var(--primary); color: #fff; font-weight: 800; padding: 5px 12px; border-radius: 6px; letter-spacing: 1px; }
-    .btn-top { text-decoration: none; font-size: 12px; font-weight: 700; color: var(--primary); background: #e0f2fe; padding: 6px 10px; border-radius: 6px; border: none; cursor: pointer; }
+    .logo {
+      background: var(--primary);
+      color: #fff;
+      font-weight: 800;
+      padding: 5px 12px;
+      border-radius: 6px;
+      letter-spacing: 1px;
+      font-size: 14px;
+    }
+    .btn-top {
+      text-decoration: none;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--primary);
+      background: #e0f2fe;
+      padding: 6px 10px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+    }
 
-    .box { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 14px; margin-bottom: 12px; }
+    .box {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px;
+      margin-bottom: 10px;
+      width: 100%;
+    }
 
     .status-motor {
-      font-size: 12px; font-weight: 800; padding: 6px 10px; border-radius: 6px;
-      text-align: center; margin-bottom: 8px; background: #ecfdf5; color: var(--success); border: 1px solid #a7f3d0;
+      font-size: 12px;
+      font-weight: 800;
+      padding: 6px 10px;
+      border-radius: 6px;
+      text-align: center;
+      margin-bottom: 8px;
+      background: #ecfdf5;
+      color: var(--success);
+      border: 1px solid #a7f3d0;
     }
 
-    /* Visor da Etiqueta Completa */
     .visor-wrapper {
-      position: relative; width: 100%; height: 240px; background: #0f172a;
-      border-radius: 10px; overflow: hidden; border: 2px solid var(--primary);
+      position: relative;
+      width: 100%;
+      height: 220px;
+      background: #0f172a;
+      border-radius: 10px;
+      overflow: hidden;
+      border: 2px solid var(--primary);
     }
-    #video-camera { width: 100%; height: 100%; object-fit: cover; }
+    #video-camera {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
     .moldura-etiqueta {
-      position: absolute; inset: 14px; border: 2px dashed #38bdf8;
-      border-radius: 8px; pointer-events: none; display: flex; align-items: flex-end;
-      justify-content: center; padding-bottom: 6px;
+      position: absolute;
+      inset: 12px;
+      border: 2px dashed #38bdf8;
+      border-radius: 8px;
+      pointer-events: none;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      padding-bottom: 6px;
     }
     .moldura-etiqueta span {
-      background: rgba(15, 23, 42, 0.85); color: #fff; font-size: 11px;
-      padding: 4px 10px; border-radius: 4px; font-weight: 700;
+      background: rgba(15, 23, 42, 0.85);
+      color: #fff;
+      font-size: 11px;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-weight: 700;
+      text-align: center;
     }
 
     .progresso-box {
-      display: none; margin-top: 10px; padding: 12px; border-radius: 8px;
-      background: #fef3c7; color: #b45309; font-size: 14px; font-weight: 800; text-align: center;
+      display: none;
+      margin-top: 8px;
+      padding: 10px;
+      border-radius: 8px;
+      background: #fef3c7;
+      color: #b45309;
+      font-size: 13px;
+      font-weight: 800;
+      text-align: center;
     }
 
-    .btn { width: 100%; padding: 15px; border: none; border-radius: 10px; font-size: 15px; font-weight: 800; cursor: pointer; margin-top: 8px; }
-    .btn-ler-agora { background: var(--primary); color: #fff; font-size: 16px; box-shadow: 0 4px 10px rgba(2, 132, 199, 0.25); }
-    .btn-macro { background: #0f172a; color: #fff; font-size: 15px; }
-    .btn-confirm { background: var(--success); color: #fff; font-size: 16px; padding: 16px; }
-    .btn-cancel { background: #e2e8f0; color: var(--text); }
+    .btn {
+      width: 100%;
+      padding: 14px;
+      border: none;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 800;
+      cursor: pointer;
+      margin-top: 8px;
+    }
+    .btn-ler-agora {
+      background: var(--primary);
+      color: #fff;
+      font-size: 15px;
+      box-shadow: 0 4px 10px rgba(2, 132, 199, 0.25);
+    }
+    .btn-macro {
+      background: #0f172a;
+      color: #fff;
+      font-size: 14px;
+    }
+    .btn-confirm {
+      background: var(--success);
+      color: #fff;
+      font-size: 15px;
+      padding: 15px;
+    }
+    .btn-cancel {
+      background: #e2e8f0;
+      color: var(--text);
+    }
 
-    label { display: block; font-size: 11px; font-weight: 700; color: var(--muted); margin-top: 8px; margin-bottom: 3px; text-transform: uppercase; }
+    label {
+      display: block;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--muted);
+      margin-top: 8px;
+      margin-bottom: 3px;
+      text-transform: uppercase;
+    }
     input {
-      width: 100%; padding: 10px; font-size: 16px; font-weight: 700;
-      border: 2px solid var(--border); border-radius: 8px; color: var(--text); text-align: center;
+      width: 100%;
+      padding: 9px 10px;
+      font-size: 15px;
+      font-weight: 700;
+      border: 2px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      text-align: center;
     }
-    .input-left { text-align: left; font-size: 14px; font-weight: 600; }
+    .input-left {
+      text-align: left;
+      font-size: 14px;
+      font-weight: 600;
+    }
 
-    .badge-lote { background: #fef3c7; color: #b45309; padding: 2px 8px; border-radius: 5px; font-weight: 700; }
+    .badge-lote {
+      background: #fef3c7;
+      color: #b45309;
+      padding: 2px 6px;
+      border-radius: 5px;
+      font-weight: 700;
+      font-size: 11px;
+    }
 
     .saldo-preview {
-      background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 10px;
-      padding: 12px; text-align: center; margin: 12px 0 6px;
+      background: #ecfdf5;
+      border: 1px solid #a7f3d0;
+      border-radius: 10px;
+      padding: 10px;
+      text-align: center;
+      margin: 12px 0 4px;
     }
-    .saldo-preview small { color: var(--success); font-weight: 700; font-size: 11px; text-transform: uppercase; display: block; }
-    .saldo-preview strong { color: var(--success); font-size: 24px; font-weight: 900; }
+    .saldo-preview small {
+      color: var(--success);
+      font-weight: 700;
+      font-size: 10px;
+      text-transform: uppercase;
+      display: block;
+    }
+    .saldo-preview strong {
+      color: var(--success);
+      font-size: 22px;
+      font-weight: 900;
+    }
 
     .live-item {
-      display: flex; justify-content: space-between; align-items: center;
-      padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 13px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 9px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 12px;
+      gap: 8px;
     }
-    .live-item:last-child { border-bottom: none; }
+    .live-item:last-child {
+      border-bottom: none;
+    }
   </style>
 </head>
 <body ontouchstart="destravarSomMobile()" onclick="destravarSomMobile()">
 
-  <!-- Player de Áudio WAV Real (Toca alto mesmo no iPhone e Android após processar foto) -->
   <audio id="player-bip" preload="auto"></audio>
 
   <div class="top-bar">
     <span class="logo">FINART</span>
-    <button class="btn-top" onclick="tocarBipIndustrial()">🔊 Testar Bipe Alto</button>
+    <button class="btn-top" onclick="tocarBipImediato()">🔊 Testar Bipe</button>
     <a href="/" class="btn-top">Ver Painel</a>
   </div>
 
-  <!-- TELA 1: LEITOR DA ETIQUETA COMPLETA (AO VIVO + FOTO MACRO) -->
+  <!-- TELA 1: LEITOR DA ETIQUETA COMPLETA -->
   <div class="box" id="tela-scanner">
     <div class="status-motor" id="status-motor">
-      ⚡ Carregando leitor óptico de alta velocidade...
+      ⚡ Iniciando leitor inteligente FINART...
     </div>
 
     <div class="visor-wrapper">
       <video id="video-camera" autoplay playsinline muted></video>
       <div class="moldura-etiqueta">
-        <span>Aponte para a ETIQUETA (Lê sozinho ou toque abaixo)</span>
+        <span>Enquadre a etiqueta (Bipa na hora que lê!)</span>
       </div>
     </div>
 
     <div class="progresso-box" id="progresso-box">
-      ⚡ Lendo todos os dados da etiqueta...
+      🔍 Extraindo dados da etiqueta...
     </div>
 
-    <!-- OPÇÃO 1: Captura instantânea da etiqueta pelo visor ao vivo -->
     <button class="btn btn-ler-agora" onclick="capturarEtiquetaDoVisor(true)">
       📸 LER ETIQUETA DO VISOR AGORA
     </button>
 
-    <!-- OPÇÃO 2: Foto Macro HD da câmera nativa do celular -->
     <input type="file" accept="image/*" capture="environment" id="input-macro" style="display:none" onchange="lerFotoMacro(this)" />
-    <button class="btn btn-macro" onclick="tocarBipCurto(); document.getElementById('input-macro').click()">
-      🔍 TIRAR FOTO MACRO DO CELULAR (ALTA PRECISÃO)
+    <button class="btn btn-macro" onclick="destravarSomMobile(); document.getElementById('input-macro').click()">
+      🔍 TIRAR FOTO MACRO DO CELULAR
     </button>
   </div>
 
-  <!-- TELA 2: CONFERÊNCIA COMPLETA DOS DADOS LIDOS DA ETIQUETA -->
+  <!-- TELA 2: CONFERÊNCIA COM APRENDIZADO INTELIGENTE E TRAVA DE LOTE -->
   <div class="box" id="tela-confirmacao" style="display: none;">
-    <h3 style="margin-bottom: 8px; color: var(--primary);">✅ Etiqueta Lida — Confira os Dados</h3>
+    <h3 style="margin-bottom: 6px; font-size: 16px; color: var(--primary);">✅ Etiqueta Lida — Confira os Dados</h3>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+      <div>
+        <label>Código do Item:</label>
+        <input type="text" id="conf-item" class="input-left" list="dl-itens" oninput="autoCompletarItemAprendido()" />
+        <datalist id="dl-itens"></datalist>
+      </div>
+      <div>
+        <label>Volume (Ex: 370/400):</label>
+        <input type="text" id="conf-vol-etiqueta" class="input-left" placeholder="Opcional" />
+      </div>
+    </div>
 
     <label>Cliente:</label>
     <input type="text" id="conf-cliente" class="input-left" oninput="atualizarRegraClienteManual()" />
 
     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
       <div>
-        <label>Pedido:</label>
-        <input type="text" id="conf-pedido" class="input-left" oninput="sincronizarLotePeloPedido()" />
+        <label>Pedido (Máx 6 díg.):</label>
+        <input type="text" id="conf-pedido" class="input-left" maxlength="6" oninput="mascaraPedidoColetor(this)" />
       </div>
       <div>
-        <label>Nº do Lote:</label>
-        <input type="text" id="conf-lote" class="input-left" style="background:#fef3c7; color:#b45309;" />
-      </div>
-    </div>
-
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-      <div>
-        <label>Código do Item:</label>
-        <input type="text" id="conf-item" class="input-left" oninput="atualizarRegraClienteManual()" />
-      </div>
-      <div>
-        <label>Volume (Ex: 370/400):</label>
-        <input type="text" id="conf-vol-etiqueta" class="input-left" placeholder="Opcional" />
+        <label>Nº do Lote (1 ponto):</label>
+        <input type="text" id="conf-lote" class="input-left" maxlength="8" style="background:#fef3c7; color:#b45309;" oninput="mascaraLoteColetor(this)" />
       </div>
     </div>
 
@@ -161,12 +307,12 @@
 
     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
       <div>
-        <label id="label-volumes">Caixas/Sacos no Palete:</label>
-        <input type="number" id="input-volumes" oninput="recalcularPreview()" style="border-color: var(--primary); font-size: 20px;" />
+        <label id="label-volumes">Caixas/Sacos Palete:</label>
+        <input type="number" id="input-volumes" oninput="recalcularPreview()" style="border-color: var(--primary); font-size: 18px;" />
       </div>
       <div>
         <label>QTD Peças p/ Caixa:</label>
-        <input type="number" id="conf-pecas" oninput="recalcularPreview()" style="font-size: 20px;" />
+        <input type="number" id="conf-pecas" oninput="recalcularPreview()" style="font-size: 18px;" />
       </div>
     </div>
 
@@ -182,8 +328,8 @@
   <!-- RESUMO DE SALDOS AO VIVO -->
   <div class="box">
     <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
-      <strong style="font-size:13px; color:var(--muted);">SALDOS ATUAIS SINCRONIZADOS</strong>
-      <span style="font-size:11px; color:var(--success); font-weight:700;">● SALVO E SEGURO</span>
+      <strong style="font-size:12px; color:var(--muted);">SALDOS SINCRONIZADOS</strong>
+      <span style="font-size:11px; color:var(--success); font-weight:700;">● MEMÓRIA ATIVA</span>
     </div>
     <div id="lista-ao-vivo">Carregando saldos...</div>
   </div>
@@ -198,19 +344,50 @@
     let lendoAgora = false;
     let timerAutoScan = null;
     let streamVideo = null;
-    let somDestravado = false;
+    let audioCtx = null;
+    let catalogoMemoria = [];
 
-    // 1. GERADOR DE ARQUIVO .WAV REAL EM MEMÓRIA (Toca ALTO em qualquer celular, Android ou iPhone)
-    function criarWavBipBase64(freq = 2400, duracaoMs = 220) {
+    // TRAVA ESTRITA DE PEDIDO (Apenas números, máx 6 dígitos: "006437")
+    function limparPedidoEstrito(val = '') {
+      return String(val).trim().split('.')[0].replace(/\D/g, '').slice(0, 6);
+    }
+
+    // TRAVA ESTRITA DE LOTE (Máx 8 caracteres e 1 único ponto: "006437.1")
+    function limparLoteEstrito(val = '', pedidoRef = '') {
+      let limpo = String(val).replace(/,/g, '.').replace(/[^0-9.]/g, '');
+      const partes = limpo.split('.').filter(Boolean);
+      if (partes.length === 0) {
+        const p = limparPedidoEstrito(pedidoRef);
+        return p ? `${p}.1` : '';
+      }
+      if (partes.length === 1) {
+        const n = partes[0];
+        if (n.length === 7) return `${n.slice(0, 6)}.${n.slice(6, 7)}`;
+        return limpo.includes('.') ? `${n.slice(0, 6)}.` : n.slice(0, 6);
+      }
+      return `${partes[0].slice(0, 6)}.${partes[1].slice(0, 1)}`.slice(0, 8);
+    }
+
+    function mascaraPedidoColetor(input) {
+      input.value = limparPedidoEstrito(input.value);
+      if (input.value.length >= 5) {
+        document.getElementById('conf-lote').value = `${input.value}.1`;
+      }
+    }
+
+    function mascaraLoteColetor(input) {
+      input.value = limparLoteEstrito(input.value);
+    }
+
+    // GERADOR DE BIPE INSTANTÂNEO (Dispara em 0ms assim que a etiqueta é lida!)
+    function criarWavBipBase64(freq = 2450, duracaoMs = 200) {
       const sampleRate = 44100;
       const numSamples = Math.floor((sampleRate * duracaoMs) / 1000);
       const buffer = new ArrayBuffer(44 + numSamples * 2);
       const view = new DataView(buffer);
-
       const writeStr = (offset, str) => {
         for (let i = 0; i < str.length; i++) view.setUint8(offset + i, str.charCodeAt(i));
       };
-
       writeStr(0, 'RIFF');
       view.setUint32(4, 36 + numSamples * 2, true);
       writeStr(8, 'WAVE');
@@ -225,75 +402,69 @@
       writeStr(36, 'data');
       view.setUint32(40, numSamples * 2, true);
 
-      // Onda quadrada de potência máxima (32767) igual a bip de coletor Zebra/Honeywell
       for (let i = 0; i < numSamples; i++) {
         const t = i / sampleRate;
         const onda = Math.sin(2 * Math.PI * freq * t) >= 0 ? 32767 : -32767;
         view.setInt16(44 + i * 2, onda, true);
       }
-
       let binary = '';
       const bytes = new Uint8Array(buffer);
       for (let i = 0; i < bytes.byteLength; i++) binary += String.fromCharCode(bytes[i]);
       return 'data:audio/wav;base64,' + btoa(binary);
     }
 
-    const wavAltoURI = criarWavBipBase64(2450, 240);
+    const wavURI = criarWavBipBase64(2450, 210);
 
     function destravarSomMobile() {
-      const player = document.getElementById('player-bip');
-      if (!player.src) player.src = wavAltoURI;
-      if (!somDestravado) {
-        player.volume = 0.01;
-        player.play().then(() => {
-          player.pause();
-          player.currentTime = 0;
-          player.volume = 1.0;
-          somDestravado = true;
-        }).catch(() => {});
-      }
+      try {
+        if (!audioCtx) {
+          const AC = window.AudioContext || window.webkitAudioContext;
+          audioCtx = new AC();
+        }
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const player = document.getElementById('player-bip');
+        if (!player.src) player.src = wavURI;
+      } catch (e) {}
     }
 
-    function tocarBipIndustrial() {
+    // Toca tanto por WebAudio (latência zero) quanto pelo Player WAV no volume máximo
+    function tocarBipImediato() {
       try {
-        if (navigator.vibrate) navigator.vibrate([200, 50, 150]);
+        if (navigator.vibrate) navigator.vibrate([160, 40, 120]);
+        if (audioCtx) {
+          if (audioCtx.state === 'suspended') audioCtx.resume();
+          const now = audioCtx.currentTime;
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = 'square';
+          osc.frequency.setValueAtTime(2450, now);
+          gain.gain.setValueAtTime(1.0, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.18);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start(now);
+          osc.stop(now + 0.18);
+        }
         const player = document.getElementById('player-bip');
-        if (!player.src) player.src = wavAltoURI;
+        if (!player.src) player.src = wavURI;
         player.volume = 1.0;
         player.currentTime = 0;
         player.play().catch(() => {});
       } catch (e) {}
     }
 
-    function tocarBipCurto() {
-      try {
-        if (navigator.vibrate) navigator.vibrate(80);
-        const player = document.getElementById('player-bip');
-        if (!player.src) player.src = wavAltoURI;
-        player.volume = 1.0;
-        player.currentTime = 0;
-        player.play().catch(() => {});
-      } catch (e) {}
-    }
-
-    // 2. INICIALIZA O LEITOR ÓPTICO UMA ÚNICA VEZ AO ABRIR (DEIXA A LEITURA 5X MAIS RÁPIDA)
     async function inicializarMotorOptico() {
       const badge = document.getElementById('status-motor');
       try {
         ocrWorker = await Tesseract.createWorker('eng');
-        // PSM 6 = Lê linha por linha da esquerda para a direita (NUNCA separa QTD: de 180 nem PEDIDO: de 006437)
-        await ocrWorker.setParameters({
-          tessedit_pageseg_mode: '6'
-        });
+        await ocrWorker.setParameters({ tessedit_pageseg_mode: '6' });
         motorPronto = true;
-        badge.innerText = '✅ Leitor de Etiqueta Ativo (Ao Vivo + Macro Rápida)';
+        badge.innerText = '✅ Leitor Inteligente Pronto (Bipa assim que lê)';
       } catch (e) {
-        console.error('Erro ao iniciar OCR:', e);
         badge.innerText = '⚠️ Modo de leitura básico ativo';
       }
     }
 
-    // 3. CÂMERA AO VIVO QUE LÊ A ETIQUETA INTEIRA AUTOMATICAMENTE
     async function iniciarCameraAoVivo() {
       const video = document.getElementById('video-camera');
       try {
@@ -308,21 +479,17 @@
         });
         video.srcObject = streamVideo;
 
-        // Faz leituras automáticas da etiqueta a cada 1.6s enquanto você aponta a câmera
         if (timerAutoScan) clearInterval(timerAutoScan);
         timerAutoScan = setInterval(() => {
           if (!lendoAgora && motorPronto && document.getElementById('tela-scanner').style.display !== 'none') {
             capturarEtiquetaDoVisor(false);
           }
-        }, 1600);
-      } catch (err) {
-        console.warn('Câmera:', err);
-      }
+        }, 1400);
+      } catch (err) {}
     }
 
-    // Prepara a imagem mantendo as letras pretas nítidas e rápidas de ler (950px)
     function prepararCanvasEtiqueta(fonteImgOuVideo, wOrig, hOrig) {
-      const maxDim = 950;
+      const maxDim = 920;
       let w = wOrig;
       let h = hOrig;
       if (w > maxDim || h > maxDim) {
@@ -342,14 +509,12 @@
       return canvas;
     }
 
-    // Leitura pelo Visor Ao Vivo (automática ou apertando o botão azul)
     async function capturarEtiquetaDoVisor(manual) {
       const video = document.getElementById('video-camera');
       if (!video || !video.videoWidth || lendoAgora) return;
 
-      if (manual) tocarBipCurto();
+      destravarSomMobile();
       lendoAgora = true;
-
       const prog = document.getElementById('progresso-box');
       if (manual) prog.style.display = 'block';
 
@@ -362,9 +527,9 @@
       }
     }
 
-    // Leitura pela Foto Macro do Celular (Qualidade máxima em ~1.5 segundo)
     function lerFotoMacro(input) {
       if (!input.files || !input.files[0]) return;
+      destravarSomMobile();
       lendoAgora = true;
       const prog = document.getElementById('progresso-box');
       prog.style.display = 'block';
@@ -398,11 +563,16 @@
           textoExtraido = text || '';
         }
 
-        // No modo automático ao vivo, só envia ao servidor quando detectar palavras da etiqueta
-        if (!mostrarAlertaSeFalhar) {
-          const temDadosEtiqueta = /PEDIDO|CLIENTE|DEVINTEX|FLORA|ITEM|PRODUTO|LOTE|006\d{3}|PT-|FR-/i.test(textoExtraido);
-          if (!temDadosEtiqueta) return;
+        const temDadosValidos = /PEDIDO|CLIENTE|DEVINTEX|FLORA|ITEM|PRODUTO|LOTE|006\d{3}|PT\s*-\s*\d|FR\s*-\s*\d|719935/i.test(textoExtraido);
+        if (!temDadosValidos) {
+          if (mostrarAlertaSeFalhar) {
+            alert('Etiqueta não identificada. Enquadre a etiqueta com foco nas letras.');
+          }
+          return;
         }
+
+        // TOCA O BIPE NO EXATO MILISSEGUNDO EM QUE CONSEGUIU LER A ETIQUETA (Sem esperar a internet!)
+        tocarBipImediato();
 
         const res = await fetch(`${API_BASE}/api/interpretar-bipe`, {
           method: 'POST',
@@ -412,19 +582,15 @@
 
         const data = await res.json();
         if (!res.ok) {
-          if (mostrarAlertaSeFalhar) {
-            alert(data.erro || 'Aproxime um pouco mais da etiqueta para focar as letras.');
-          }
+          if (mostrarAlertaSeFalhar) alert(data.erro || 'Tente aproximar um pouco mais da etiqueta.');
           return;
         }
 
-        // No modo automático ao vivo, exige que tenha lido Item + Lote + Qtd para bipar sozinho sem erro
         if (!mostrarAlertaSeFalhar && (!data.item || !data.lote || !data.qtd_pecas_por_volume)) {
           return;
         }
 
         if (timerAutoScan) clearInterval(timerAutoScan);
-        tocarBipIndustrial();
         abrirTelaConfirmacao(data);
       } catch (e) {
         if (mostrarAlertaSeFalhar) alert('Erro ao processar leitura.');
@@ -432,9 +598,12 @@
     }
 
     function abrirTelaConfirmacao(data) {
+      const pedLimpo = limparPedidoEstrito(data.pedido || data.lote);
+      const loteLimpo = limparLoteEstrito(data.lote, pedLimpo);
+
       document.getElementById('conf-cliente').value = data.cliente || '';
-      document.getElementById('conf-pedido').value = data.pedido || '';
-      document.getElementById('conf-lote').value = data.lote || '';
+      document.getElementById('conf-pedido').value = pedLimpo;
+      document.getElementById('conf-lote').value = loteLimpo;
       document.getElementById('conf-item').value = data.item || '';
       document.getElementById('conf-produto').value = data.produto || '';
       document.getElementById('conf-pecas').value = data.qtd_pecas_por_volume || '';
@@ -447,11 +616,19 @@
       document.getElementById('tela-confirmacao').style.display = 'block';
     }
 
-    function sincronizarLotePeloPedido() {
-      const ped = document.getElementById('conf-pedido').value.trim();
-      if (ped.length >= 5) {
-        document.getElementById('conf-lote').value = `${ped}.1`;
+    // Se você digitar um código que o sistema já aprendeu, ele preenche tudo sozinho!
+    function autoCompletarItemAprendido() {
+      const cod = (document.getElementById('conf-item').value || '').trim().toUpperCase();
+      const mem = catalogoMemoria.find(c => c.item.toUpperCase() === cod);
+      if (mem) {
+        document.getElementById('conf-cliente').value = mem.cliente;
+        document.getElementById('conf-produto').value = mem.produto;
+        document.getElementById('input-volumes').value = mem.padrao_volumes_palete;
+        if (mem.qtd_padrao_pecas > 0) {
+          document.getElementById('conf-pecas').value = mem.qtd_padrao_pecas;
+        }
       }
+      atualizarRegraClienteManual();
     }
 
     function atualizarRegraClienteManual() {
@@ -483,10 +660,14 @@
         return alert('Verifique a quantidade de caixas e de peças por caixa!');
       }
 
+      const pedLimpo = limparPedidoEstrito(document.getElementById('conf-pedido').value);
+      let loteLimpo = limparLoteEstrito(document.getElementById('conf-lote').value, pedLimpo);
+      if (loteLimpo.endsWith('.')) loteLimpo += '1';
+
       const payload = {
         cliente: document.getElementById('conf-cliente').value,
-        pedido: document.getElementById('conf-pedido').value,
-        lote: document.getElementById('conf-lote').value,
+        pedido: pedLimpo,
+        lote: loteLimpo,
         item: document.getElementById('conf-item').value,
         produto: document.getElementById('conf-produto').value,
         qtd_volumes_palete: vols,
@@ -506,7 +687,7 @@
         return;
       }
 
-      tocarBipIndustrial();
+      tocarBipImediato();
       await atualizarResumoAoVivo();
       voltarParaCamera();
     }
@@ -520,20 +701,28 @@
     async function atualizarResumoAoVivo() {
       try {
         const res = await fetch(`${API_BASE}/api/dashboard?t=${Date.now()}`, { cache: 'no-store' });
-        const { consolidado, historico } = await res.json();
+        const { consolidado, historico, catalogo } = await res.json();
 
         const backupSalvo = JSON.parse(localStorage.getItem('finart_backup_paletes') || '[]');
+        const catalogoSalvo = JSON.parse(localStorage.getItem('finart_backup_catalogo') || '[]');
+
         if (historico.length === 0 && backupSalvo.length > 0) {
           await fetch(`${API_BASE}/api/restaurar-backup`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ historico: backupSalvo })
+            body: JSON.stringify({ historico: backupSalvo, catalogo: catalogoSalvo })
           });
           return atualizarResumoAoVivo();
         }
 
         if (historico.length > 0) {
           localStorage.setItem('finart_backup_paletes', JSON.stringify(historico));
+        }
+        if (catalogo && catalogo.length > 0) {
+          catalogoMemoria = catalogo;
+          localStorage.setItem('finart_backup_catalogo', JSON.stringify(catalogo));
+          const dl = document.getElementById('dl-itens');
+          if (dl) dl.innerHTML = catalogo.map(c => `<option value="${c.item}">${c.produto}</option>`).join('');
         }
 
         const div = document.getElementById('lista-ao-vivo');
@@ -544,10 +733,10 @@
         div.innerHTML = consolidado.slice(0, 8).map(r => `
           <div class="live-item">
             <div>
-              <strong>${r.cliente}</strong> <span class="badge-lote">Lote ${r.lote}</span><br/>
+              <strong>${r.cliente}</strong> <span class="badge-lote">Lote ${limparLoteEstrito(r.lote, r.pedido)}</span><br/>
               <small style="color:var(--muted)">${r.item} • ${r.total_paletes} palete(s) (${r.total_caixas_ou_sacaria} vol.)</small>
             </div>
-            <strong style="color:var(--success); font-size:15px;">${r.saldo_total_pecas.toLocaleString('pt-BR')} pçs</strong>
+            <strong style="color:var(--success); font-size:14px; white-space:nowrap;">${r.saldo_total_pecas.toLocaleString('pt-BR')} pçs</strong>
           </div>
         `).join('');
       } catch (e) {}
