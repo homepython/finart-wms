@@ -114,7 +114,7 @@
     @media (min-width: 641px) { .search-group { width: auto; } }
 
     .filter-chips {
-      display: flex; gap: 4px;
+      display: flex; gap: 4px; flex-wrap: wrap;
     }
     .chip-filtro {
       border: 1px solid var(--border); background: var(--bg-card); color: var(--text-muted);
@@ -155,12 +155,6 @@
     .list-row:last-child { border-bottom: none; }
     .list-row:hover { background: #f8fafc; }
     .list-row.selecionado { background: #e0f2fe; }
-    .list-row.flash-novo { animation: pulseRow 1.1s ease; }
-
-    @keyframes pulseRow {
-      0% { background-color: #d1fae5; }
-      100% { background-color: transparent; }
-    }
 
     /* ESTILO DO GRUPO EXPANSÍVEL POR ITEM NA ABA DE EDIÇÃO/EXCLUSÃO */
     .grupo-header {
@@ -232,8 +226,8 @@
     .tag-pedido { background: #f1f5f9; color: var(--text-muted); font-weight: 600; }
     .produto-desc { font-size: 13px; color: var(--text-muted); word-break: break-word; }
 
-    .row-metrics { display: flex; align-items: center; gap: 16px; text-align: right; }
-    .metric-box { min-width: 58px; }
+    .row-metrics { display: flex; align-items: center; gap: 14px; text-align: right; }
+    .metric-box { min-width: 54px; }
     .metric-box small { display: block; font-size: 10px; color: var(--text-muted); text-transform: uppercase; font-weight: 600; }
     .metric-box strong { font-size: 15px; color: var(--text-main); }
 
@@ -243,6 +237,22 @@
     }
     .saldo-box small { display: block; font-size: 10px; font-weight: 700; color: var(--success); text-transform: uppercase; }
     .saldo-box strong { font-size: 17px; font-weight: 800; color: var(--success); }
+
+    .btn-mais-um-painel {
+      background: var(--success);
+      color: #fff;
+      border: none;
+      padding: 8px 11px;
+      border-radius: 7px;
+      font-size: 12px;
+      font-weight: 800;
+      cursor: pointer;
+      white-space: nowrap;
+      box-shadow: 0 2px 6px rgba(5, 150, 105, 0.22);
+    }
+    .btn-mais-um-painel:active {
+      transform: scale(0.96);
+    }
 
     @media (max-width: 640px) {
       .header-actions { justify-content: space-between; }
@@ -254,6 +264,11 @@
       .saldo-box { min-width: 0; text-align: center; padding: 6px 4px; }
       .acoes-mobile {
         grid-column: span 4; display: flex; justify-content: flex-end; gap: 8px; margin-top: 6px;
+      }
+      .btn-mais-um-painel {
+        grid-column: span 4;
+        width: 100%;
+        padding: 10px;
       }
     }
 
@@ -318,7 +333,7 @@
         <div class="brand-logo">FINART</div>
         <div class="brand-title">
           <h1>Controle de Paletes e Saldos</h1>
-          <span>Sincronização Instantânea Online</span>
+          <span>Sincronização Instantânea Online • Multi-Cliente Dinâmico</span>
         </div>
       </div>
       <div class="header-actions">
@@ -340,11 +355,8 @@
       </div>
 
       <div class="search-group">
-        <div class="filter-chips">
-          <button class="chip-filtro ativo" id="chip-todos" onclick="definirFiltroCliente('')">Todos</button>
-          <button class="chip-filtro" id="chip-devintex" onclick="definirFiltroCliente('DEVINTEX')">Devintex</button>
-          <button class="chip-filtro" id="chip-flora" onclick="definirFiltroCliente('FLORA')">Flora</button>
-        </div>
+        <!-- CHIPS GERADOS DINAMICAMENTE CONFORME OS CLIENTES CADASTRADOS NO BANCO -->
+        <div class="filter-chips" id="container-chips-clientes"></div>
         <input
           type="text"
           class="search-input"
@@ -376,7 +388,7 @@
     </div>
   </div>
 
-  <!-- MODAL COM AUTO-COMPLETE POR NOME DO PRODUTO E ITEM -->
+  <!-- MODAL COM AUTO-COMPLETE DINÂMICO PARA QUALQUER CLIENTE, PRODUTO E ITEM -->
   <div class="modal-bg" id="modal-edicao">
     <div class="modal">
       <h3 id="modal-titulo">Lançar Palete - FINART</h3>
@@ -384,7 +396,7 @@
 
       <div class="form-group">
         <label>Código do Item (Digite p/ auto-completar)</label>
-        <input type="text" id="edit-item" autocomplete="off" placeholder="Ex: PT-7908, PT-12236, FR-12588" onfocus="filtrarSugestoesModal('item', this.value)" oninput="filtrarSugestoesModal('item', this.value)" />
+        <input type="text" id="edit-item" autocomplete="off" placeholder="Ex: PT-7908, 721467 ou novo código" onfocus="filtrarSugestoesModal('item', this.value)" oninput="filtrarSugestoesModal('item', this.value)" />
         <div class="ac-dropdown" id="drop-item"></div>
       </div>
 
@@ -395,8 +407,9 @@
       </div>
 
       <div class="form-group">
-        <label>Cliente</label>
-        <input type="text" id="edit-cliente" autocomplete="off" placeholder="Ex: DEVINTEX COSMETICOS" oninput="autoAjustarVolumesPorCliente()" />
+        <label>Cliente (Aprende novos clientes automaticamente)</label>
+        <input type="text" id="edit-cliente" autocomplete="off" placeholder="Digite ou selecione o Cliente" onfocus="filtrarSugestoesModal('cliente', this.value)" oninput="filtrarSugestoesModal('cliente', this.value); autoAjustarVolumesPorClienteDinamico();" />
+        <div class="ac-dropdown" id="drop-cliente"></div>
       </div>
 
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
@@ -412,12 +425,12 @@
 
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
         <div class="form-group">
-          <label>Caixas/Sacos no Palete</label>
-          <input type="number" id="edit-volumes" />
+          <label>Volumes no Palete (Inteiro)</label>
+          <input type="number" id="edit-volumes" min="1" max="300" step="1" />
         </div>
         <div class="form-group">
-          <label>Peças por Caixa/Saco</label>
-          <input type="number" id="edit-pecas" />
+          <label>Peças por Volume (Inteiro)</label>
+          <input type="number" id="edit-pecas" min="1" max="50000" step="1" />
         </div>
       </div>
 
@@ -433,7 +446,6 @@
       ? ''
       : 'https://finart-wms.onrender.com';
 
-    // Remove PT-7808 do cache local do navegador
     (function limparCacheErrado() {
       try {
         const cat = JSON.parse(localStorage.getItem('finart_backup_catalogo') || '[]')
@@ -451,11 +463,13 @@
     let filtroClienteRapido = '';
 
     function limparPedidoEstrito(val = '') {
-      return String(val || '').trim().split('.')[0].replace(/\D/g, '').slice(0, 6);
+      const semDatas = String(val || '').replace(/\b\d{1,2}\s*[\/.\-]\s*\d{1,2}\s*[\/.\-]\s*\d{2,4}\b/g, '');
+      return semDatas.trim().split('.')[0].replace(/\D/g, '').slice(0, 6);
     }
 
     function limparLoteEstrito(val = '', pedidoRef = '') {
-      let limpo = String(val || '').replace(/,/g, '.').replace(/[^0-9.]/g, '');
+      const semDatas = String(val || '').replace(/\b\d{1,2}\s*\/\s*\d{1,2}(?:\s*\/\s*\d{2,4})?\b/g, '');
+      let limpo = semDatas.replace(/,/g, '.').replace(/[^0-9.]/g, '');
       const partes = limpo.split('.').filter(Boolean);
       if (partes.length === 0) {
         const p = limparPedidoEstrito(pedidoRef);
@@ -480,11 +494,42 @@
       input.value = limparLoteEstrito(input.value);
     }
 
+    // Gera dinamicamente os botões de filtro para TODOS os clientes ativos (sem hardcode)
+    function renderizarChipsClientesDinamicos() {
+      const container = document.getElementById('container-chips-clientes');
+      if (!container) return;
+
+      const clientesAtivos = [
+        ...new Set(
+          consolidadoCache
+            .map(r => (r.cliente || '').trim().toUpperCase())
+            .filter(Boolean)
+        )
+      ];
+
+      if (clientesAtivos.length === 0) {
+        container.innerHTML = '';
+        return;
+      }
+
+      const htmlChips = [
+        `<button class="chip-filtro ${filtroClienteRapido === '' ? 'ativo' : ''}" onclick="definirFiltroCliente('')">Todos</button>`
+      ];
+
+      clientesAtivos.forEach(cli => {
+        const rotuloCurto = cli.split(/\s+/)[0];
+        const ativo = filtroClienteRapido === cli ? 'ativo' : '';
+        htmlChips.push(
+          `<button class="chip-filtro ${ativo}" onclick="definirFiltroCliente('${cli.replace(/'/g, "\\'")}')" title="${cli}">${rotuloCurto}</button>`
+        );
+      });
+
+      container.innerHTML = htmlChips.join('');
+    }
+
     function definirFiltroCliente(cli) {
       filtroClienteRapido = cli;
-      document.getElementById('chip-todos').classList.toggle('ativo', cli === '');
-      document.getElementById('chip-devintex').classList.toggle('ativo', cli === 'DEVINTEX');
-      document.getElementById('chip-flora').classList.toggle('ativo', cli === 'FLORA');
+      renderizarChipsClientesDinamicos();
       renderizarListas();
     }
 
@@ -529,8 +574,27 @@
     function filtrarSugestoesModal(tipo, valor) {
       document.querySelectorAll('.ac-dropdown').forEach(d => d.style.display = 'none');
       const termo = (valor || '').trim().toUpperCase();
-      const drop = document.getElementById(tipo === 'item' ? 'drop-item' : 'drop-produto');
 
+      if (tipo === 'cliente') {
+        const dropCli = document.getElementById('drop-cliente');
+        const clientesUnicos = [
+          ...new Set([
+            ...catalogoCache.map(c => c.cliente),
+            ...historicoCache.map(h => h.cliente)
+          ].filter(Boolean))
+        ].filter(cli => cli.toUpperCase().includes(termo));
+
+        if (clientesUnicos.length === 0) return;
+        dropCli.innerHTML = clientesUnicos.map(cli => `
+          <div class="ac-row" onclick="escolherClienteModal('${cli.replace(/'/g, "\\'")}')">
+            <strong>${cli}</strong>
+          </div>
+        `).join('');
+        dropCli.style.display = 'block';
+        return;
+      }
+
+      const drop = document.getElementById(tipo === 'item' ? 'drop-item' : 'drop-produto');
       const filtrados = catalogoCache.filter(c =>
         c.item !== 'PT-7808' && (
           c.item.toUpperCase().includes(termo) ||
@@ -547,6 +611,12 @@
       `).join('');
       drop.dataset.lista = JSON.stringify(filtrados);
       drop.style.display = 'block';
+    }
+
+    function escolherClienteModal(cli) {
+      document.getElementById('edit-cliente').value = cli;
+      autoAjustarVolumesPorClienteDinamico();
+      fecharDropdownsModal();
     }
 
     function escolherSugestaoModal(idx, tipo) {
@@ -585,6 +655,33 @@
         gruposAbertos.add(chaveGrupo);
       }
       renderizarListas();
+    }
+
+    async function somarMaisUmPaleteDiretoDoPainel(evento, itemCod, loteCod) {
+      evento.stopPropagation();
+      const ultimoPalete = historicoCache.find(
+        h => h.item.toUpperCase() === itemCod.toUpperCase() &&
+             limparLoteEstrito(h.lote, h.pedido) === loteCod
+      );
+      if (!ultimoPalete) return;
+
+      try {
+        await fetch(`${API_BASE}/api/paletes`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            cliente: ultimoPalete.cliente,
+            pedido: ultimoPalete.pedido,
+            lote: loteCod,
+            item: ultimoPalete.item,
+            produto: ultimoPalete.produto,
+            qtd_volumes_palete: ultimoPalete.qtd_volumes_palete,
+            qtd_pecas_por_volume: ultimoPalete.qtd_pecas_por_volume,
+            volume_etiqueta: ''
+          })
+        });
+        await carregarDashboard(true);
+      } catch (e) {}
     }
 
     async function carregarDashboard(forcarRender = false) {
@@ -636,35 +733,40 @@
           if (!idsAtuais.has(Number(id))) idsSelecionados.delete(id);
         });
 
+        renderizarChipsClientesDinamicos();
         renderizarListas();
       } catch (e) {
         console.error('Erro ao buscar dados:', e);
       }
     }
 
-    function autoAjustarVolumesPorCliente() {
-      const cli = (document.getElementById('edit-cliente').value || '').toUpperCase();
-      const item = (document.getElementById('edit-item').value || '').toUpperCase();
-      const prod = (document.getElementById('edit-produto').value || '').toUpperCase();
-      if (cli.includes('DEVINTEX') && (item === 'PT-7908' || (prod.includes('1000 GRS') && prod.includes('REDONDO')))) {
-        document.getElementById('edit-volumes').value = 22;
-      } else if (cli.includes('DEVINTEX')) {
-        document.getElementById('edit-volumes').value = 15;
-      } else if (cli.length > 2 && !document.getElementById('edit-volumes').value) {
-        document.getElementById('edit-volumes').value = 20;
+    // 100% AGNÓSTICO: consulta o catálogo aprendido do item ou do cliente
+    function autoAjustarVolumesPorClienteDinamico() {
+      const cli = (document.getElementById('edit-cliente').value || '').toUpperCase().trim();
+      const item = (document.getElementById('edit-item').value || '').toUpperCase().trim();
+
+      const catItem = catalogoCache.find(c => c.item.toUpperCase() === item);
+      if (catItem && catItem.padrao_volumes_palete > 0) {
+        document.getElementById('edit-volumes').value = catItem.padrao_volumes_palete;
+        return;
+      }
+
+      const catCli = catalogoCache.find(c => c.cliente.toUpperCase() === cli && c.padrao_volumes_palete >= 10);
+      if (catCli && !document.getElementById('edit-volumes').value) {
+        document.getElementById('edit-volumes').value = catCli.padrao_volumes_palete;
       }
     }
 
     function passaFiltroBuscaECliente(registro, termo) {
-      if (filtroClienteRapido && !registro.cliente.toUpperCase().includes(filtroClienteRapido)) {
+      if (filtroClienteRapido && (registro.cliente || '').toUpperCase().trim() !== filtroClienteRapido) {
         return false;
       }
       if (!termo) return true;
       return (
-        registro.cliente.toLowerCase().includes(termo) ||
-        registro.lote.toLowerCase().includes(termo) ||
-        registro.item.toLowerCase().includes(termo) ||
-        registro.produto.toLowerCase().includes(termo)
+        (registro.cliente || '').toLowerCase().includes(termo) ||
+        (registro.lote || '').toLowerCase().includes(termo) ||
+        (registro.item || '').toLowerCase().includes(termo) ||
+        (registro.produto || '').toLowerCase().includes(termo)
       );
     }
 
@@ -699,6 +801,9 @@
                 <div class="metric-box"><small>Volumes</small><strong>${r.total_caixas_ou_sacaria}</strong></div>
                 <div class="metric-box"><small>Pçs/Vol</small><strong>${r.qtd_pecas_por_volume}</strong></div>
                 <div class="saldo-box"><small>Saldo Total</small><strong>${r.saldo_total_pecas.toLocaleString('pt-BR')}</strong></div>
+                <button class="btn-mais-um-painel" onclick="somarMaisUmPaleteDiretoDoPainel(event, '${r.item}', '${loteFormatado}')" title="Somar +1 palete idêntico neste lote">
+                  ⚡ +1 Palete
+                </button>
               </div>
             </div>
           `;
@@ -801,7 +906,7 @@
                           <span class="tag tag-lote">Lote: ${grupo.lote}</span>
                         </div>
                         <div class="produto-desc">
-                          Apontado em ${new Date(item.data_hora).toLocaleString('pt-BR')} ${item.volume_etiqueta ? `• Vol Etiqueta: ${item.volume_etiqueta}` : ''}
+                          Apontado em ${new Date(item.data_hora).toLocaleString('pt-BR')}
                         </div>
                       </div>
                     </div>
@@ -968,8 +1073,8 @@
         lote: loteLimpo,
         item: document.getElementById('edit-item').value,
         produto: document.getElementById('edit-produto').value,
-        qtd_volumes_palete: Number(document.getElementById('edit-volumes').value),
-        qtd_pecas_por_volume: Number(document.getElementById('edit-pecas').value)
+        qtd_volumes_palete: parseInt(document.getElementById('edit-volumes').value, 10),
+        qtd_pecas_por_volume: parseInt(document.getElementById('edit-pecas').value, 10)
       };
 
       const url = id ? `${API_BASE}/api/paletes/${id}` : `${API_BASE}/api/paletes`;

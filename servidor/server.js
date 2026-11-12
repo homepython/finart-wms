@@ -62,10 +62,8 @@ app.get('/api/stream', (req, res) => {
   const novoCliente = { id: clienteId, res };
   clientesTempoReal.push(novoCliente);
 
-  // Confirma conexão imediatamente
   res.write(`data: ${JSON.stringify({ conectado: true, timestamp: Date.now(), versaoExclusao })}\n\n`);
 
-  // Heartbeat a cada 20s evita queda silenciosa no Render / redes móveis
   const timerHeartbeat = setInterval(() => {
     try {
       res.write(`: heartbeat ${Date.now()}\n\n`);
@@ -81,15 +79,22 @@ app.get('/api/stream', (req, res) => {
 });
 
 // ============================================================================
-// 2. FUNÇÕES DE HIGIENIZAÇÃO, SANITIZAÇÃO E SIMILARIDADE (BLINDAGEM DE DADOS)
+// 2. MOTOR DE SANITIZAÇÃO, TIPAGEM ESTRITA E FUZZY MATCHING (BASE FIEL 80%)
 // ============================================================================
 function sanitizarPedido(valor = '') {
-  const semPonto = String(valor || '').trim().split('.')[0];
+  // Remove datas antes de sanitizar pedido
+  const semDatas = String(valor || '')
+    .replace(/\b\d{1,2}\s*[\/.\-]\s*\d{1,2}\s*[\/.\-]\s*\d{2,4}\b/g, '')
+    .trim();
+  const semPonto = semDatas.split('.')[0];
   return semPonto.replace(/\D/g, '').slice(0, 6);
 }
 
 function sanitizarLote(valor = '', pedidoFallback = '') {
-  let limpo = String(valor || '').trim().replace(/,/g, '.').replace(/[^0-9.]/g, '');
+  const semDatas = String(valor || '')
+    .replace(/\b\d{1,2}\s*\/\s*\d{1,2}(?:\s*\/\s*\d{2,4})?\b/g, '')
+    .trim();
+  let limpo = semDatas.replace(/,/g, '.').replace(/[^0-9.]/g, '');
   const partes = limpo.split('.').filter(Boolean);
 
   if (partes.length === 0) {
@@ -107,18 +112,32 @@ function sanitizarLote(valor = '', pedidoFallback = '') {
   return `${base}.${sufixo}`.slice(0, 8);
 }
 
+function validarInteiroPaletizacao(valor, min = 1, max = 50000) {
+  if (valor === null || valor === undefined) return 0;
+  const str = String(valor).trim();
+  // Rejeita imediatamente se contiver barra de data (ex: 12/11)
+  if (str.includes('/')) return 0;
+  const num = parseInt(str.replace(/\D/g, ''), 10);
+  if (!Number.isInteger(num) || num < min || num > max) return 0;
+  return num;
+}
+
 function corrigirCodigoItem(itemBruto = '', produtoTexto = '') {
   let cod = String(itemBruto || '').trim().toUpperCase().replace(/\s+/g, '');
   const prod = String(produtoTexto || '').toUpperCase();
 
-  // Prioridade máxima: extrai código terminado em MP no final da descrição oficial
-  const matchMP = prod.match(/\b((?:PT|FR)-\d{4,6})MP\b/i);
+  // Rejeita se o código de item parecer uma data
+  if (/^\d{1,2}[\/.\-]\d{1,2}/.test(cod)) {
+    cod = '';
+  }
+
+  // Extrai código terminado em MP no final da descrição, se existir
+  const matchMP = prod.match(/\b((?:PT|FR|IT|CD|MP|EM)-[A-Z0-9]{3,8})MP\b/i) || prod.match(/\b((?:PT|FR)-\d{4,6})MP\b/i);
   if (matchMP) {
     cod = matchMP[1].toUpperCase();
   }
 
-  // Banimento definitivo de falso-positivo de reflexo PT-7808 -> PT-7908
-  if (cod === 'PT-7808' || cod === 'PT7808' || (prod.includes('1000 GRS') && prod.includes('REDONDO'))) {
+  if (cod === 'PT-7808' || cod === 'PT7808') {
     return 'PT-7908';
   }
   if (cod === '19935') return '719935';
@@ -126,9 +145,9 @@ function corrigirCodigoItem(itemBruto = '', produtoTexto = '') {
   return cod;
 }
 
-function distanciaSimilaridade(a = '', b = '') {
-  const s1 = String(a).toUpperCase().trim();
-  const s2 = String(b).toUpperCase().trim();
+function distanciaLevenshtein(a = '', b = '') {
+  const s1 = String(a || '').toUpperCase().trim();
+  const s2 = String(b || '').toUpperCase().trim();
   if (s1 === s2) return 0;
   if (!s1.length) return s2.length;
   if (!s2.length) return s1.length;
@@ -153,8 +172,80 @@ function distanciaSimilaridade(a = '', b = '') {
   return matriz[s2.length][s1.length];
 }
 
+// Retorna percentual de similaridade entre 0 e 100
+function calcularSimilaridadeFuzzy(a = '', b = '') {
+  const s1 = String(a || '').toUpperCase().trim().replace(/\s+/g, ' ');
+  const s2 = String(b || '').toUpperCase().trim().replace(/\s+/g, ' ');
+  if (!s1 && !s2) return 100;
+  if (!s1 || !s2) return 0;
+  if (s1 === s2) return 100;
+  const dist = distanciaLevenshtein(s1, s2);
+  const maxLen = Math.max(s1.length, s2.length);
+  return Math.max(0, Math.round(((maxLen - dist) / maxLen) * 100));
+}
+
+// Avalia um candidato de leitura contra um registro da Base Fiel (limiar >= 80%)
+function avaliarMatchBaseFiel(leitura, base) {
+  if (!base) return null;
+
+  const simLote = leitura.lote && base.lote ? calcularSimilaridadeFuzzy(leitura.lote, base.lote) : 0;
+  const simPedido = leitura.pedido && base.pedido ? calcularSimilaridadeFuzzy(leitura.pedido, base.pedido) : 0;
+  const simItem = leitura.item && base.item ? calcularSimilaridadeFuzzy(leitura.item, base.item) : 0;
+  const simProduto = leitura.produto && base.produto ? calcularSimilaridadeFuzzy(leitura.produto, base.produto) : 0;
+  const simCliente = leitura.cliente && base.cliente ? calcularSimilaridadeFuzzy(leitura.cliente, base.cliente) : 0;
+
+  // Calcula a maior similaridade de identificador chave (Lote, Pedido, Item) + composição
+  const metricasValidas = [];
+  if (simLote > 0) metricasValidas.push(simLote * 1.25);
+  if (simItem > 0) metricasValidas.push(simItem * 1.25);
+  if (simPedido > 0) metricasValidas.push(simPedido * 1.1);
+  if (simProduto > 0) metricasValidas.push(simProduto);
+  if (simCliente > 0) metricasValidas.push(simCliente);
+
+  const melhorChave = Math.max(simLote, simItem, simPedido, simProduto);
+  const mediaPonderada =
+    metricasValidas.length > 0
+      ? Math.min(100, Math.round(metricasValidas.reduce((acc, v) => acc + v, 0) / metricasValidas.length))
+      : 0;
+
+  const scoreFinal = Math.max(melhorChave, mediaPonderada);
+
+  // Verifica se pertence ao mesmo contexto (Item igual ou >= 80% E Lote/Pedido >= 80%, ou Lote idêntico)
+  const mesmoContexto =
+    (simItem >= 80 && (simLote >= 75 || !leitura.lote)) ||
+    (simLote >= 80 && (simItem >= 75 || !leitura.item)) ||
+    (simItem === 100 && simLote >= 70) ||
+    (simLote === 100 && simItem >= 70);
+
+  if (!mesmoContexto || scoreFinal < 80) return null;
+
+  const divergencias = [];
+  if (leitura.lote && leitura.lote !== base.lote) {
+    divergencias.push(`Lote lido "${leitura.lote}" → Base Fiel "${base.lote}"`);
+  }
+  if (leitura.pedido && leitura.pedido !== base.pedido) {
+    divergencias.push(`Pedido lido "${leitura.pedido}" → Base Fiel "${base.pedido}"`);
+  }
+  if (leitura.item && leitura.item.toUpperCase() !== base.item.toUpperCase()) {
+    divergencias.push(`Item lido "${leitura.item}" → Base Fiel "${base.item}"`);
+  }
+  if (leitura.cliente && leitura.cliente.toUpperCase() !== base.cliente.toUpperCase()) {
+    divergencias.push(`Cliente lido "${leitura.cliente}" → Base Fiel "${base.cliente}"`);
+  }
+  if (leitura.qtd_pecas && Number(leitura.qtd_pecas) !== Number(base.qtd_pecas_por_volume)) {
+    divergencias.push(`Peças/Vol lido "${leitura.qtd_pecas}" → Base Fiel "${base.qtd_pecas_por_volume}"`);
+  }
+
+  return {
+    similaridade: scoreFinal,
+    temDivergencia: divergencias.length > 0,
+    divergencias,
+    base
+  };
+}
+
 // ============================================================================
-// 3. BANCO DE DADOS SQLITE3 (CAMINHO ABSOLUTO + WAL MODE + CATÁLOGO OFICIAL)
+// 3. BANCO DE DADOS SQLITE3 (AGNÓSTICO E AUTO-APRENDIZADO CONTÍNUO)
 // ============================================================================
 const dbPath = path.join(__dirname, 'finart.db');
 const db = new sqlite3.Database(dbPath, (err) => {
@@ -162,7 +253,7 @@ const db = new sqlite3.Database(dbPath, (err) => {
   else console.log(`✅ Banco FINART conectado em: ${dbPath}`);
 });
 
-const CATALOGO_OFICIAL = {
+const SEMENTE_INICIAL_CATALOGO = {
   'FR-12588': {
     cliente: 'DEVINTEX COSMETICOS',
     produto: 'FRA 300 ML CÔNICO ATIV. R 28 410 TP PUSH PULL BRANCO 2515 -MP-FR-12588MP',
@@ -248,31 +339,33 @@ db.serialize(() => {
   db.run(`CREATE INDEX IF NOT EXISTS idx_paletes_lote_item ON paletes_bipados (lote, item)`);
   db.run(`CREATE INDEX IF NOT EXISTS idx_paletes_item ON paletes_bipados (item)`);
 
-  // Saneamento automático de dados legados
   db.run(`DELETE FROM catalogo_itens WHERE item = 'PT-7808' OR item = 'PT7808'`);
   db.run(`UPDATE paletes_bipados SET item = 'PT-7908' WHERE item = 'PT-7808' OR item = 'PT7808'`);
-  db.run(`UPDATE catalogo_itens SET padrao_volumes_palete = 15, tipo_embalagem = 'CAIXA' WHERE item = 'PT-12590'`);
 
+  // Usa INSERT OR IGNORE para preservar padrões aprendidos/editados pelo operador
   const stmt = db.prepare(`
-    INSERT OR REPLACE INTO catalogo_itens (item, cliente, produto, padrao_volumes_palete, qtd_padrao_pecas, tipo_embalagem)
+    INSERT OR IGNORE INTO catalogo_itens (item, cliente, produto, padrao_volumes_palete, qtd_padrao_pecas, tipo_embalagem)
     VALUES (?, ?, ?, ?, ?, ?)
   `);
-  Object.entries(CATALOGO_OFICIAL).forEach(([cod, d]) => {
+  Object.entries(SEMENTE_INICIAL_CATALOGO).forEach(([cod, d]) => {
     stmt.run(cod, d.cliente, d.produto, d.padrao_volumes, d.qtd_pecas, d.embalagem);
   });
   stmt.finalize();
 
-  // Higieniza registros antigos que possam ter pontos duplicados em lote/pedido
-  db.all(`SELECT id, pedido, lote, item, produto FROM paletes_bipados`, [], (err, rows) => {
+  // Higieniza registros antigos que possam ter datas no campo volume_etiqueta ou pontos duplicados
+  db.all(`SELECT id, pedido, lote, item, produto, volume_etiqueta FROM paletes_bipados`, [], (err, rows) => {
     if (!err && Array.isArray(rows) && rows.length > 0) {
       rows.forEach((r) => {
         const pedOk = sanitizarPedido(r.pedido || r.lote);
         const loteOk = sanitizarLote(r.lote, pedOk);
         const itemOk = corrigirCodigoItem(r.item, r.produto);
-        if (pedOk !== r.pedido || loteOk !== r.lote || itemOk !== r.item) {
+        const volLimpo = /^\d{1,2}\/\d{1,2}(\/\d{2,4})?$/.test(String(r.volume_etiqueta || '').trim())
+          ? ''
+          : r.volume_etiqueta;
+        if (pedOk !== r.pedido || loteOk !== r.lote || itemOk !== r.item || volLimpo !== r.volume_etiqueta) {
           db.run(
-            `UPDATE paletes_bipados SET pedido = ?, lote = ?, item = ? WHERE id = ?`,
-            [pedOk, loteOk, itemOk, r.id]
+            `UPDATE paletes_bipados SET pedido = ?, lote = ?, item = ?, volume_etiqueta = ? WHERE id = ?`,
+            [pedOk, loteOk, itemOk, volLimpo, r.id]
           );
         }
       });
@@ -280,32 +373,164 @@ db.serialize(() => {
   });
 });
 
-// PRIORIDADE 1 ABSOLUTA: Usa SEMPRE o valor salvo/corrigido pelo operador na base confiável!
-function calcularPadraoPalete(cliente = '', item = '', produto = '', padraoSalvo = 0) {
-  if (padraoSalvo && Number(padraoSalvo) > 0) {
-    return Number(padraoSalvo);
+// Cálculo 100% dinâmico de padrão de volumes (baseado no histórico/catálogo do item ou cliente)
+function calcularPadraoPaleteDinamico(item = '', cliente = '', padraoSalvoItem = 0, catalogoRows = []) {
+  if (padraoSalvoItem && Number(padraoSalvoItem) > 0) {
+    return Number(padraoSalvoItem);
   }
 
-  const cli = String(cliente || '').toUpperCase();
-  const it = String(item || '').toUpperCase();
-  const prod = String(produto || '').toUpperCase();
+  const itUpper = String(item || '').toUpperCase().trim();
+  const cliUpper = String(cliente || '').toUpperCase().trim();
 
-  // Apenas o Pote 1000g Redondo (PT-7908) tem padrão inicial 22 sacarias
-  if (cli.includes('DEVINTEX') && (it === 'PT-7908' || (prod.includes('1000 GRS') && prod.includes('REDONDO')))) {
-    return 22;
+  if (itUpper) {
+    const achouItem = catalogoRows.find((c) => c.item.toUpperCase() === itUpper);
+    if (achouItem && achouItem.padrao_volumes_palete > 0) {
+      return Number(achouItem.padrao_volumes_palete);
+    }
   }
-  // Demais itens Devintex (PT-12590 de 500g, PT-12236 de 300g, FR-12588, etc.) = 15 caixas
-  if (cli.includes('DEVINTEX')) {
-    return 15;
+
+  if (cliUpper) {
+    const itensDoCliente = catalogoRows.filter(
+      (c) => c.cliente.toUpperCase() === cliUpper && c.padrao_volumes_palete >= 10
+    );
+    if (itensDoCliente.length > 0) {
+      // Usa a moda (padrão mais frequente daquele cliente)
+      const contagem = {};
+      let melhorPadrao = itensDoCliente[0].padrao_volumes_palete;
+      let maxFreq = 0;
+      itensDoCliente.forEach((c) => {
+        const v = c.padrao_volumes_palete;
+        contagem[v] = (contagem[v] || 0) + 1;
+        if (contagem[v] > maxFreq) {
+          maxFreq = contagem[v];
+          melhorPadrao = v;
+        }
+      });
+      return Number(melhorPadrao);
+    }
   }
-  return 20;
+
+  return 15;
 }
 
 // ============================================================================
-// 4. INTERPRETADOR ÓPTICO INTELIGENTE + VOTAÇÃO TRIPLA + FONTE CONFIÁVEL
+// 4. PARSER DE OCR RECONSTRUÍDO (SEPARAÇÃO ESTRITA DATA vs VOLUME + AGNÓSTICO)
 // ============================================================================
+function higienizarDatasERuidosOCR(textoBruto = '') {
+  const datasEncontradas = [];
+
+  let limpo = String(textoBruto || '')
+    .replace(/\r/g, '')
+    // Remove marcações de papelão/caixa e máquina
+    .replace(/\bPA[A-Z]{2,5}\s*\d{4,9}\b/gi, ' ')
+    .replace(/\bMQN\s*\d{1,4}\b/gi, ' ')
+    .replace(/N[º°o]\s*PED\.?\s*CLIENTE\s*:?/gi, ' ')
+    // Remove blocos explícitos de DATA, FABRICAÇÃO, VALIDADE, VENCIMENTO, EMISSÃO e HORA
+    .replace(
+      /\b(?:DATA(?:\s*DE\s*FAB(?:RICA[CÇ][AÃ]O)?)?|DT\.?\s*FAB|FAB(?:RICA[CÇ][AÃ]O)?|VAL(?:IDADE)?|VENC(?:IMENTO)?|EMISS[AÃ]O)\s*[:.\-]?\s*(\d{1,2}\s*[\/.\-]\s*\d{1,2}(?:\s*[\/.\-]\s*\d{2,4})?)/gi,
+      (m, d) => {
+        datasEncontradas.push(d);
+        return ' [DATA_REMOVIDA] ';
+      }
+    )
+    // Remove qualquer data completa DD/MM/AAAA, DD/MM/AA, DD.MM.AAAA ou AAAA-MM-DD
+    .replace(/\b(0?[1-9]|[12]\d|3[01])\s*[\/.\-]\s*(0?[1-9]|1[0-2])\s*[\/.\-]\s*(20\d{2}|\d{2})\b/g, (m) => {
+      datasEncontradas.push(m);
+      return ' [DATA_REMOVIDA] ';
+    })
+    // Remove datas parciais MM/AAAA (ex: 11/2026, 08/2025)
+    .replace(/\b(0?[1-9]|1[0-2])\s*\/\s*(20[2-3]\d)\b/g, (m) => {
+      datasEncontradas.push(m);
+      return ' [DATA_REMOVIDA] ';
+    })
+    // Remove horários HH:MM(:SS)
+    .replace(/\b([01]?\d|2[0-3]):[0-5]\d(?::[0-5]\d)?\b/g, ' ')
+    // Normaliza cabeçalhos comuns de etiquetas logísticas com ruído de OCR
+    .replace(/\b(?:OTD|0TD|QTO|QID|QT0|QTD\.|QUANT(?:IDADE)?)\s*:?/gi, 'QTD:')
+    .replace(/\b(?:1TEM|lTEM|!TEM|ITEN|IIEM|\|TEM|TEM:|COD(?:IGO)?\s*ITEM)\s*:?/gi, 'ITEM:')
+    .replace(/\b(?:PR0DUTO|PRODUT0|PRODUTO\.|DESCRI[CÇ][AÃ]O)\s*:?/gi, 'PRODUTO:')
+    .replace(/\b(?:L0TE|LQTE)\s*:?/gi, 'LOTE:')
+    .replace(/\b(?:PED1DO|PEDID0|PEDIDO\.)\s*:?/gi, 'PEDIDO:')
+    .replace(/\b(?:CL1ENTE|CLlENTE|DESTINAT[AÁ]RIO|EMPRESA)\s*:?/gi, 'CLIENTE:')
+    .replace(/PI\s*-\s*(\d)/gi, 'PT-$1')
+    .replace(/P1\s*-\s*(\d)/gi, 'PT-$1')
+    .replace(/F8\s*-\s*(\d)/gi, 'FR-$1')
+    .replace(/ER\s*-\s*(\d)/gi, 'FR-$1');
+
+  return { textoLimpo: limpo, datasEncontradas };
+}
+
+// Extrai o nome de QUALQUER cliente da etiqueta de forma 100% agnóstica
+function extrairClienteAgnostico(textoLimpo = '', clientesConhecidos = []) {
+  // 1. Verifica se algum cliente já conhecido no banco está escrito na etiqueta (exato ou fuzzy >= 85%)
+  const textoUpper = textoLimpo.toUpperCase();
+  for (const cliBanco of clientesConhecidos) {
+    const nomeLimpo = String(cliBanco || '').toUpperCase().trim();
+    if (nomeLimpo.length >= 3 && textoUpper.includes(nomeLimpo)) {
+      return nomeLimpo;
+    }
+    // Verifica primeira palavra forte do cliente (ex: >= 5 letras)
+    const primeiraPalavra = nomeLimpo.split(/\s+/)[0];
+    if (primeiraPalavra.length >= 6 && textoUpper.includes(primeiraPalavra)) {
+      return nomeLimpo;
+    }
+  }
+
+  // 2. Extração explícita via campo CLIENTE: / DESTINATÁRIO: / EMPRESA:
+  const mCliExplicito = textoLimpo.match(
+    /CLIENTE\s*[:.\-]?\s*([A-ZÀ-Ú0-9][A-ZÀ-Ú0-9\s.\-&\/]{2,55}?)(?=\bPEDIDO|\bITEM|\bPRODUTO|\bLOTE|\bQTD|\bVOL|\bCNPJ|\[DATA_REMOVIDA\]|\n|$)/i
+  );
+  if (mCliExplicito) {
+    const candidato = mCliExplicito[1]
+      .replace(/[^A-ZÀ-Ú0-9\s.\-&]/gi, ' ')
+      .replace(/\s{2,}/g, ' ')
+      .trim()
+      .toUpperCase();
+    if (candidato.length >= 3 && !/^(PEDIDO|ITEM|PRODUTO|LOTE|QTD|DATA|VOLUME)$/.test(candidato)) {
+      // Verifica se tem alta similaridade (>= 82%) com algum cliente já cadastrado para evitar duplicar por 1 letra
+      for (const cliBanco of clientesConhecidos) {
+        if (calcularSimilaridadeFuzzy(candidato, cliBanco) >= 82) {
+          return cliBanco.toUpperCase();
+        }
+      }
+      return candidato;
+    }
+  }
+
+  // 3. Heurística de Linha de Cabeçalho (para etiquetas onde o nome do cliente vem no topo sem o rótulo "CLIENTE:")
+  const linhas = textoLimpo
+    .split('\n')
+    .map((l) => l.replace(/\[DATA_REMOVIDA\]/g, '').trim().toUpperCase())
+    .filter((l) => l.length >= 4);
+
+  const palavrasReservadas = /^(PEDIDO|ITEM|PRODUTO|LOTE|QTD|QUANTIDADE|VOLUME|PESO|CAIXA|PALETE|FINART|CONTROLE|ETIQUETA|TURNO|OPERADOR|DATA|VALIDADE|FAB|PT-|FR-|\d+)/i;
+
+  for (let i = 0; i < Math.min(linhas.length, 4); i++) {
+    const linha = linhas[i];
+    if (palavrasReservadas.test(linha)) continue;
+    // Deve conter pelo menos uma palavra alfabética de >= 4 letras e não ser descrição de frasco/pote
+    if (/[A-ZÀ-Ú]{4,}/.test(linha) && !/\b(GRS|ML|MG|KG|LITROS|REDONDO|CONICO|PUSH\s*PULL)\b/i.test(linha)) {
+      const limpo = linha
+        .replace(/[^A-ZÀ-Ú0-9\s.\-&]/gi, ' ')
+        .replace(/\s{2,}/g, ' ')
+        .trim()
+        .slice(0, 45);
+      if (limpo.length >= 4) {
+        for (const cliBanco of clientesConhecidos) {
+          if (calcularSimilaridadeFuzzy(limpo, cliBanco) >= 82) {
+            return cliBanco.toUpperCase();
+          }
+        }
+        return limpo;
+      }
+    }
+  }
+
+  return '';
+}
+
 app.post('/api/interpretar-bipe', (req, res) => {
-  const { codigoLido, textoEtiqueta } = req.body;
+  const { codigoLido, textoEtiqueta, baseFielCliente } = req.body;
   const brCode = (codigoLido || '').trim();
   const ocrRaw = (textoEtiqueta || '').trim();
 
@@ -313,32 +538,19 @@ app.post('/api/interpretar-bipe', (req, res) => {
     return res.status(400).json({ erro: 'Nenhuma imagem recebida.' });
   }
 
-  let texto = `${brCode}\n${ocrRaw}`
-    .replace(/\r/g, '')
-    .replace(/\bPA[A-Z]{2,5}\s*\d{4,9}\b/gi, ' ')
-    .replace(/\bMQN\s*\d{1,4}\b/gi, ' ')
-    .replace(/N[º°o]\s*PED\.?\s*CLIENTE\s*:?/gi, ' ')
-    .replace(/OTD|0TD|QTO|QID|QT0|QTD\./gi, 'QTD:')
-    .replace(/1TEM|lTEM|!TEM|ITEN|IIEM|\|TEM|TEM:/gi, 'ITEM:')
-    .replace(/PR0DUTO|PRODUT0|PRODUTO\./gi, 'PRODUTO:')
-    .replace(/L0TE|LQTE/gi, 'LOTE:')
-    .replace(/PED1DO|PEDID0|PEDIDO\./gi, 'PEDIDO:')
-    .replace(/CL1ENTE/gi, 'CLIENTE:')
-    .replace(/PI\s*-\s*(\d)/gi, 'PT-$1')
-    .replace(/P1\s*-\s*(\d)/gi, 'PT-$1')
-    .replace(/F8\s*-\s*(\d)/gi, 'FR-$1')
-    .replace(/ER\s*-\s*(\d)/gi, 'FR-$1');
+  // ETAPA 1: Higienização estrita de Datas (DD/MM/AAAA, FAB, VAL) e ruídos
+  const { textoLimpo: texto } = higienizarDatasERuidosOCR(`${brCode}\n${ocrRaw}`);
 
   let candidatosItem = [];
   let candidatosPedido = [];
   let candidatosLote = [];
   let qtdPorVolume = 0;
-  let clienteLido = '';
+  let qtdVolumesEtiqueta = 0;
   let produtoLido = '';
-  let volumeLido = '';
+  let volumeSequencialEtiqueta = '';
 
-  // 1. Extração prioritária via Código de Barras / QR estruturado
-  const mBarcode = texto.match(/([A-Z]{2}\s*-\s*\d{4,6}|\d{5,7})\s*[;:,]\s*(\d{6,8})\s*[;:,]\s*(\d{2,4})/i);
+  // 1. Código de Barras / QR estruturado (ITEM;LOTE;QTD)
+  const mBarcode = texto.match(/([A-Z]{2,4}\s*-\s*[A-Z0-9]{3,8}|\d{5,8})\s*[;:,]\s*(\d{5,8})\s*[;:,]\s*(\d{1,5})/i);
   if (mBarcode) {
     candidatosItem.push(mBarcode[1].replace(/\s+/g, '').toUpperCase());
     const lb = mBarcode[2].trim();
@@ -346,11 +558,11 @@ app.post('/api/interpretar-bipe', (req, res) => {
     const loteBar = sanitizarLote(`${lb.slice(0, -1)}.${lb.slice(-1)}`, pedBar);
     if (pedBar) candidatosPedido.push(pedBar);
     if (loteBar) candidatosLote.push(loteBar);
-    qtdPorVolume = parseInt(mBarcode[3].trim(), 10) || 0;
+    qtdPorVolume = validarInteiroPaletizacao(mBarcode[3], 1, 25000);
   }
 
-  // 2. Extração de PEDIDO explícito
-  const regexPedidos = /PEDIDO[:.\s]*(\d{4,6})(?!\.\d)/gi;
+  // 2. PEDIDO explícito
+  const regexPedidos = /PEDIDO\s*[:.\-]?\s*(\d{4,6})(?!\.\d)/gi;
   let mPed;
   while ((mPed = regexPedidos.exec(texto)) !== null) {
     const p = sanitizarPedido(mPed[1]);
@@ -360,8 +572,8 @@ app.post('/api/interpretar-bipe', (req, res) => {
     }
   }
 
-  // 3. Extração de LOTE explícito ou padrão 00XXXX.X
-  const regexLotes = /(?:LOTE[:.\s]*(\d{4,6}\s*[\.,]\s*\d)|\b(00\d{4}\s*[\.,]\s*\d)\b)/gi;
+  // 3. LOTE explícito ou padrão numérico com sufixo .1 / .2
+  const regexLotes = /(?:LOTE\s*[:.\-]?\s*(\d{4,6}\s*[\.,]\s*\d)|\b(00\d{4}\s*[\.,]\s*\d)\b)/gi;
   let mLote;
   while ((mLote = regexLotes.exec(texto)) !== null) {
     const rawL = mLote[1] || mLote[2];
@@ -371,7 +583,7 @@ app.post('/api/interpretar-bipe', (req, res) => {
     if (p) candidatosPedido.push(p);
   }
 
-  // 4. Padrão numérico 00XXXX
+  // 4. Padrão numérico de pedido (00XXXX)
   const regexZeroZero = /\b(00\d{4})\b/g;
   let mZZ;
   while ((mZZ = regexZeroZero.exec(texto)) !== null) {
@@ -380,109 +592,125 @@ app.post('/api/interpretar-bipe', (req, res) => {
     candidatosLote.push(sanitizarLote('', p));
   }
 
-  // 5. Códigos de item prefixados (PT-XXXX, FR-XXXX)
-  const regexTodosPrefixados = /\b((?:PT|FR)\s*-?\s*\d{4,6})(?:MP)?\b/gi;
+  // 5. Códigos de item alfanuméricos (PT-XXXX, FR-XXXX, ou qualquer XX-XXXX)
+  const regexTodosPrefixados = /\b([A-Z]{2,3}\s*-\s*\d{3,7})(?:MP)?\b/gi;
   let matchPref;
   while ((matchPref = regexTodosPrefixados.exec(texto)) !== null) {
     let c = matchPref[1].replace(/\s+/g, '').toUpperCase();
-    if (!c.includes('-')) c = c.slice(0, 2) + '-' + c.slice(2);
     candidatosItem.push(c);
   }
 
-  // 6. Campo ITEM explícito
-  const mItemExplicito = texto.match(/ITEM[:.\s]*([A-Z0-9\-]{5,12})/i);
+  // 6. Campo ITEM explícito (aceita códigos de qualquer cliente novo)
+  const mItemExplicito = texto.match(/ITEM\s*[:.\-]?\s*([A-Z0-9\-]{3,15})/i);
   if (mItemExplicito) {
     const cand = mItemExplicito[1].trim().toUpperCase();
-    if (!cand.startsWith('00')) candidatosItem.push(cand);
-  }
-
-  // 7. Códigos numéricos de 6 dígitos (Flora: 719935, 721467, etc.)
-  const regexSeisDigitos = /\b([1-9]\d{5})\b/g;
-  let mSeis;
-  while ((mSeis = regexSeisDigitos.exec(texto)) !== null) {
-    const num6 = mSeis[1];
-    if (!candidatosPedido.includes(num6)) {
-      candidatosItem.push(num6);
+    if (!cand.startsWith('00') && !/^(DATA|LOTE|PEDIDO|PRODUTO|QTD)$/.test(cand)) {
+      candidatosItem.push(cand);
     }
   }
 
-  // Assinaturas únicas de produtos Flora
-  if (/04\.001\.04\.0498|VERDE\s*CLARO/i.test(texto)) {
-    candidatosItem.unshift('721467');
-  } else if (/22908\/2|P[OÓ]S\s*DANOS/i.test(texto)) {
-    candidatosItem.unshift('719935');
+  // 7. Códigos numéricos de 5 a 7 dígitos (excluindo anos e pedidos)
+  const regexDigitosItem = /\b([1-9]\d{4,6})\b/g;
+  let mDig;
+  while ((mDig = regexDigitosItem.exec(texto)) !== null) {
+    const numItem = mDig[1];
+    if (!candidatosPedido.includes(numItem) && !/^202\d/.test(numItem)) {
+      candidatosItem.push(numItem);
+    }
   }
 
-  // Identificação de Cliente (Sem falso-positivo quando vazio)
-  if (/DEVINTEX|COSMETICOS/i.test(texto)) {
-    clienteLido = 'DEVINTEX COSMETICOS';
-  } else if (/FLORA\s*PRODS|FLORA\s*24|HIG\s*E\s*LIM|P[OÓ]S\s*DANOS|VERDE\s*CLARO/i.test(texto)) {
-    clienteLido = 'FLORA PRODS DE HIG E LIM';
-  } else {
-    const mCli = texto.match(/CLIENTE[:.\s]*([A-Z0-9\s.\-&]{3,35})/i);
-    if (mCli) clienteLido = mCli[1].split('\n')[0].trim().toUpperCase();
-  }
-
-  // Captura Multilinha da Descrição do Produto
+  // 8. Captura Multilinha da Descrição do Produto
   const mBlocoProduto =
-    texto.match(/PRODUTO[:.\s]*([\s\S]{5,160}?)(?=\bQTD[:\s]|\bLOTE[:\s]|\bVALIDADE[:\s]|\b00\d{4}\.\d\b|$)/i) ||
-    texto.match(/\b((?:PT|FRA)\s+\d{2,4}\s*(?:GRS|ML)[\s\S]{5,140}?)(?=\bQTD[:\s]|\bLOTE[:\s]|\bVALIDADE[:\s]|\b00\d{4}\.\d\b|$)/i);
+    texto.match(/PRODUTO\s*[:.\-]?\s*([\s\S]{4,160}?)(?=\bQTD[:\s]|\bLOTE[:\s]|\bVOL|\bPESO|\[DATA_REMOVIDA\]|\b00\d{4}\.\d\b|$)/i) ||
+    texto.match(/\b((?:PT|FRA|POTE|FRASCO|TAMPA|CAIXA)\s+\d{2,4}\s*(?:GRS|ML|G|KG)[\s\S]{4,140}?)(?=\bQTD[:\s]|\bLOTE[:\s]|\[DATA_REMOVIDA\]|\b00\d{4}\.\d\b|$)/i);
 
   if (mBlocoProduto) {
     let prodLimpo = mBlocoProduto[1]
+      .replace(/\[DATA_REMOVIDA\]/g, ' ')
       .replace(/\n+/g, ' ')
       .replace(/[^A-Z0-9À-Ú\s.\-\/]/gi, ' ')
       .replace(/\s{2,}/g, ' ')
       .trim()
       .toUpperCase();
 
-    const mAteMP = prodLimpo.match(/^(.+?(?:PT|FR)-\d{4,6}MP)/i);
+    const mAteMP = prodLimpo.match(/^(.+?[A-Z]{2,3}-\d{3,6}MP)/i);
     if (mAteMP) prodLimpo = mAteMP[1].toUpperCase();
-    if (prodLimpo.length >= 6) produtoLido = prodLimpo;
+    if (prodLimpo.length >= 4) produtoLido = prodLimpo;
   }
 
-  // Quantidade de peças por volume
+  // 9. Extração ESTRITA de Quantidade de Peças por Volume (Ignorando anos 2020-2035 e datas!)
   if (!qtdPorVolume) {
-    const mQtdDireta = texto.match(/QTD[:.\s\n]*(\d{2,4})\b/i);
+    const mQtdDireta = texto.match(/QTD\s*[:.\-\s]*(\d{1,5})\b(?!\s*[\/.\-]\s*\d)/i);
     if (mQtdDireta) {
-      const val = parseInt(mQtdDireta[1], 10);
-      if (val >= 10 && val <= 2500 && !candidatosPedido.includes(String(val))) {
+      const val = validarInteiroPaletizacao(mQtdDireta[1], 1, 20000);
+      const ehAno = val >= 2020 && val <= 2035;
+      if (val >= 5 && !ehAno && !candidatosPedido.includes(String(val))) {
         qtdPorVolume = val;
       }
     }
   }
   if (!qtdPorVolume) {
-    const mEntreProdELote = texto.match(/(?:MP|MAR\s*E|ATIVADOR)[\s\S]{0,30}?\b(\d{2,4})\b[\s\S]{0,30}?(?:LOTE|00\d{4})/i);
-    if (mEntreProdELote) qtdPorVolume = parseInt(mEntreProdELote[1], 10);
+    const mPecasUnid = texto.match(/\b(\d{2,4})\s*(?:P[CÇ]S|PE[CÇ]AS|UN(?:ID)?)\b/i);
+    if (mPecasUnid) {
+      qtdPorVolume = validarInteiroPaletizacao(mPecasUnid[1], 5, 20000);
+    }
   }
 
-  // Número do volume na etiqueta (ex: 112/160)
-  const mVol = texto.match(/\b(\d{1,3}\s*\/\s*\d{2,3})\b/);
-  if (mVol) volumeLido = mVol[1].replace(/\s+/g, '');
+  // 10. Extração ESTRITA de Volume / Caixas (SOMENTE se explícito com VOL/CAIXAS, NUNCA aceitando datas!)
+  const mVolInteiro = texto.match(/\b(?:VOL(?:UMES?)?|CAIXAS|SACOS|SACARIAS)\s*[:.\-]?\s*(\d{1,3})\b(?!\s*\/\s*\d{1,2}\s*\/)/i);
+  if (mVolInteiro) {
+    const vInt = validarInteiroPaletizacao(mVolInteiro[1], 1, 150);
+    if (vInt > 0) qtdVolumesEtiqueta = vInt;
+  }
+
+  // Sequencial de volume (ex: VOL: 112/160), exigindo que NÃO seja data (denominador > 12 quando sem rótulo VOL)
+  const mVolSeq = texto.match(/\bVOL(?:UME)?\s*[:.\-]?\s*(\d{1,4}\s*\/\s*\d{1,4})\b/i);
+  if (mVolSeq) {
+    volumeSequencialEtiqueta = mVolSeq[1].replace(/\s+/g, '');
+  }
 
   db.all(`SELECT * FROM catalogo_itens WHERE item != 'PT-7808'`, [], (errCat, catalogoRows) => {
     if (errCat) return res.status(500).json({ erro: errCat.message });
 
-    db.all(`SELECT * FROM paletes_bipados ORDER BY id DESC LIMIT 200`, [], (errHist, histRows) => {
+    db.all(`SELECT * FROM paletes_bipados ORDER BY id DESC LIMIT 250`, [], (errHist, histRows) => {
       const historico = histRows || [];
 
+      // Lista dinâmica de todos os clientes já conhecidos no banco
+      const clientesConhecidos = [
+        ...new Set([
+          ...catalogoRows.map((c) => c.cliente),
+          ...historico.map((h) => h.cliente)
+        ].filter(Boolean))
+      ];
+
+      const clienteExtraidoEtiqueta = extrairClienteAgnostico(texto, clientesConhecidos);
+
+      // Escolha do código do item (Exato ou Fuzzy >= 85% contra o catálogo/histórico)
       let itemEscolhido = corrigirCodigoItem(candidatosItem[0] || '', produtoLido);
 
       for (const candBruto of candidatosItem) {
         const cand = corrigirCodigoItem(candBruto, produtoLido);
-        const achouNoCatalogo = catalogoRows.find((r) => r.item.toUpperCase() === cand.toUpperCase());
-        const achouNoHistorico = historico.find((h) => h.item.toUpperCase() === cand.toUpperCase());
-        if (achouNoCatalogo || achouNoHistorico) {
-          itemEscolhido = (achouNoCatalogo || achouNoHistorico).item;
+        const exatoCat = catalogoRows.find((r) => r.item.toUpperCase() === cand.toUpperCase());
+        const exatoHist = historico.find((h) => h.item.toUpperCase() === cand.toUpperCase());
+        if (exatoCat || exatoHist) {
+          itemEscolhido = (exatoCat || exatoHist).item;
           break;
         }
       }
 
-      // Votação Tripla entre candidatos de Lote e Pedido lidos na etiqueta
+      // Se não achou item pelo código mas leu a descrição do produto, tenta cruzar pela descrição (>= 80% fuzzy)
+      if (!itemEscolhido && produtoLido.length >= 8) {
+        for (const cat of catalogoRows) {
+          if (calcularSimilaridadeFuzzy(produtoLido, cat.produto) >= 80 || cat.produto.toUpperCase().includes(produtoLido.slice(0, 15))) {
+            itemEscolhido = cat.item;
+            break;
+          }
+        }
+      }
+
       let loteLidoNaCamera = candidatosLote[0] || '';
       let pedidoLidoNaCamera = candidatosPedido[0] || sanitizarPedido(loteLidoNaCamera);
 
-      // Se houver mais de um candidato na leitura, prioriza o que bate com o histórico ativo
       for (const candL of candidatosLote) {
         if (historico.some((h) => h.lote === candL)) {
           loteLidoNaCamera = candL;
@@ -491,80 +719,95 @@ app.post('/api/interpretar-bipe', (req, res) => {
         }
       }
 
-      if (!itemEscolhido && loteLidoNaCamera) {
-        const doMesmoLote = historico.find((h) => h.lote === loteLidoNaCamera);
-        if (doMesmoLote) {
-          itemEscolhido = doMesmoLote.item;
+      // ======================================================================
+      // MOTOR DE "BASE FIEL" COM FUZZY MATCHING (>= 80% DE SIMILARIDADE)
+      // ======================================================================
+      const leituraBruta = {
+        item: itemEscolhido,
+        lote: loteLidoNaCamera,
+        pedido: pedidoLidoNaCamera,
+        cliente: clienteExtraidoEtiqueta,
+        produto: produtoLido,
+        qtd_pecas: qtdPorVolume
+      };
+
+      // Candidatos a Base Fiel: 1º a Base Fiel enviada pelo Coletor na sessão, depois os lotes ativos no banco
+      const basesCandidatas = [];
+      if (baseFielCliente && baseFielCliente.item && baseFielCliente.lote) {
+        basesCandidatas.push(baseFielCliente);
+      }
+      historico.forEach((h) => {
+        if (!basesCandidatas.some((b) => b.item === h.item && b.lote === h.lote)) {
+          basesCandidatas.push(h);
+        }
+      });
+
+      let melhorMatchFiel = null;
+      for (const baseCand of basesCandidatas) {
+        const avaliacao = avaliarMatchBaseFiel(leituraBruta, baseCand);
+        if (avaliacao && (!melhorMatchFiel || avaliacao.similaridade > melhorMatchFiel.similaridade)) {
+          melhorMatchFiel = avaliacao;
         }
       }
 
+      let sugestaoDivergencia = null;
       let loteFinal = loteLidoNaCamera;
       let pedidoFinal = pedidoLidoNaCamera;
-      let sugestaoDivergencia = null;
+
+      if (melhorMatchFiel && melhorMatchFiel.similaridade >= 80) {
+        const bf = melhorMatchFiel.base;
+        if (melhorMatchFiel.temDivergencia) {
+          sugestaoDivergencia = {
+            tipo: 'BASE_FIEL_FUZZY_80',
+            similaridade: melhorMatchFiel.similaridade,
+            auto_corrigido: false,
+            divergencias: melhorMatchFiel.divergencias,
+            mensagem: `Similaridade de ${melhorMatchFiel.similaridade}% com a Base Fiel ativa (${bf.item} • Lote ${bf.lote}). Foram detectados ruídos de OCR (${melhorMatchFiel.divergencias.join(' | ')}). Toque abaixo para Auto-Corrigir com 1 clique!`,
+            item_lido: itemEscolhido || '(não lido)',
+            lote_lido: loteLidoNaCamera || '(não lido)',
+            pedido_lido: pedidoLidoNaCamera || '(não lido)',
+            cliente_lido: clienteExtraidoEtiqueta || '(não lido)',
+            produto_lido: produtoLido || '(não lido)',
+            qtd_pecas_lida: qtdPorVolume || 0,
+            // Dados perfeitos da Base Fiel para substituição com 1 clique
+            item_sugerido: bf.item,
+            cliente_sugerido: bf.cliente,
+            produto_sugerido: bf.produto,
+            lote_sugerido: bf.lote,
+            pedido_sugerido: bf.pedido,
+            qtd_pecas_sugerida: bf.qtd_pecas_por_volume,
+            qtd_volumes_sugerida: bf.qtd_volumes_palete
+          };
+        } else {
+          // 100% compatível com a Base Fiel: preenche campos ausentes automaticamente
+          itemEscolhido = bf.item;
+          loteFinal = bf.lote;
+          pedidoFinal = bf.pedido;
+        }
+      }
 
       const paletesDesteItem = itemEscolhido
         ? historico.filter((h) => h.item.toUpperCase() === itemEscolhido.toUpperCase())
         : [];
-
-      // TRAVA DE FONTE CONFIÁVEL POR ITEM APONTADO
-      if (paletesDesteItem.length > 0) {
-        const fonteConfiavel = paletesDesteItem[0];
-        const jaExisteExatoParaOItem = paletesDesteItem.some((h) => h.lote === loteLidoNaCamera);
-
-        if (!jaExisteExatoParaOItem && loteLidoNaCamera) {
-          const loteConfiavelParecido = paletesDesteItem.find(
-            (h) =>
-              distanciaSimilaridade(loteLidoNaCamera, h.lote) <= 2 ||
-              distanciaSimilaridade(pedidoLidoNaCamera, h.pedido) <= 2
-          );
-
-          if (loteConfiavelParecido) {
-            loteFinal = loteConfiavelParecido.lote;
-            pedidoFinal = loteConfiavelParecido.pedido;
-
-            sugestaoDivergencia = {
-              tipo: 'LOTE_AUTO_CORRIGIDO_PELA_BASE',
-              auto_corrigido: true,
-              mensagem: `A câmera leu Pedido "${pedidoLidoNaCamera}" / Lote "${loteLidoNaCamera}", mas este item já tem saldo na Fonte Confiável Lote "${loteConfiavelParecido.lote}" (Ped: "${loteConfiavelParecido.pedido}"). O sistema ajustou automaticamente para "${loteConfiavelParecido.lote}"!`,
-              item_lido: itemEscolhido,
-              item_sugerido: loteConfiavelParecido.item,
-              cliente_sugerido: loteConfiavelParecido.cliente,
-              produto_sugerido: loteConfiavelParecido.produto,
-              qtd_pecas_sugerida: loteConfiavelParecido.qtd_pecas_por_volume,
-              qtd_volumes_sugerida: loteConfiavelParecido.qtd_volumes_palete,
-              lote_lido: loteLidoNaCamera,
-              pedido_lido: pedidoLidoNaCamera,
-              lote_sugerido: loteConfiavelParecido.lote,
-              pedido_sugerido: loteConfiavelParecido.pedido
-            };
-          }
-        } else if (!loteLidoNaCamera) {
-          loteFinal = fonteConfiavel.lote;
-          pedidoFinal = fonteConfiavel.pedido;
-        }
-      }
-
-      const catItem = catalogoRows.find((r) => r.item.toUpperCase() === itemEscolhido.toUpperCase());
+      const catItem = itemEscolhido
+        ? catalogoRows.find((r) => r.item.toUpperCase() === itemEscolhido.toUpperCase())
+        : null;
       const ultimoPaleteDoItem = paletesDesteItem[0] || null;
-      // Busca o último palete padrão (>= 10 volumes) para que uma picadeira não corrompa o padrão de caixas
       const ultimoPaletePadraoDoItem = paletesDesteItem.find((p) => p.qtd_volumes_palete >= 10) || ultimoPaleteDoItem;
       const refItemConfiavel = ultimoPaleteDoItem || catItem;
 
-      // Trava 422 contra leitura vazia ou falso-positivo
-      if (!itemEscolhido && !pedidoFinal && !loteFinal && !produtoLido) {
+      // Trava 422 contra leitura vazia
+      if (!itemEscolhido && !pedidoFinal && !loteFinal && !produtoLido && !clienteExtraidoEtiqueta) {
         return res.status(422).json({
-          erro: 'Etiqueta não enquadrada. Aponte para a etiqueta inteira e tente novamente.'
+          erro: 'Etiqueta não identificada na imagem. Enquadre a etiqueta com boa iluminação e tente novamente.'
         });
       }
 
+      // Resolução 100% Agnóstica do Cliente (Prioriza Base Confiável do Item -> Etiqueta Lida -> Vazio p/ operador confirmar)
       const clienteFinal =
         (refItemConfiavel && refItemConfiavel.cliente) ||
-        clienteLido ||
-        (itemEscolhido.startsWith('PT-') || itemEscolhido.startsWith('FR-')
-          ? 'DEVINTEX COSMETICOS'
-          : itemEscolhido
-            ? 'FLORA PRODS DE HIG E LIM'
-            : '');
+        clienteExtraidoEtiqueta ||
+        '';
 
       const produtoFinal =
         (catItem && catItem.produto) ||
@@ -578,20 +821,20 @@ app.post('/api/interpretar-bipe', (req, res) => {
         qtdPorVolume ||
         0;
 
-      // Prioriza o padrão salvo/corrigido pelo operador no catálogo ou último palete padrão
       const volumesDaBaseConfiavel =
         (ultimoPaletePadraoDoItem && ultimoPaletePadraoDoItem.qtd_volumes_palete > 0
           ? ultimoPaletePadraoDoItem.qtd_volumes_palete
           : 0) ||
-        (catItem && catItem.padrao_volumes_palete > 0 ? catItem.padrao_volumes_palete : 0);
+        (catItem && catItem.padrao_volumes_palete > 0 ? catItem.padrao_volumes_palete : 0) ||
+        qtdVolumesEtiqueta;
 
-      const padraoVolumes = calcularPadraoPalete(
-        clienteFinal,
+      const padraoVolumes = calcularPadraoPaleteDinamico(
         itemEscolhido,
-        produtoFinal,
-        volumesDaBaseConfiavel
+        clienteFinal,
+        volumesDaBaseConfiavel,
+        catalogoRows
       );
-      const tipoEmbalagem = padraoVolumes === 22 ? 'SACARIA' : 'CAIXA';
+      const tipoEmbalagem = (catItem && catItem.tipo_embalagem) || (padraoVolumes === 22 ? 'SACARIA' : 'CAIXA');
 
       res.json({
         item: itemEscolhido,
@@ -600,7 +843,7 @@ app.post('/api/interpretar-bipe', (req, res) => {
         cliente: clienteFinal,
         produto: produtoFinal || (itemEscolhido ? `PRODUTO ITEM ${itemEscolhido}` : ''),
         tipoEmbalagem,
-        volume_etiqueta: volumeLido,
+        volume_etiqueta: volumeSequencialEtiqueta,
         qtd_pecas_por_volume: qtdPecasFinal,
         qtd_volumes_sugerida: padraoVolumes,
         saldo_previsto: qtdPecasFinal * padraoVolumes,
@@ -611,7 +854,7 @@ app.post('/api/interpretar-bipe', (req, res) => {
 });
 
 // ============================================================================
-// 5. SALVAR PALETE E ATUALIZAR FONTE CONFIÁVEL / CATÁLOGO
+// 5. SALVAR PALETE E GRAVAR NOVOS CLIENTES/ITENS NA BASE FIEL AUTOMATICAMENTE
 // ============================================================================
 app.post('/api/paletes', (req, res) => {
   const {
@@ -625,7 +868,8 @@ app.post('/api/paletes', (req, res) => {
     volume_etiqueta
   } = req.body;
 
-  const volumes = Number(qtd_volumes_palete);
+  const volumes = validarInteiroPaletizacao(qtd_volumes_palete, 1, 500);
+  const pecasInput = validarInteiroPaletizacao(qtd_pecas_por_volume, 1, 100000);
   const itemLimpo = corrigirCodigoItem(item, produto);
   const pedidoLimpo = sanitizarPedido(pedido || lote);
   const loteLimpo = sanitizarLote(lote, pedidoLimpo);
@@ -638,31 +882,40 @@ app.post('/api/paletes', (req, res) => {
         const clienteUnificado =
           String(cliente || '').trim().toUpperCase() ||
           (loteRow && loteRow.cliente) ||
-          (catRow && catRow.cliente);
+          (catRow && catRow.cliente) ||
+          '';
         const produtoUnificado =
           String(produto || '').trim().toUpperCase() ||
           (loteRow && loteRow.produto) ||
-          (catRow && catRow.produto);
+          (catRow && catRow.produto) ||
+          `PRODUTO ${itemLimpo}`;
         const pecasUnificada =
-          Number(qtd_pecas_por_volume) ||
+          pecasInput ||
           (loteRow && loteRow.qtd_pecas_por_volume) ||
           (catRow && catRow.qtd_padrao_pecas) ||
           0;
 
         if (!loteLimpo || !itemLimpo || !clienteUnificado || pecasUnificada <= 0 || volumes <= 0) {
-          return res.status(400).json({ erro: 'Confirme Cliente, Lote, Item e Quantidades antes de salvar.' });
+          return res.status(400).json({
+            erro: 'Confirme Cliente, Lote, Item e Quantidades inteiras válidas antes de salvar.'
+          });
         }
 
         const saldoTotalPecas = pecasUnificada * volumes;
 
-        // Se o palete confirmado tem 10 ou mais volumes (ex: 15, 20, 22), aprende como padrão oficial do item
+        // Aprende automaticamente qualquer novo cliente, item e padrão de paletização
         const padraoParaAprender =
           volumes >= 10
             ? volumes
             : catRow
               ? catRow.padrao_volumes_palete
-              : calcularPadraoPalete(clienteUnificado, itemLimpo, produtoUnificado);
+              : volumes;
         const tipoEmb = padraoParaAprender === 22 ? 'SACARIA' : 'CAIXA';
+
+        // Garante que volume_etiqueta nunca salve uma data acidental
+        const volEtiquetaLimpo = /^\d{1,2}\/\d{1,2}(\/\d{2,4})?$/.test(String(volume_etiqueta || '').trim())
+          ? ''
+          : String(volume_etiqueta || '').trim();
 
         db.serialize(() => {
           db.run(
@@ -671,7 +924,6 @@ app.post('/api/paletes', (req, res) => {
             [itemLimpo, clienteUnificado, produtoUnificado, padraoParaAprender, pecasUnificada, tipoEmb]
           );
 
-          // Unifica Nome do Produto, Cliente e Peças/Volume em todos os paletes do mesmo Lote + Item
           db.run(
             `UPDATE paletes_bipados 
              SET cliente = ?, produto = ?, qtd_pecas_por_volume = ?, saldo_total_pecas = qtd_volumes_palete * ?
@@ -692,17 +944,35 @@ app.post('/api/paletes', (req, res) => {
               pecasUnificada,
               volumes,
               saldoTotalPecas,
-              volume_etiqueta || ''
+              volEtiquetaLimpo
             ],
             function (err) {
               if (err) return res.status(500).json({ erro: err.message });
-              notificarTelasInstantaneamente({ acao: 'novo_palete', id: this.lastID, item: itemLimpo, lote: loteLimpo });
+              const baseFielAtualizada = {
+                id: this.lastID,
+                cliente: clienteUnificado,
+                pedido: pedidoLimpo,
+                lote: loteLimpo,
+                item: itemLimpo,
+                produto: produtoUnificado,
+                qtd_volumes_palete: volumes,
+                qtd_pecas_por_volume: pecasUnificada,
+                saldo_total_pecas: saldoTotalPecas
+              };
+              notificarTelasInstantaneamente({
+                acao: 'novo_palete',
+                id: this.lastID,
+                item: itemLimpo,
+                lote: loteLimpo,
+                baseFiel: baseFielAtualizada
+              });
               res.json({
                 sucesso: true,
                 id: this.lastID,
                 pedido: pedidoLimpo,
                 lote: loteLimpo,
-                saldo_total_pecas: saldoTotalPecas
+                saldo_total_pecas: saldoTotalPecas,
+                base_fiel: baseFielAtualizada
               });
             }
           );
@@ -713,7 +983,7 @@ app.post('/api/paletes', (req, res) => {
 });
 
 // ============================================================================
-// 6. AUTO-RESTAURAÇÃO DE BACKUP BLINDADA CONTRA CORRIDA DE CONCORRÊNCIA
+// 6. AUTO-RESTAURAÇÃO DE BACKUP BLINDADA CONTRA CONCORRÊNCIA
 // ============================================================================
 app.post('/api/restaurar-backup', (req, res) => {
   if (restaurandoBackupMutex) {
@@ -734,8 +1004,8 @@ app.post('/api/restaurar-backup', (req, res) => {
         if (codCorrigido && codCorrigido !== 'PT-7808') {
           stmtCat.run(
             codCorrigido,
-            c.cliente,
-            c.produto,
+            String(c.cliente || '').toUpperCase(),
+            String(c.produto || '').toUpperCase(),
             c.padrao_volumes_palete || 15,
             c.qtd_padrao_pecas || 0,
             c.tipo_embalagem || 'CAIXA'
@@ -780,8 +1050,8 @@ app.post('/api/restaurar-backup', (req, res) => {
             pedOk,
             loteOk,
             itemOk,
-            p.cliente,
-            p.produto,
+            String(p.cliente || '').toUpperCase(),
+            String(p.produto || '').toUpperCase(),
             p.qtd_pecas_por_volume,
             p.qtd_volumes_palete,
             p.saldo_total_pecas,
@@ -802,7 +1072,7 @@ app.post('/api/restaurar-backup', (req, res) => {
 });
 
 // ============================================================================
-// 7. DASHBOARD CONSOLIDADO + HISTÓRICO + CATÁLOGO
+// 7. DASHBOARD CONSOLIDADO + HISTÓRICO + CATÁLOGO + CLIENTES DINÂMICOS
 // ============================================================================
 app.get('/api/dashboard', (req, res) => {
   res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
@@ -844,14 +1114,14 @@ app.get('/api/dashboard', (req, res) => {
 });
 
 // ============================================================================
-// 8. EDITAR PALETE E ATUALIZAR PADRÃO NA BASE CONFIÁVEL
+// 8. EDITAR PALETE E ATUALIZAR PADRÃO NA BASE FIEL / CATÁLOGO
 // ============================================================================
 app.put('/api/paletes/:id', (req, res) => {
   const { id } = req.params;
   const { lote, pedido, cliente, item, produto, qtd_pecas_por_volume, qtd_volumes_palete, volume_etiqueta } = req.body;
 
-  const pecasUn = Number(qtd_pecas_por_volume);
-  const volumes = Number(qtd_volumes_palete);
+  const pecasUn = validarInteiroPaletizacao(qtd_pecas_por_volume, 1, 100000);
+  const volumes = validarInteiroPaletizacao(qtd_volumes_palete, 1, 500);
   if (pecasUn <= 0 || volumes <= 0) return res.status(400).json({ erro: 'Valores inválidos.' });
 
   const pedidoLimpo = sanitizarPedido(pedido || lote);
@@ -889,8 +1159,7 @@ app.put('/api/paletes/:id', (req, res) => {
           [clienteLimpo, produtoLimpo, pecasUn, pecasUn, loteLimpo, itemLimpo]
         );
 
-        const padraoCorrigido =
-          volumes >= 10 ? volumes : calcularPadraoPalete(clienteLimpo, itemLimpo, produtoLimpo);
+        const padraoCorrigido = volumes >= 10 ? volumes : 15;
         const tipoEmb = padraoCorrigido === 22 ? 'SACARIA' : 'CAIXA';
 
         db.run(
@@ -908,7 +1177,7 @@ app.put('/api/paletes/:id', (req, res) => {
 });
 
 // ============================================================================
-// 9. EXCLUSÃO INDIVIDUAL E EM LOTE (COM BANIMENTO DE ID CONTRA AUTO-RESTORE)
+// 9. EXCLUSÃO INDIVIDUAL E EM LOTE
 // ============================================================================
 app.post('/api/paletes/excluir-multiplos', (req, res) => {
   const { ids, todos } = req.body;

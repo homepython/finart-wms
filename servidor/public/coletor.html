@@ -7,7 +7,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="apple-mobile-web-app-title" content="FINART Coletor" />
   <meta name="mobile-web-app-capable" content="yes" />
-  <title>FINART - Coletor Industrial</title>
+  <title>FINART - Coletor Industrial Inteligente</title>
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
   <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
   <style>
@@ -20,6 +20,7 @@
       --primary-dark: #0369a1;
       --primary-light: #e0f2fe;
       --success: #059669;
+      --success-dark: #047857;
       --success-bg: #ecfdf5;
       --success-border: #a7f3d0;
       --warning-bg: #fffbeb;
@@ -130,7 +131,7 @@
       cursor: pointer;
     }
 
-    /* TOAST DE FEEDBACK NÃO-BLOQUEANTE (SUBSTITUI ALERT NATIVO) */
+    /* TOAST DE FEEDBACK NÃO-BLOQUEANTE */
     .toast-industrial {
       display: none;
       padding: 11px 14px;
@@ -175,6 +176,100 @@
       margin-bottom: 10px;
       width: 100%;
       box-shadow: 0 2px 6px rgba(15, 23, 42, 0.03);
+    }
+
+    /* ========================================================================
+       CARD "+1 PALETE IDÊNTICO" (BYPASS DE CÂMERA — BASE FIEL ATIVA)
+       ======================================================================== */
+    .card-base-fiel-bypass {
+      display: none;
+      background: linear-gradient(180deg, #ecfdf5 0%, #ffffff 100%);
+      border: 2px solid var(--success);
+      border-radius: 14px;
+      padding: 12px;
+      margin-bottom: 10px;
+      box-shadow: 0 6px 18px rgba(5, 150, 105, 0.14);
+    }
+    .bf-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+      gap: 6px;
+    }
+    .bf-pill {
+      background: var(--success);
+      color: #fff;
+      font-size: 10px;
+      font-weight: 900;
+      padding: 3px 8px;
+      border-radius: 20px;
+      letter-spacing: 0.4px;
+      text-transform: uppercase;
+    }
+    .btn-trocar-lote {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .bf-resumo {
+      font-size: 13px;
+      color: var(--text);
+      margin-bottom: 10px;
+      line-height: 1.35;
+    }
+    .bf-resumo strong {
+      color: var(--primary-dark);
+    }
+    .btn-mais-um-palete {
+      width: 100%;
+      min-height: 74px;
+      background: linear-gradient(135deg, var(--success), var(--success-dark));
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      font-size: 18px;
+      font-weight: 900;
+      cursor: pointer;
+      box-shadow: 0 6px 16px rgba(5, 150, 105, 0.32);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      transition: transform 0.08s ease;
+    }
+    .btn-mais-um-palete:active {
+      transform: scale(0.98);
+    }
+    .btn-mais-um-palete:disabled {
+      opacity: 0.6;
+    }
+    .btn-mais-um-palete small {
+      font-size: 12px;
+      font-weight: 600;
+      opacity: 0.95;
+    }
+    .bf-sub-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      margin-top: 8px;
+    }
+    .btn-bf-sec {
+      padding: 8px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: #f8fafc;
+      color: var(--text);
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
     }
 
     /* BARRA DE STATUS DA LENTE */
@@ -225,11 +320,11 @@
       color: #0f172a;
     }
 
-    /* VISOR HD COM MIRA LASER INDUSTRIAL */
+    /* VISOR HD */
     .visor-wrapper {
       position: relative;
       width: 100%;
-      height: 275px;
+      height: 255px;
       background: #0f172a;
       border-radius: 12px;
       overflow: hidden;
@@ -259,7 +354,6 @@
       border-radius: 6px;
       font-weight: 700;
       text-align: center;
-      letter-spacing: 0.2px;
     }
 
     .progresso-box {
@@ -275,7 +369,6 @@
       border: 1px solid #fde68a;
     }
 
-    /* ZONA ERGONÔMICA DE DISPARO COM UMA MÃO (POLEGAR) */
     .macro-bottom-zone {
       margin-top: 12px;
       display: flex;
@@ -285,22 +378,22 @@
 
     .btn-macro-direta-gigante {
       width: 100%;
-      min-height: 94px;
+      min-height: 88px;
       background: linear-gradient(135deg, var(--primary), var(--primary-dark));
       color: #ffffff;
       border: none;
       border-radius: 14px;
-      font-size: 18px;
+      font-size: 17px;
       font-weight: 900;
-      letter-spacing: 0.5px;
+      letter-spacing: 0.4px;
       cursor: pointer;
-      box-shadow: 0 8px 20px rgba(2, 132, 199, 0.3);
+      box-shadow: 0 8px 20px rgba(2, 132, 199, 0.28);
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       gap: 4px;
-      transition: transform 0.1s ease, opacity 0.15s ease;
+      transition: transform 0.1s ease;
     }
     .btn-macro-direta-gigante:active {
       transform: scale(0.98);
@@ -333,25 +426,57 @@
       text-align: center;
     }
 
-    /* ALERTA DE FONTE CONFIÁVEL */
+    /* ========================================================================
+       MODAL / BANNER DE AUTO-CORREÇÃO "BASE FIEL" (80% FUZZY MATCHING)
+       ======================================================================== */
     .alerta-divergencia {
       display: none;
       background: var(--warning-bg);
       border: 2px solid var(--warning-border);
-      border-radius: 10px;
+      border-radius: 12px;
       padding: 12px;
       margin-bottom: 12px;
+      box-shadow: 0 4px 14px rgba(245, 158, 11, 0.18);
+    }
+    .alerta-header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+      gap: 6px;
     }
     .alerta-divergencia h4 {
       color: var(--warning-text);
       font-size: 14px;
-      margin-bottom: 6px;
+      font-weight: 900;
+    }
+    .badge-fuzzy {
+      background: var(--warning-border);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 900;
+      padding: 2px 8px;
+      border-radius: 12px;
     }
     .alerta-divergencia p {
       color: var(--text);
-      font-size: 13px;
+      font-size: 12px;
       margin-bottom: 10px;
-      line-height: 1.35;
+      line-height: 1.4;
+    }
+    .comparativo-fuzzy {
+      background: #ffffff;
+      border: 1px solid #fde68a;
+      border-radius: 8px;
+      padding: 8px 10px;
+      margin-bottom: 10px;
+      font-size: 12px;
+    }
+    .comparativo-fuzzy div {
+      margin-bottom: 3px;
+    }
+    .comparativo-fuzzy div:last-child {
+      margin-bottom: 0;
     }
     .alerta-botoes {
       display: grid;
@@ -362,11 +487,12 @@
       background: var(--success);
       color: #fff;
       border: none;
-      padding: 11px;
-      border-radius: 8px;
-      font-weight: 800;
-      font-size: 13px;
+      padding: 13px;
+      border-radius: 9px;
+      font-weight: 900;
+      font-size: 14px;
       cursor: pointer;
+      box-shadow: 0 4px 12px rgba(5, 150, 105, 0.28);
     }
     .btn-manter-lido {
       background: #fff;
@@ -560,7 +686,7 @@
     <div class="top-bar">
       <div class="brand-group">
         <span class="logo">FINART</span>
-        <span class="sync-badge"><span class="sync-dot"></span> Online 0ms</span>
+        <span class="sync-badge"><span class="sync-dot"></span> Base Fiel 0ms</span>
       </div>
       <div class="top-actions">
         <button class="btn-top" onclick="tocarSomApontamentoZebra()">🔊 Som</button>
@@ -572,7 +698,27 @@
       <span id="toast-texto"></span>
     </div>
 
-    <!-- TELA 1: VISOR SEMPRE ATIVO (NÃO DESLIGA A CÂMERA E NÃO PEDE PERMISSÃO DE NOVO) -->
+    <!-- ======================================================================
+         NOVO RECURSO: "+1 PALETE IDÊNTICO" (BYPASS DE CÂMERA — OTIMIZA 90%)
+         Aparece automaticamente assim que o 1º palete (Base Fiel) é confirmado!
+         ====================================================================== -->
+    <div class="card-base-fiel-bypass" id="card-repetir-palete">
+      <div class="bf-header">
+        <span class="bf-pill">🔒 Base Fiel Cravada na Sessão</span>
+        <button class="btn-trocar-lote" onclick="limparBaseFielSessao()">🔓 Trocar Lote/Item</button>
+      </div>
+      <div class="bf-resumo" id="bf-resumo-texto"></div>
+      <button class="btn-mais-um-palete" id="btn-disparo-mais-um" onclick="dispararMaisUmPaleteIdentico()">
+        <span id="txt-btn-mais-um">⚡ +1 PALETE IDÊNTICO (SEM CÂMERA)</span>
+        <small id="sub-btn-mais-um">Toque para somar +1 palete igual na hora</small>
+      </button>
+      <div class="bf-sub-actions">
+        <button class="btn-bf-sec" onclick="abrirPicadeiraBaseFiel()">📦 +1 Palete Picadeira (Ajustar Qtd)</button>
+        <button class="btn-bf-sec" onclick="desfazerUltimoPaleteSessao()" id="btn-desfazer-ultimo" style="color:var(--danger);">↩️ Desfazer Último</button>
+      </div>
+    </div>
+
+    <!-- TELA 1: VISOR SEMPRE ATIVO -->
     <div class="box" id="tela-scanner">
       <div class="status-motor">
         <span id="status-motor">⚡ Iniciando Lente HD...</span>
@@ -585,53 +731,72 @@
       <div class="visor-wrapper">
         <video id="video-camera" autoplay playsinline muted></video>
         <div class="moldura-etiqueta">
-          <span>Enquadre a etiqueta inteira e toque no botão azul</span>
+          <span>Enquadre a etiqueta inteira (Datas são filtradas automaticamente)</span>
         </div>
       </div>
 
       <div class="progresso-box" id="progresso-box">
-        ⚡ Lendo etiqueta (QR + Barras + Texto Completo)...
+        ⚡ Analisando etiqueta e validando contra a Base Fiel...
       </div>
 
       <div class="macro-bottom-zone">
         <button class="btn-macro-direta-gigante" id="btn-disparo-macro" onclick="capturarEtiquetaDoVisor()">
-          <span>🔍 APONTAR COM MACRO DIRETA</span>
-          <small>Leitura instantânea sem cortar bordas (Funciona em baixa luz)</small>
+          <span>🔍 LER ETIQUETA NO VISOR</span>
+          <small>Extração inteligente de qualquer cliente (Ignora datas DD/MM/AAAA)</small>
         </button>
 
         <input type="file" accept="image/*" capture="environment" id="input-macro" style="display:none" onchange="lerFotoMacro(this)" />
         <div class="aux-buttons-grid">
           <button class="btn-camera-externa-aux" onclick="tocarBipLeituraCurto(); document.getElementById('input-macro').click()">
-            📷 Câmera Nativa
+            📷 Câmera Nativa HD
           </button>
           <button class="btn-camera-externa-aux" onclick="abrirModoCatalogoManual()">
-            ⌨️ Catálogo Rápido
+            ⌨️ Catálogo / Manual
           </button>
         </div>
       </div>
     </div>
 
-    <!-- TELA 2: CONFERÊNCIA INTELIGENTE ZERO-DIGITAÇÃO -->
+    <!-- TELA 2: CONFERÊNCIA INTELIGENTE E AUTO-CORREÇÃO (BASE FIEL 80%) -->
     <div class="box" id="tela-confirmacao" style="display: none;">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 6px;">
         <h3 style="font-size: 16px; color: var(--primary);">✅ Conferência Inteligente do Palete</h3>
-        <span id="badge-origem-leitura" class="badge-lote" style="background:var(--primary-light); color:var(--primary);">OCR + Base</span>
+        <span id="badge-origem-leitura" class="badge-lote" style="background:var(--primary-light); color:var(--primary);">Parser Inteligente</span>
       </div>
 
+      <!-- MODAL / CARD DE AUTO-CORREÇÃO COM 1 CLIQUE (SIMILARIDADE >= 80%) -->
       <div class="alerta-divergencia" id="box-divergencia">
-        <h4 id="titulo-divergencia">🛡️ Proteção de Fonte Confiável Ativa</h4>
+        <div class="alerta-header-row">
+          <h4 id="titulo-divergencia">🛡️ Divergência Detectada vs. Base Fiel</h4>
+          <span class="badge-fuzzy" id="badge-fuzzy-pct">88% Match</span>
+        </div>
         <p id="texto-divergencia"></p>
+        <div class="comparativo-fuzzy" id="comparativo-fuzzy"></div>
         <div class="alerta-botoes">
           <button class="btn-corrigir-sugestao" id="btn-aceitar-sugestao" onclick="aplicarSugestaoConfiavel()">
-            ✅ Confirmado: Manter Lote Confiável
+            ⚡ AUTO-CORRIGIR PELA BASE FIEL (1 CLIQUE)
           </button>
           <button class="btn-manter-lido" id="btn-usar-lido-camera" onclick="usarValorBrutoDaCamera()">
-            ⚠️ Mudar para o número lido na câmera
+            🆕 É um Novo Lote / Manter dados lidos no OCR
           </button>
         </div>
       </div>
 
-      <div style="display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 8px;">
+      <div class="field-wrap">
+        <label>Cliente (Aprende qualquer cliente automaticamente):</label>
+        <input
+          type="text"
+          id="conf-cliente"
+          class="input-left"
+          autocomplete="off"
+          placeholder="Nome do Cliente da Etiqueta"
+          onfocus="mostrarAutocomplete('cliente', this.value)"
+          oninput="mostrarAutocomplete('cliente', this.value); atualizarRegraClienteDinamica();"
+        />
+        <div class="autocomplete-list" id="ac-cliente"></div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
         <div class="field-wrap">
           <label>Código do Item:</label>
           <input
@@ -639,49 +804,11 @@
             id="conf-item"
             class="input-left"
             autocomplete="off"
-            placeholder="Ex: 721467, PT-7908"
+            placeholder="Ex: PT-7908, 721467..."
             onfocus="mostrarAutocomplete('item', this.value)"
             oninput="mostrarAutocomplete('item', this.value)"
           />
           <div class="autocomplete-list" id="ac-item"></div>
-        </div>
-        <div>
-          <label>Volume (Ex: 112/160):</label>
-          <input type="text" id="conf-vol-etiqueta" class="input-left" placeholder="Opcional" />
-        </div>
-      </div>
-
-      <div class="field-wrap">
-        <label>Descrição do Produto (Auto-complete do histórico):</label>
-        <input
-          type="text"
-          id="conf-produto"
-          class="input-left"
-          autocomplete="off"
-          placeholder="Digite ou selecione da lista..."
-          onfocus="mostrarAutocomplete('produto', this.value)"
-          oninput="mostrarAutocomplete('produto', this.value)"
-        />
-        <div class="autocomplete-list" id="ac-produto"></div>
-      </div>
-
-      <div class="field-wrap">
-        <label>Cliente:</label>
-        <input
-          type="text"
-          id="conf-cliente"
-          class="input-left"
-          autocomplete="off"
-          onfocus="mostrarAutocomplete('cliente', this.value)"
-          oninput="mostrarAutocomplete('cliente', this.value); atualizarRegraClienteManual();"
-        />
-        <div class="autocomplete-list" id="ac-cliente"></div>
-      </div>
-
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-        <div>
-          <label>Pedido (Máx 6 díg.):</label>
-          <input type="text" id="conf-pedido" class="input-left" inputmode="numeric" maxlength="6" oninput="mascaraPedidoColetor(this)" />
         </div>
         <div class="field-wrap">
           <label>Nº do Lote (1 ponto):</label>
@@ -691,6 +818,7 @@
             class="input-left"
             maxlength="8"
             autocomplete="off"
+            placeholder="Ex: 006437.1"
             style="background:#fef3c7; color:#b45309;"
             onfocus="mostrarAutocomplete('lote', this.value)"
             oninput="mascaraLoteColetor(this); mostrarAutocomplete('lote', this.value);"
@@ -699,40 +827,62 @@
         </div>
       </div>
 
-      <div style="display: grid; grid-template-columns: 1.15fr 0.85fr; gap: 8px; align-items: start;">
+      <div style="display: grid; grid-template-columns: 1fr; gap: 8px;">
+        <div class="field-wrap">
+          <label>Descrição do Produto:</label>
+          <input
+            type="text"
+            id="conf-produto"
+            class="input-left"
+            autocomplete="off"
+            placeholder="Descrição completa do material..."
+            onfocus="mostrarAutocomplete('produto', this.value)"
+            oninput="mostrarAutocomplete('produto', this.value)"
+          />
+          <div class="autocomplete-list" id="ac-produto"></div>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 0.75fr 1.25fr 0.9fr; gap: 8px; align-items: start;">
         <div>
-          <label id="label-volumes">Caixas/Sacos Palete:</label>
+          <label>Pedido:</label>
+          <input type="text" id="conf-pedido" class="input-left" inputmode="numeric" maxlength="6" placeholder="006437" oninput="mascaraPedidoColetor(this)" style="height:42px;" />
+        </div>
+        <div>
+          <label id="label-volumes">Volumes Palete (Int):</label>
           <div class="stepper-row">
             <button type="button" class="btn-step" onclick="ajustarVolumesDelta(-1)">−</button>
-            <input type="number" id="input-volumes" oninput="recalcularPreview()" style="border-color: var(--primary); font-size: 18px;" />
+            <input type="number" id="input-volumes" inputmode="numeric" min="1" max="300" step="1" oninput="sanitizarCampoInteiro(this); recalcularPreview()" style="border-color: var(--primary); font-size: 18px; height:42px;" />
             <button type="button" class="btn-step" onclick="ajustarVolumesDelta(1)">+</button>
           </div>
           <div class="preset-chips">
-            <button type="button" class="chip-vol" onclick="definirVolumesRapido(15)">15 cx</button>
-            <button type="button" class="chip-vol" onclick="definirVolumesRapido(20)">20 cx</button>
-            <button type="button" class="chip-vol" onclick="definirVolumesRapido(22)">22 sac</button>
+            <button type="button" class="chip-vol" onclick="definirVolumesRapido(15)">15</button>
+            <button type="button" class="chip-vol" onclick="definirVolumesRapido(20)">20</button>
+            <button type="button" class="chip-vol" onclick="definirVolumesRapido(22)">22</button>
           </div>
         </div>
         <div>
-          <label>QTD Peças p/ Caixa:</label>
-          <input type="number" id="conf-pecas" oninput="recalcularPreview()" style="font-size: 18px; height: 42px;" />
+          <label>Peças / Vol (Int):</label>
+          <input type="number" id="conf-pecas" inputmode="numeric" min="1" max="50000" step="1" oninput="sanitizarCampoInteiro(this); recalcularPreview()" style="font-size: 18px; height: 42px;" />
         </div>
       </div>
+
+      <input type="hidden" id="conf-vol-etiqueta" value="" />
 
       <div class="saldo-preview">
         <small id="preview-detalhe">Saldo Total deste Palete</small>
         <strong id="preview-total">0 peças</strong>
       </div>
 
-      <button class="btn btn-confirm" id="btn-confirmar-envio" onclick="confirmarEnvio()">✅ CONFIRMAR E SUBIR SALDO</button>
-      <button class="btn btn-cancel" onclick="voltarParaCameraSemFecharStream()">🔄 Ler Outra Etiqueta</button>
+      <button class="btn btn-confirm" id="btn-confirmar-envio" onclick="confirmarEnvio()">✅ CONFIRMAR E CRAVAR NA BASE FIEL</button>
+      <button class="btn btn-cancel" onclick="voltarParaCameraSemFecharStream()">🔄 Cancelar / Voltar ao Visor</button>
     </div>
 
-    <!-- SÓ APARECE DEPOIS QUE O OPERADOR BIPAR UM PALETE NESTA SESSÃO -->
+    <!-- SALDOS APONTADOS NA SESSÃO -->
     <div class="box" id="box-saldos-sessao" style="display: none;">
       <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
-        <strong style="font-size:12px; color:var(--muted);">SALDO APONTADO AGORA</strong>
-        <span style="font-size:11px; color:var(--success); font-weight:700;">● FONTE CONFIÁVEL ATIVA</span>
+        <strong style="font-size:12px; color:var(--muted);">SALDOS ATIVOS DO LOTE (TOQUE P/ REPETIR)</strong>
+        <span style="font-size:11px; color:var(--success); font-weight:700;">● BASE FIEL ATIVA</span>
       </div>
       <div id="lista-ao-vivo"></div>
     </div>
@@ -743,7 +893,6 @@
       ? ''
       : 'https://finart-wms.onrender.com';
 
-    // Remove PT-7808 do cache local do celular imediatamente
     (function higienizarCacheLocal() {
       try {
         const cat = JSON.parse(localStorage.getItem('finart_backup_catalogo') || '[]')
@@ -760,11 +909,23 @@
     let audioCtx = null;
     let catalogoMemoria = [];
     let historicoMemoria = [];
+    let consolidadoMemoria = [];
     let sugestaoAtual = null;
     let jaBipouNestaSessao = false;
     let macroZoomAtivo = false;
     let lanternaAtiva = false;
     let timerToast = null;
+
+    // Estado da "Base Fiel" cravada na sessão atual + último ID criado (para permitir desfazer)
+    let baseFielAtiva = null;
+    let ultimoIdCriadoSessao = null;
+    try {
+      const bfSalva = JSON.parse(localStorage.getItem('finart_base_fiel_sessao') || 'null');
+      if (bfSalva && bfSalva.item && bfSalva.lote && bfSalva.qtd_volumes_palete > 0) {
+        baseFielAtiva = bfSalva;
+        jaBipouNestaSessao = true;
+      }
+    } catch (e) {}
 
     function mostrarToast(mensagem, tipo = 'erro', duracao = 4200) {
       const box = document.getElementById('toast-industrial');
@@ -778,12 +939,22 @@
       }, duracao);
     }
 
+    // ============================================================================
+    // HIGIENIZAÇÃO ESTRITA (PROÍBE DATAS EM VOLUMES/QUANTIDADES) + FUZZY 80%
+    // ============================================================================
+    function sanitizarCampoInteiro(input) {
+      const limpo = String(input.value || '').replace(/\D/g, '');
+      input.value = limpo ? parseInt(limpo, 10) : '';
+    }
+
     function limparPedidoEstrito(val = '') {
-      return String(val || '').trim().split('.')[0].replace(/\D/g, '').slice(0, 6);
+      const semDatas = String(val || '').replace(/\b\d{1,2}\s*[\/.\-]\s*\d{1,2}\s*[\/.\-]\s*\d{2,4}\b/g, '');
+      return semDatas.trim().split('.')[0].replace(/\D/g, '').slice(0, 6);
     }
 
     function limparLoteEstrito(val = '', pedidoRef = '') {
-      let limpo = String(val || '').replace(/,/g, '.').replace(/[^0-9.]/g, '');
+      const semDatas = String(val || '').replace(/\b\d{1,2}\s*\/\s*\d{1,2}(?:\s*\/\s*\d{2,4})?\b/g, '');
+      let limpo = semDatas.replace(/,/g, '.').replace(/[^0-9.]/g, '');
       const partes = limpo.split('.').filter(Boolean);
       if (partes.length === 0) {
         const p = limparPedidoEstrito(pedidoRef);
@@ -797,9 +968,9 @@
       return `${partes[0].slice(0, 6)}.${partes[1].slice(0, 1)}`.slice(0, 8);
     }
 
-    function distanciaLocal(a = '', b = '') {
-      const s1 = String(a).toUpperCase().trim();
-      const s2 = String(b).toUpperCase().trim();
+    function distanciaLevenshtein(a = '', b = '') {
+      const s1 = String(a || '').toUpperCase().trim();
+      const s2 = String(b || '').toUpperCase().trim();
       if (s1 === s2) return 0;
       if (!s1.length) return s2.length;
       if (!s2.length) return s1.length;
@@ -814,6 +985,17 @@
         }
       }
       return m[s2.length][s1.length];
+    }
+
+    function calcularSimilaridadeFuzzyLocal(a = '', b = '') {
+      const s1 = String(a || '').toUpperCase().trim().replace(/\s+/g, ' ');
+      const s2 = String(b || '').toUpperCase().trim().replace(/\s+/g, ' ');
+      if (!s1 && !s2) return 100;
+      if (!s1 || !s2) return 0;
+      if (s1 === s2) return 100;
+      const dist = distanciaLevenshtein(s1, s2);
+      const maxLen = Math.max(s1.length, s2.length);
+      return Math.max(0, Math.round(((maxLen - dist) / maxLen) * 100));
     }
 
     function mascaraPedidoColetor(input) {
@@ -838,6 +1020,141 @@
     function definirVolumesRapido(valor) {
       document.getElementById('input-volumes').value = valor;
       recalcularPreview();
+    }
+
+    // ============================================================================
+    // GERENCIAMENTO DA "BASE FIEL" E BOTÃO "+1 PALETE IDÊNTICO" (BYPASS CÂMERA)
+    // ============================================================================
+    function cravarBaseFielNaSessao(dadosBase) {
+      if (!dadosBase || !dadosBase.item || !dadosBase.lote) return;
+      baseFielAtiva = {
+        cliente: String(dadosBase.cliente || '').toUpperCase().trim(),
+        pedido: limparPedidoEstrito(dadosBase.pedido || dadosBase.lote),
+        lote: limparLoteEstrito(dadosBase.lote, dadosBase.pedido),
+        item: String(dadosBase.item || '').toUpperCase().trim(),
+        produto: String(dadosBase.produto || '').toUpperCase().trim(),
+        qtd_volumes_palete: parseInt(dadosBase.qtd_volumes_palete, 10) || 15,
+        qtd_pecas_por_volume: parseInt(dadosBase.qtd_pecas_por_volume, 10) || 0
+      };
+      localStorage.setItem('finart_base_fiel_sessao', JSON.stringify(baseFielAtiva));
+      renderizarCardBaseFielBypass();
+    }
+
+    function limparBaseFielSessao() {
+      baseFielAtiva = null;
+      localStorage.removeItem('finart_base_fiel_sessao');
+      renderizarCardBaseFielBypass();
+      mostrarToast('🔓 Base Fiel liberada. Aponte a câmera para o novo lote.', 'aviso', 2600);
+    }
+
+    function renderizarCardBaseFielBypass() {
+      const card = document.getElementById('card-repetir-palete');
+      if (!baseFielAtiva || !baseFielAtiva.item || !baseFielAtiva.lote) {
+        card.style.display = 'none';
+        return;
+      }
+
+      const saldoUnitario = baseFielAtiva.qtd_volumes_palete * baseFielAtiva.qtd_pecas_por_volume;
+      const loteConsolidado = consolidadoMemoria.find(
+        r => r.item.toUpperCase() === baseFielAtiva.item.toUpperCase() &&
+             limparLoteEstrito(r.lote, r.pedido) === baseFielAtiva.lote
+      );
+      const qtdPaletesAtuais = loteConsolidado ? loteConsolidado.total_paletes : 1;
+      const saldoAcumulado = loteConsolidado ? loteConsolidado.saldo_total_pecas : saldoUnitario;
+
+      document.getElementById('bf-resumo-texto').innerHTML = `
+        <strong>${baseFielAtiva.cliente}</strong> • Item <strong>${baseFielAtiva.item}</strong> • <span class="badge-lote">Lote ${baseFielAtiva.lote}</span><br/>
+        <span style="color:var(--muted); font-size:12px;">${baseFielAtiva.produto}</span><br/>
+        <span style="color:var(--success-dark); font-weight:800; font-size:12px;">
+          Acumulado no Lote: ${qtdPaletesAtuais} palete(s) • ${saldoAcumulado.toLocaleString('pt-BR')} pçs
+        </span>
+      `;
+      document.getElementById('txt-btn-mais-um').innerText = `⚡ +1 PALETE IDÊNTICO (${baseFielAtiva.qtd_volumes_palete} VOL)`;
+      document.getElementById('sub-btn-mais-um').innerText =
+        `Soma +${saldoUnitario.toLocaleString('pt-BR')} pçs no Lote ${baseFielAtiva.lote} sem abrir câmera`;
+      card.style.display = 'block';
+    }
+
+    async function dispararMaisUmPaleteIdentico() {
+      if (!baseFielAtiva) return;
+      const btn = document.getElementById('btn-disparo-mais-um');
+      if (btn.disabled) return;
+      btn.disabled = true;
+
+      tocarSomApontamentoZebra();
+
+      try {
+        const res = await fetch(`${API_BASE}/api/paletes`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            cliente: baseFielAtiva.cliente,
+            pedido: baseFielAtiva.pedido,
+            lote: baseFielAtiva.lote,
+            item: baseFielAtiva.item,
+            produto: baseFielAtiva.produto,
+            qtd_volumes_palete: baseFielAtiva.qtd_volumes_palete,
+            qtd_pecas_por_volume: baseFielAtiva.qtd_pecas_por_volume,
+            volume_etiqueta: ''
+          })
+        });
+
+        const resultado = await res.json();
+        if (!res.ok) {
+          tocarBipErroIndustrial();
+          mostrarToast(resultado.erro || '⚠️ Erro ao somar palete.', 'erro');
+          return;
+        }
+
+        ultimoIdCriadoSessao = resultado.id;
+        jaBipouNestaSessao = true;
+        document.getElementById('box-saldos-sessao').style.display = 'block';
+        await carregarDadosSilencioso();
+        const ganho = baseFielAtiva.qtd_volumes_palete * baseFielAtiva.qtd_pecas_por_volume;
+        mostrarToast(`✅ +1 Palete (${baseFielAtiva.item}) somado! +${ganho.toLocaleString('pt-BR')} pçs no Lote ${baseFielAtiva.lote}`, 'sucesso', 2800);
+      } catch (e) {
+        tocarBipErroIndustrial();
+        mostrarToast('⚠️ Falha de conexão ao somar +1 palete.', 'erro');
+      } finally {
+        setTimeout(() => { btn.disabled = false; }, 600);
+      }
+    }
+
+    function abrirPicadeiraBaseFiel() {
+      if (!baseFielAtiva) return;
+      tocarBipLeituraCurto();
+      sugestaoAtual = null;
+      document.getElementById('box-divergencia').style.display = 'none';
+      document.getElementById('badge-origem-leitura').innerText = 'Picadeira da Base Fiel';
+      document.getElementById('conf-cliente').value = baseFielAtiva.cliente;
+      document.getElementById('conf-item').value = baseFielAtiva.item;
+      document.getElementById('conf-produto').value = baseFielAtiva.produto;
+      document.getElementById('conf-pedido').value = baseFielAtiva.pedido;
+      document.getElementById('conf-lote').value = baseFielAtiva.lote;
+      document.getElementById('input-volumes').value = baseFielAtiva.qtd_volumes_palete;
+      document.getElementById('conf-pecas').value = baseFielAtiva.qtd_pecas_por_volume;
+      recalcularPreview();
+      document.getElementById('tela-scanner').style.display = 'none';
+      document.getElementById('tela-confirmacao').style.display = 'block';
+    }
+
+    async function desfazerUltimoPaleteSessao() {
+      const alvoId = ultimoIdCriadoSessao || (historicoMemoria[0] && historicoMemoria[0].id);
+      if (!alvoId) {
+        mostrarToast('Nenhum palete recente para desfazer.', 'aviso');
+        return;
+      }
+      try {
+        const res = await fetch(`${API_BASE}/api/paletes/${alvoId}`, { method: 'DELETE' });
+        if (res.ok) {
+          tocarBipLeituraCurto();
+          ultimoIdCriadoSessao = null;
+          await carregarDadosSilencioso();
+          mostrarToast(`↩️ Último apontamento (#${alvoId}) desfeito com sucesso!`, 'aviso', 3000);
+        }
+      } catch (e) {
+        mostrarToast('Erro ao desfazer apontamento.', 'erro');
+      }
     }
 
     // ============================================================================
@@ -892,26 +1209,9 @@
       return 'data:audio/wav;base64,' + btoa(binary);
     }
 
-    const wavLeituraCurtoURI = criarSomColetorZebraBase64(
-      [{ f: 920, ini: 0.0, fim: 0.085 }],
-      0.10
-    );
-
-    const wavApontamentoZebraURI = criarSomColetorZebraBase64(
-      [
-        { f: 780, ini: 0.00, fim: 0.075 },
-        { f: 1170, ini: 0.08, fim: 0.21 }
-      ],
-      0.23
-    );
-
-    const wavErroGraveURI = criarSomColetorZebraBase64(
-      [
-        { f: 310, ini: 0.00, fim: 0.11 },
-        { f: 230, ini: 0.12, fim: 0.26 }
-      ],
-      0.28
-    );
+    const wavLeituraCurtoURI = criarSomColetorZebraBase64([{ f: 920, ini: 0.0, fim: 0.085 }], 0.10);
+    const wavApontamentoZebraURI = criarSomColetorZebraBase64([{ f: 780, ini: 0.00, fim: 0.075 }, { f: 1170, ini: 0.08, fim: 0.21 }], 0.23);
+    const wavErroGraveURI = criarSomColetorZebraBase64([{ f: 310, ini: 0.00, fim: 0.11 }, { f: 230, ini: 0.12, fim: 0.26 }], 0.28);
 
     function destravarSomMobile() {
       try {
@@ -994,7 +1294,7 @@
     }
 
     // ============================================================================
-    // AUTO-COMPLETE INTELIGENTE EM TODOS OS CAMPOS
+    // AUTO-COMPLETE DINÂMICO E AGNÓSTICO PARA QUALQUER CLIENTE / ITEM
     // ============================================================================
     function fecharTodosAutocompletes(e) {
       if (e && e.target && e.target.tagName === 'INPUT') return;
@@ -1040,11 +1340,11 @@
         box.style.display = 'block';
       } else if (tipo === 'cliente') {
         const box = document.getElementById('ac-cliente');
-        const clientesUnicos = [...new Set(baseItens.map(c => c.cliente))].filter(cli => cli.toUpperCase().includes(termo));
+        const clientesUnicos = [...new Set(baseItens.map(c => c.cliente))].filter(cli => cli && cli.toUpperCase().includes(termo));
         if (clientesUnicos.length === 0) return;
 
         box.innerHTML = clientesUnicos.map(cli => `
-          <div class="autocomplete-item" onclick="selecionarClienteAutocomplete('${cli}')">
+          <div class="autocomplete-item" onclick="selecionarClienteAutocomplete('${cli.replace(/'/g, "\\'")}')">
             <strong>${cli}</strong>
           </div>
         `).join('');
@@ -1062,7 +1362,7 @@
         box.innerHTML = lotesUnicos.slice(0, 6).map((h) => `
           <div class="autocomplete-item" onclick="selecionarLoteAutocomplete('${h.lote}', '${h.pedido}', '${h.item}')">
             <strong>Lote: ${h.lote} (Ped: ${h.pedido})</strong>
-            <span>${h.item} — ${h.produto}</span>
+            <span>${h.cliente} • ${h.item} — ${h.produto}</span>
           </div>
         `).join('');
         box.style.display = 'block';
@@ -1078,12 +1378,11 @@
       document.getElementById('conf-item').value = escolhido.item;
       document.getElementById('conf-produto').value = escolhido.produto;
       document.getElementById('conf-cliente').value = escolhido.cliente;
-      document.getElementById('input-volumes').value = escolhido.padrao_volumes_palete || 15;
+      document.getElementById('input-volumes').value = parseInt(escolhido.padrao_volumes_palete, 10) || 15;
       if (escolhido.qtd_padrao_pecas > 0) {
-        document.getElementById('conf-pecas').value = escolhido.qtd_padrao_pecas;
+        document.getElementById('conf-pecas').value = parseInt(escolhido.qtd_padrao_pecas, 10);
       }
 
-      // Se já houver lote ativo para este item na memória, preenche automaticamente
       const ultimoDesteItem = historicoMemoria.find(h => h.item.toUpperCase() === escolhido.item.toUpperCase());
       if (ultimoDesteItem && !document.getElementById('conf-lote').value) {
         document.getElementById('conf-lote').value = limparLoteEstrito(ultimoDesteItem.lote, ultimoDesteItem.pedido);
@@ -1096,20 +1395,21 @@
 
     function selecionarClienteAutocomplete(cli) {
       document.getElementById('conf-cliente').value = cli;
-      atualizarRegraClienteManual();
+      atualizarRegraClienteDinamica();
       fecharTodosAutocompletes();
     }
 
     function selecionarLoteAutocomplete(lote, pedido, itemAssociado) {
       document.getElementById('conf-lote').value = limparLoteEstrito(lote, pedido);
       document.getElementById('conf-pedido').value = limparPedidoEstrito(pedido || lote);
-      const mem = catalogoMemoria.find(c => c.item === itemAssociado);
+      const baseItens = obterBaseUnificadaItens();
+      const mem = baseItens.find(c => c.item === itemAssociado);
       if (mem) {
         document.getElementById('conf-item').value = mem.item;
         document.getElementById('conf-produto').value = mem.produto;
         document.getElementById('conf-cliente').value = mem.cliente;
-        document.getElementById('input-volumes').value = mem.padrao_volumes_palete;
-        document.getElementById('conf-pecas').value = mem.qtd_padrao_pecas;
+        document.getElementById('input-volumes').value = parseInt(mem.padrao_volumes_palete, 10) || 15;
+        document.getElementById('conf-pecas').value = parseInt(mem.qtd_padrao_pecas, 10) || '';
         recalcularPreview();
       }
       fecharTodosAutocompletes();
@@ -1119,7 +1419,7 @@
       tocarBipLeituraCurto();
       sugestaoAtual = null;
       document.getElementById('box-divergencia').style.display = 'none';
-      document.getElementById('badge-origem-leitura').innerText = 'Catálogo Rápido';
+      document.getElementById('badge-origem-leitura').innerText = 'Catálogo / Manual';
       document.getElementById('conf-item').value = '';
       document.getElementById('conf-produto').value = '';
       document.getElementById('conf-cliente').value = '';
@@ -1139,7 +1439,7 @@
     }
 
     // ============================================================================
-    // MOTOR ÓPTICO TESSERACT (PSM 6 + DAWG OFF) E STREAM PERMANENTE DE CÂMERA
+    // MOTOR ÓPTICO TESSERACT (PSM 6 + DAWG OFF) E CÂMERA PERMANENTE
     // ============================================================================
     async function inicializarMotorOptico() {
       const badge = document.getElementById('status-motor');
@@ -1151,7 +1451,7 @@
           load_freq_dawg: '0'
         });
         motorPronto = true;
-        badge.innerText = '✅ Lente Macro Pronta (Sem Corte)';
+        badge.innerText = '✅ Lente HD + Base Fiel Prontos';
       } catch (e) {
         badge.innerText = '✅ Câmera Pronta';
       }
@@ -1220,9 +1520,8 @@
       await aplicarConfiguracaoLente();
     }
 
-    // PIPELINE DUPLO: CANVAS PURO (PARA BARCODE DETECTOR) + CANVAS REALÇADO (PARA OCR)
     function prepararPipelinesDeImagem(fonteImgOuVideo, wOrig, hOrig) {
-      const maxDim = 1200;
+      const maxDim = 1280;
       let w = wOrig;
       let h = hOrig;
 
@@ -1236,14 +1535,12 @@
         }
       }
 
-      // 1. Canvas Natural (Preserva anti-aliasing das barras 1D/QR para BarcodeDetector)
       const canvasNatural = document.createElement('canvas');
       canvasNatural.width = w;
       canvasNatural.height = h;
       const ctxNat = canvasNatural.getContext('2d');
       ctxNat.drawImage(fonteImgOuVideo, 0, 0, w, h);
 
-      // 2. Canvas Realçado Adaptativo (Sem cortar bordas + compensação de baixa luz e plástico filme)
       const canvasOCR = document.createElement('canvas');
       canvasOCR.width = w;
       canvasOCR.height = h;
@@ -1363,12 +1660,13 @@
         ]);
 
         const textoExtraido = (ocrRes && ocrRes.data && ocrRes.data.text) ? ocrRes.data.text : '';
-        const tudo = `${codigoExtraido}\n${textoExtraido}`;
+        const tudo = `${codigoExtraido}\n${textoExtraido}`.trim();
 
-        const temDadosValidos = /PEDIDO|CLIENTE|DEVINTEX|FLORA|ITEM|PRODUTO|LOTE|00\d{4}|PT\s*-\s*\d|FR\s*-\s*\d|719935|721467|[1-9]\d{5}/i.test(tudo);
-        if (!temDadosValidos) {
+        // Validação Agnóstica (Aceita qualquer cliente ou etiqueta logística válida)
+        const temDadosLogicos = /PEDIDO|CLIENTE|DESTINAT|EMPRESA|ITEM|PRODUTO|DESCRI|LOTE|QTD|QUANT|00\d{4}|[A-Z]{2,3}\s*-\s*\d{3,6}|\b\d{5,7}\b/i.test(tudo);
+        if (!temDadosLogicos || tudo.length < 5) {
           tocarBipErroIndustrial();
-          mostrarToast('⚠️ Etiqueta não enquadrada. Aponte para a etiqueta inteira e toque no botão azul.', 'erro');
+          mostrarToast('⚠️ Etiqueta não identificada na foto. Enquadre a etiqueta inteira com foco.', 'erro');
           return;
         }
 
@@ -1377,7 +1675,8 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             codigoLido: codigoExtraido,
-            textoEtiqueta: textoExtraido
+            textoEtiqueta: textoExtraido,
+            baseFielCliente: baseFielAtiva
           })
         });
 
@@ -1389,7 +1688,7 @@
         }
 
         tocarBipLeituraCurto();
-        document.getElementById('badge-origem-leitura').innerText = codigoExtraido ? 'QR/Barras + OCR' : 'Leitura Óptica HD';
+        document.getElementById('badge-origem-leitura').innerText = codigoExtraido ? 'QR/Barras + OCR' : 'Parser OCR HD';
         abrirTelaConfirmacao(data);
       } catch (e) {
         tocarBipErroIndustrial();
@@ -1398,15 +1697,17 @@
     }
 
     // ============================================================================
-    // CONFERÊNCIA INTELIGENTE E PROTEÇÃO DA FONTE CONFIÁVEL
+    // CONFERÊNCIA COM MOTOR DE "BASE FIEL" (80% FUZZY MATCHING) E 1-CLIQUE
     // ============================================================================
     function abrirTelaConfirmacao(data) {
       let itemLido = (data.item === 'PT-7808' ? 'PT-7908' : (data.item || '')).toUpperCase();
       let pedLimpo = limparPedidoEstrito(data.pedido || data.lote);
       let loteLimpo = limparLoteEstrito(data.lote, pedLimpo);
+      let clienteLido = (data.cliente || '').toUpperCase().trim();
+      let produtoLido = (data.produto || '').toUpperCase().trim();
+      let pecasLida = parseInt(data.qtd_pecas_por_volume, 10) || 0;
       let sugestao = data.sugestao_divergencia || null;
 
-      // Busca todos os paletes já apontados/corrigidos deste mesmo item na memória do celular
       const doMesmoItem = itemLido
         ? historicoMemoria.filter(h => h.item.toUpperCase() === itemLido)
         : [];
@@ -1414,65 +1715,72 @@
         ? catalogoMemoria.find(c => c.item.toUpperCase() === itemLido)
         : null;
 
-      // Prioriza o último palete padrão (>= 10 caixas) ou o catálogo para que picadeiras não alterem o padrão
       const ultimoPadraoDoItem = doMesmoItem.find(h => h.qtd_volumes_palete >= 10) || doMesmoItem[0];
-      let volumesSugeridos = data.qtd_volumes_sugerida || 15;
+      let volumesSugeridos = parseInt(data.qtd_volumes_sugerida, 10) || 15;
       if (ultimoPadraoDoItem && ultimoPadraoDoItem.qtd_volumes_palete > 0) {
-        volumesSugeridos = ultimoPadraoDoItem.qtd_volumes_palete;
+        volumesSugeridos = parseInt(ultimoPadraoDoItem.qtd_volumes_palete, 10);
       } else if (catDoItem && catDoItem.padrao_volumes_palete > 0) {
-        volumesSugeridos = catDoItem.padrao_volumes_palete;
+        volumesSugeridos = parseInt(catDoItem.padrao_volumes_palete, 10);
       }
 
-      const tipoEmb = volumesSugeridos === 22 ? 'SACARIA' : 'CAIXA';
+      // Verificação local de Base Fiel (>= 80% Fuzzy Matching) caso o operador tenha Base Fiel ativa na sessão
+      if (!sugestao && baseFielAtiva) {
+        const simLote = loteLimpo ? calcularSimilaridadeFuzzyLocal(loteLimpo, baseFielAtiva.lote) : 0;
+        const simItem = itemLido ? calcularSimilaridadeFuzzyLocal(itemLido, baseFielAtiva.item) : 0;
+        const simPed = pedLimpo ? calcularSimilaridadeFuzzyLocal(pedLimpo, baseFielAtiva.pedido) : 0;
+        const maiorSim = Math.max(simLote, simItem, simPed);
 
-      if (!sugestao && doMesmoItem.length > 0 && loteLimpo) {
-        const jaTemExato = doMesmoItem.some(h => limparLoteEstrito(h.lote, h.pedido) === loteLimpo);
-        if (!jaTemExato) {
-          const confiavel = doMesmoItem.find(h => distanciaLocal(loteLimpo, limparLoteEstrito(h.lote, h.pedido)) <= 2);
-          if (confiavel) {
-            const loteConfiavel = limparLoteEstrito(confiavel.lote, confiavel.pedido);
-            const pedConfiavel = limparPedidoEstrito(confiavel.pedido || confiavel.lote);
+        const temDivergencia =
+          (loteLimpo && loteLimpo !== baseFielAtiva.lote) ||
+          (itemLido && itemLido !== baseFielAtiva.item) ||
+          (pedLimpo && pedLimpo !== baseFielAtiva.pedido) ||
+          (pecasLida > 0 && pecasLida !== baseFielAtiva.qtd_pecas_por_volume);
 
-            sugestao = {
-              tipo: 'LOTE_AUTO_CORRIGIDO_PELA_BASE',
-              auto_corrigido: true,
-              mensagem: `A câmera leu Pedido "${pedLimpo}" / Lote "${loteLimpo}", mas este produto (${itemLido}) já tem saldo confirmado no Lote Confiável "${loteConfiavel}" (Ped: "${pedConfiavel}"). O sistema corrigiu automaticamente para "${loteConfiavel}"!`,
-              item_lido: itemLido,
-              item_sugerido: confiavel.item,
-              cliente_sugerido: confiavel.cliente,
-              produto_sugerido: confiavel.produto,
-              qtd_pecas_sugerida: confiavel.qtd_pecas_por_volume,
-              qtd_volumes_sugerida: volumesSugeridos,
-              lote_lido: loteLimpo,
-              pedido_lido: pedLimpo,
-              lote_sugerido: loteConfiavel,
-              pedido_sugerido: pedConfiavel
-            };
-
-            loteLimpo = loteConfiavel;
-            pedLimpo = pedConfiavel;
-          }
+        if (maiorSim >= 80 && temDivergencia) {
+          sugestao = {
+            tipo: 'BASE_FIEL_FUZZY_80',
+            similaridade: maiorSim,
+            mensagem: `A leitura apresentou ${maiorSim}% de similaridade com a Base Fiel ativa na sessão, mas contém divergências de OCR. Bloqueamos o erro para sua segurança!`,
+            item_lido: itemLido || '(vazio)',
+            lote_lido: loteLimpo || '(vazio)',
+            pedido_lido: pedLimpo || '(vazio)',
+            cliente_lido: clienteLido || '(vazio)',
+            qtd_pecas_lida: pecasLida,
+            item_sugerido: baseFielAtiva.item,
+            cliente_sugerido: baseFielAtiva.cliente,
+            produto_sugerido: baseFielAtiva.produto,
+            lote_sugerido: baseFielAtiva.lote,
+            pedido_sugerido: baseFielAtiva.pedido,
+            qtd_pecas_sugerida: baseFielAtiva.qtd_pecas_por_volume,
+            qtd_volumes_sugerida: baseFielAtiva.qtd_volumes_palete
+          };
         }
       }
 
-      document.getElementById('conf-cliente').value = data.cliente || '';
+      // Preenche os campos (garantindo inteiros estritos nos campos numéricos)
+      document.getElementById('conf-cliente').value = clienteLido;
       document.getElementById('conf-pedido').value = pedLimpo;
       document.getElementById('conf-lote').value = loteLimpo;
       document.getElementById('conf-item').value = itemLido;
-      document.getElementById('conf-produto').value = data.produto || '';
-      document.getElementById('conf-pecas').value = data.qtd_pecas_por_volume || '';
+      document.getElementById('conf-produto').value = produtoLido;
+      document.getElementById('conf-pecas').value = pecasLida > 0 ? pecasLida : '';
       document.getElementById('conf-vol-etiqueta').value = data.volume_etiqueta || '';
-      document.getElementById('label-volumes').innerText = `Qtd ${tipoEmb}S (Padrão: ${volumesSugeridos}):`;
+      document.getElementById('label-volumes').innerText = `Volumes Palete (Padrão: ${volumesSugeridos}):`;
       document.getElementById('input-volumes').value = volumesSugeridos;
 
       const boxDiv = document.getElementById('box-divergencia');
       if (sugestao) {
         sugestaoAtual = sugestao;
+        tocarBipErroIndustrial();
+        const pct = sugestao.similaridade || 88;
+        document.getElementById('badge-fuzzy-pct').innerText = `${pct}% Similaridade`;
         document.getElementById('texto-divergencia').innerText = sugestao.mensagem;
+        document.getElementById('comparativo-fuzzy').innerHTML = `
+          <div>⚠️ <strong>Lido no OCR:</strong> Item <span style="color:var(--danger)">${sugestao.item_lido}</span> • Lote <span style="color:var(--danger)">${sugestao.lote_lido}</span> • Ped <span style="color:var(--danger)">${sugestao.pedido_lido}</span></div>
+          <div>✅ <strong>Base Fiel:</strong> Item <span style="color:var(--success)">${sugestao.item_sugerido}</span> • Lote <span style="color:var(--success)">${sugestao.lote_sugerido}</span> • Ped <span style="color:var(--success)">${sugestao.pedido_sugerido}</span> (${sugestao.qtd_volumes_sugerida} vol × ${sugestao.qtd_pecas_sugerida} pçs)</div>
+        `;
         document.getElementById('btn-aceitar-sugestao').innerText =
-          `✅ Manter Fonte Confiável: Lote ${sugestao.lote_sugerido} (Ped: ${sugestao.pedido_sugerido})`;
-        document.getElementById('btn-usar-lido-camera').innerText =
-          `⚠️ Usar o que a câmera leu (${sugestao.lote_lido || sugestao.item_lido})`;
+          `⚡ AUTO-CORRIGIR PELA BASE FIEL (${sugestao.item_sugerido} • Lote ${sugestao.lote_sugerido})`;
         boxDiv.style.display = 'block';
       } else {
         sugestaoAtual = null;
@@ -1490,10 +1798,10 @@
       document.getElementById('conf-cliente').value = sugestaoAtual.cliente_sugerido;
       document.getElementById('conf-produto').value = sugestaoAtual.produto_sugerido;
       if (sugestaoAtual.qtd_pecas_sugerida > 0) {
-        document.getElementById('conf-pecas').value = sugestaoAtual.qtd_pecas_sugerida;
+        document.getElementById('conf-pecas').value = parseInt(sugestaoAtual.qtd_pecas_sugerida, 10);
       }
       if (sugestaoAtual.qtd_volumes_sugerida > 0) {
-        document.getElementById('input-volumes').value = sugestaoAtual.qtd_volumes_sugerida;
+        document.getElementById('input-volumes').value = parseInt(sugestaoAtual.qtd_volumes_sugerida, 10);
       }
       if (sugestaoAtual.lote_sugerido) {
         document.getElementById('conf-lote').value = sugestaoAtual.lote_sugerido;
@@ -1504,51 +1812,48 @@
       recalcularPreview();
       document.getElementById('box-divergencia').style.display = 'none';
       tocarBipLeituraCurto();
+      mostrarToast('✅ Dados substituídos 100% pela Base Fiel! Toque em Confirmar.', 'sucesso', 2800);
     }
 
     function usarValorBrutoDaCamera() {
       if (!sugestaoAtual) return;
-      if (sugestaoAtual.lote_lido) {
+      if (sugestaoAtual.lote_lido && sugestaoAtual.lote_lido !== '(não lido)') {
         document.getElementById('conf-lote').value = sugestaoAtual.lote_lido;
       }
-      if (sugestaoAtual.pedido_lido) {
+      if (sugestaoAtual.pedido_lido && sugestaoAtual.pedido_lido !== '(não lido)') {
         document.getElementById('conf-pedido').value = sugestaoAtual.pedido_lido;
       }
-      if (sugestaoAtual.item_lido) {
+      if (sugestaoAtual.item_lido && sugestaoAtual.item_lido !== '(não lido)') {
         document.getElementById('conf-item').value = sugestaoAtual.item_lido;
       }
       recalcularPreview();
       document.getElementById('box-divergencia').style.display = 'none';
     }
 
-    function atualizarRegraClienteManual() {
-      const cli = (document.getElementById('conf-cliente').value || '').toUpperCase();
-      const item = (document.getElementById('conf-item').value || '').toUpperCase();
-      const prod = (document.getElementById('conf-produto').value || '').toUpperCase();
+    // 100% AGNÓSTICO: Busca padrão de volumes aprendidos do item ou do cliente no banco
+    function atualizarRegraClienteDinamica() {
+      const cli = (document.getElementById('conf-cliente').value || '').toUpperCase().trim();
+      const item = (document.getElementById('conf-item').value || '').toUpperCase().trim();
 
-      // 1º Prioridade: Verifica se já existe um palete padrão apontado/corrigido ou salvo no catálogo
       const jaApontado = historicoMemoria.find(h => h.item.toUpperCase() === item && h.qtd_volumes_palete >= 10) ||
                          historicoMemoria.find(h => h.item.toUpperCase() === item);
       const noCatalogo = catalogoMemoria.find(c => c.item.toUpperCase() === item);
 
       if (jaApontado && jaApontado.qtd_volumes_palete > 0) {
-        document.getElementById('input-volumes').value = jaApontado.qtd_volumes_palete;
+        document.getElementById('input-volumes').value = parseInt(jaApontado.qtd_volumes_palete, 10);
         recalcularPreview();
         return;
       }
       if (noCatalogo && noCatalogo.padrao_volumes_palete > 0) {
-        document.getElementById('input-volumes').value = noCatalogo.padrao_volumes_palete;
+        document.getElementById('input-volumes').value = parseInt(noCatalogo.padrao_volumes_palete, 10);
         recalcularPreview();
         return;
       }
 
-      // 2º Regra inicial para item inédito
-      if (cli.includes('DEVINTEX') && (item === 'PT-7908' || (prod.includes('1000 GRS') && prod.includes('REDONDO')))) {
-        document.getElementById('input-volumes').value = 22;
-      } else if (cli.includes('DEVINTEX')) {
-        document.getElementById('input-volumes').value = 15;
-      } else if (cli.length > 2) {
-        document.getElementById('input-volumes').value = 20;
+      // Se é um item novo de um cliente já conhecido no catálogo, sugere o padrão daquele cliente
+      const doMesmoCliente = catalogoMemoria.find(c => c.cliente.toUpperCase() === cli && c.padrao_volumes_palete >= 10);
+      if (doMesmoCliente) {
+        document.getElementById('input-volumes').value = parseInt(doMesmoCliente.padrao_volumes_palete, 10);
       }
       recalcularPreview();
     }
@@ -1565,9 +1870,12 @@
     async function confirmarEnvio() {
       const vols = parseInt(document.getElementById('input-volumes').value, 10);
       const pecas = parseInt(document.getElementById('conf-pecas').value, 10);
-      if (!vols || vols <= 0 || !pecas || pecas <= 0) {
+      const cli = (document.getElementById('conf-cliente').value || '').trim().toUpperCase();
+      const itemFinal = (document.getElementById('conf-item').value || '').trim().toUpperCase();
+
+      if (!cli || !itemFinal || !Number.isInteger(vols) || vols <= 0 || !Number.isInteger(pecas) || pecas <= 0) {
         tocarBipErroIndustrial();
-        mostrarToast('⚠️ Verifique a quantidade de volumes e de peças por volume!', 'erro');
+        mostrarToast('⚠️ Preencha Cliente, Item e Quantidades inteiras válidas!', 'erro');
         return;
       }
 
@@ -1580,15 +1888,12 @@
       let loteLimpo = limparLoteEstrito(document.getElementById('conf-lote').value, pedLimpo);
       if (loteLimpo.endsWith('.')) loteLimpo += '1';
 
-      let itemFinal = (document.getElementById('conf-item').value || '').trim().toUpperCase();
-      if (itemFinal === 'PT-7808') itemFinal = 'PT-7908';
-
       const payload = {
-        cliente: document.getElementById('conf-cliente').value,
+        cliente: cli,
         pedido: pedLimpo,
         lote: loteLimpo,
-        item: itemFinal,
-        produto: document.getElementById('conf-produto').value,
+        item: itemFinal === 'PT-7808' ? 'PT-7908' : itemFinal,
+        produto: (document.getElementById('conf-produto').value || '').trim().toUpperCase() || `PRODUTO ${itemFinal}`,
         qtd_volumes_palete: vols,
         qtd_pecas_por_volume: pecas,
         volume_etiqueta: document.getElementById('conf-vol-etiqueta').value
@@ -1608,9 +1913,14 @@
           return;
         }
 
+        ultimoIdCriadoSessao = resultado.id;
         jaBipouNestaSessao = true;
         document.getElementById('box-saldos-sessao').style.display = 'block';
-        mostrarToast(`✅ Palete salvo! +${(vols * pecas).toLocaleString('pt-BR')} pçs no Lote ${loteLimpo}`, 'sucesso', 3000);
+
+        // Crava este palete confirmado como a Base Fiel ativa para liberar o botão "+1 Palete Idêntico"
+        cravarBaseFielNaSessao(payload);
+
+        mostrarToast(`✅ Base Fiel cravada! +${(vols * pecas).toLocaleString('pt-BR')} pçs no Lote ${loteLimpo}`, 'sucesso', 3200);
 
         await carregarDadosSilencioso();
         voltarParaCameraSemFecharStream();
@@ -1626,6 +1936,24 @@
       document.getElementById('tela-confirmacao').style.display = 'none';
       document.getElementById('tela-scanner').style.display = 'block';
       garantirCameraAbertaUmaUnicaVez();
+    }
+
+    function selecionarLoteVivoComoBaseFiel(idx) {
+      const r = consolidadoMemoria[idx];
+      if (!r) return;
+      const doItem = historicoMemoria.find(h => h.item === r.item && limparLoteEstrito(h.lote, h.pedido) === limparLoteEstrito(r.lote, r.pedido));
+      cravarBaseFielNaSessao({
+        cliente: r.cliente,
+        pedido: r.pedido,
+        lote: r.lote,
+        item: r.item,
+        produto: r.produto,
+        qtd_volumes_palete: doItem ? doItem.qtd_volumes_palete : 15,
+        qtd_pecas_por_volume: r.qtd_pecas_por_volume
+      });
+      tocarBipLeituraCurto();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      mostrarToast(`🔒 Base Fiel alterada para ${r.item} (Lote ${limparLoteEstrito(r.lote, r.pedido)})`, 'sucesso', 2500);
     }
 
     async function carregarDadosSilencioso() {
@@ -1653,20 +1981,30 @@
           localStorage.setItem('finart_backup_paletes', JSON.stringify(historico));
         }
 
+        consolidadoMemoria = consolidado || [];
         historicoMemoria = (historico || []).filter(h => h.item !== 'PT-7808');
         if (catalogo && catalogo.length > 0) {
           catalogoMemoria = catalogo.filter(c => c.item !== 'PT-7808');
           localStorage.setItem('finart_backup_catalogo', JSON.stringify(catalogoMemoria));
         }
 
+        // Se todos os paletes foram excluídos no painel, limpa a Base Fiel órfã
+        if (historicoMemoria.length === 0 && baseFielAtiva) {
+          baseFielAtiva = null;
+          localStorage.removeItem('finart_base_fiel_sessao');
+        }
+
+        renderizarCardBaseFielBypass();
+
         if (jaBipouNestaSessao) {
+          document.getElementById('box-saldos-sessao').style.display = 'block';
           const div = document.getElementById('lista-ao-vivo');
-          if (!consolidado || consolidado.length === 0) {
+          if (!consolidadoMemoria || consolidadoMemoria.length === 0) {
             div.innerHTML = '<small style="color:var(--muted)">Nenhum palete ativo.</small>';
             return;
           }
-          div.innerHTML = consolidado.slice(0, 6).map(r => `
-            <div class="live-item">
+          div.innerHTML = consolidadoMemoria.slice(0, 6).map((r, i) => `
+            <div class="live-item" onclick="selecionarLoteVivoComoBaseFiel(${i})" style="cursor:pointer;">
               <div>
                 <strong>${r.cliente}</strong> <span class="badge-lote">Lote ${limparLoteEstrito(r.lote, r.pedido)}</span><br/>
                 <small style="color:var(--muted)">${r.item} • ${r.total_paletes} palete(s) (${r.total_caixas_ou_sacaria} vol.)</small>
@@ -1678,7 +2016,6 @@
       } catch (e) {}
     }
 
-    // Conexão SSE também no Coletor Mobile para sincronia 0ms da Fonte Confiável!
     function conectarStreamColetor() {
       try {
         const stream = new EventSource(`${API_BASE}/api/stream`);
