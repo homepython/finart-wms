@@ -2,1116 +2,2736 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>FINART - Controle de Paletes e Saldos</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FINART WMS Enterprise — Controle de Estoque, Paletização e Expedição</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet" />
   <style>
     :root {
-      --bg-page: #f4f6f8;
-      --bg-card: #ffffff;
-      --border: #e2e8f0;
-      --text-main: #0f172a;
+      --bg-app: #f1f5f9;
+      --bg-surface: #ffffff;
+      --bg-subtle: #f8fafc;
+      --bg-header: #0f172a;
+      --bg-header-secondary: #1e293b;
+      --text-primary: #0f172a;
+      --text-secondary: #334155;
       --text-muted: #64748b;
-      --primary: #0284c7;
-      --primary-dark: #0369a1;
-      --primary-light: #e0f2fe;
-      --success: #059669;
-      --success-bg: #ecfdf5;
-      --warning-bg: #fef3c7;
-      --warning-text: #b45309;
-      --danger: #dc2626;
+      --border-light: #e2e8f0;
+      --border-strong: #cbd5e1;
+      --brand-primary: #1d4ed8;
+      --brand-hover: #1e40af;
+      --brand-soft: #eff6ff;
+      --emerald-primary: #047857;
+      --emerald-soft: #ecfdf5;
+      --emerald-border: #a7f3d0;
+      --amber-primary: #b45309;
+      --amber-soft: #fffbeb;
+      --amber-border: #fde68a;
+      --danger-primary: #b91c1c;
+      --danger-soft: #fef2f2;
+      --danger-border: #fecaca;
+      --radius-sm: 6px;
+      --radius-md: 8px;
+      --radius-lg: 12px;
+      --shadow-sm: 0 1px 2px 0 rgba(15, 23, 42, 0.05);
+      --shadow-md: 0 4px 6px -1px rgba(15, 23, 42, 0.07), 0 2px 4px -2px rgba(15, 23, 42, 0.05);
     }
 
     * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     }
 
-    html, body {
-      background-color: var(--bg-page);
-      color: var(--text-main);
-      padding: 16px 12px;
-      line-height: 1.4;
-      overflow-x: hidden;
-      width: 100%;
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: var(--bg-app);
+      color: var(--text-primary);
+      font-size: 13px;
+      line-height: 1.45;
+      -webkit-font-smoothing: antialiased;
     }
 
-    .container {
-      max-width: 1020px;
+    .mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* TOPBAR CORPORATIVO */
+    .topbar {
+      background: var(--bg-header);
+      color: #ffffff;
+      border-bottom: 1px solid #1e293b;
+      padding: 12px 24px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: var(--shadow-md);
+    }
+
+    .topbar-inner {
+      max-width: 1640px;
       margin: 0 auto;
-      width: 100%;
-    }
-
-    header {
       display: flex;
-      justify-content: space-between;
       align-items: center;
-      background: var(--bg-card);
-      padding: 16px 18px;
-      border-radius: 12px;
-      border: 1px solid var(--border);
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
-      margin-bottom: 14px;
-      flex-wrap: wrap;
-      gap: 12px;
-    }
-
-    .brand-area { display: flex; align-items: center; gap: 12px; }
-    .brand-logo {
-      background: var(--primary); color: #fff; font-weight: 800; font-size: 18px;
-      padding: 6px 14px; border-radius: 6px; letter-spacing: 1.5px;
-    }
-    .brand-title h1 { font-size: 17px; font-weight: 700; color: var(--text-main); }
-    .brand-title span { font-size: 12px; color: var(--text-muted); }
-
-    .header-actions {
-      display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
-      width: 100%; justify-content: flex-end;
-    }
-    @media (min-width: 641px) { .header-actions { width: auto; } }
-
-    .status-pill {
-      display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600;
-      color: var(--success); background: var(--success-bg); padding: 6px 12px; border-radius: 20px;
-      border: 1px solid #a7f3d0;
-    }
-    .dot {
-      width: 8px; height: 8px; background: var(--success); border-radius: 50%;
-      animation: pulseDot 2s infinite;
-    }
-    @keyframes pulseDot {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50% { opacity: 0.45; transform: scale(0.85); }
-    }
-
-    .toolbar {
-      display: flex; justify-content: space-between; align-items: center;
-      margin-bottom: 12px; gap: 10px; flex-wrap: wrap;
-    }
-    .tabs {
-      display: grid; grid-template-columns: 1fr 1fr; background: #e2e8f0;
-      padding: 4px; border-radius: 8px; gap: 4px; width: 100%;
-    }
-    @media (min-width: 641px) { .tabs { width: auto; display: flex; } }
-
-    .tab-btn {
-      border: none; background: transparent; padding: 9px 14px; border-radius: 6px;
-      font-size: 13px; font-weight: 600; color: var(--text-muted); cursor: pointer; text-align: center;
-      display: inline-flex; align-items: center; justify-content: center; gap: 6px;
-    }
-    .tab-btn.active {
-      background: var(--bg-card); color: var(--text-main); box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
-    }
-    .tab-count {
-      background: var(--primary-light); color: var(--primary);
-      font-size: 11px; font-weight: 800; padding: 1px 6px; border-radius: 10px;
-    }
-
-    .search-group {
-      display: flex; align-items: center; gap: 8px; width: 100%; flex-wrap: wrap;
-    }
-    @media (min-width: 641px) { .search-group { width: auto; } }
-
-    .filter-chips {
-      display: flex; gap: 4px; flex-wrap: wrap;
-    }
-    .chip-filtro {
-      border: 1px solid var(--border); background: var(--bg-card); color: var(--text-muted);
-      padding: 7px 10px; border-radius: 7px; font-size: 12px; font-weight: 600; cursor: pointer;
-    }
-    .chip-filtro.ativo {
-      background: var(--primary-light); color: var(--primary); border-color: #7dd3fc; font-weight: 700;
-    }
-
-    .search-input {
-      padding: 9px 14px; border: 1px solid var(--border); border-radius: 8px;
-      background: var(--bg-card); font-size: 13px; width: 100%; color: var(--text-main); outline: none;
-      flex: 1;
-    }
-    .search-input:focus { border-color: var(--primary); }
-    @media (min-width: 641px) { .search-input { width: 250px; flex: none; } }
-
-    .bulk-bar {
-      display: flex; justify-content: space-between; align-items: center;
-      background: #f8fafc; padding: 12px 16px; border-bottom: 1px solid var(--border);
-      gap: 10px; flex-wrap: wrap;
-    }
-    .check-label {
-      display: flex; align-items: center; gap: 10px; font-size: 14px;
-      font-weight: 700; color: var(--text-main); cursor: pointer; user-select: none;
-    }
-    .checkbox-item { width: 20px; height: 20px; accent-color: var(--primary); cursor: pointer; }
-
-    .list-container {
-      background: var(--bg-card); border: 1px solid var(--border);
-      border-radius: 12px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02); overflow: hidden; width: 100%;
-    }
-    .list-row {
-      display: flex; justify-content: space-between; align-items: center;
-      padding: 16px; border-bottom: 1px solid var(--border); gap: 14px; flex-wrap: wrap; width: 100%;
-      transition: background-color 0.25s ease;
-    }
-    .list-row:last-child { border-bottom: none; }
-    .list-row:hover { background: #f8fafc; }
-    .list-row.selecionado { background: #e0f2fe; }
-
-    /* ESTILO DO GRUPO EXPANSÍVEL POR ITEM NA ABA DE EDIÇÃO/EXCLUSÃO */
-    .grupo-header {
-      display: flex;
       justify-content: space-between;
-      align-items: center;
-      padding: 16px;
-      background: #ffffff;
-      border-bottom: 1px solid var(--border);
-      cursor: pointer;
-      transition: background 0.15s ease;
-      gap: 12px;
+      gap: 16px;
       flex-wrap: wrap;
     }
-    .grupo-header:hover {
-      background: #f8fafc;
+
+    .brand-group {
+      display: flex;
+      align-items: center;
+      gap: 14px;
     }
-    .grupo-header.aberto {
-      background: #f0f9ff;
-      border-bottom: 1px solid #bae6fd;
-    }
-    .seta-expansao {
-      display: inline-flex;
+
+    .brand-mark {
+      width: 38px;
+      height: 38px;
+      border-radius: var(--radius-md);
+      background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+      display: flex;
       align-items: center;
       justify-content: center;
-      width: 26px;
-      height: 26px;
-      border-radius: 6px;
-      background: var(--primary-light);
-      color: var(--primary);
-      font-weight: 900;
-      font-size: 13px;
-      transition: transform 0.2s ease;
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 800;
+      font-size: 15px;
+      letter-spacing: -0.5px;
+      color: #ffffff;
+      border: 1px solid rgba(255, 255, 255, 0.15);
     }
-    .grupo-header.aberto .seta-expansao {
-      transform: rotate(90deg);
-      background: var(--primary);
-      color: #fff;
-    }
-    .gaveta-paletes {
-      display: none;
-      background: #f8fafc;
-      border-bottom: 2px solid #cbd5e1;
-      padding-left: 12px;
-    }
-    .gaveta-paletes.aberta {
-      display: block;
-    }
-    .sub-barra-grupo {
+
+    .brand-title {
+      font-size: 15px;
+      font-weight: 800;
+      letter-spacing: -0.3px;
+      color: #f8fafc;
       display: flex;
-      justify-content: space-between;
       align-items: center;
-      padding: 10px 16px;
-      background: #f1f5f9;
-      border-bottom: 1px solid var(--border);
-      font-size: 12px;
+      gap: 8px;
+    }
+
+    .badge-version {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 4px;
+      background: rgba(59, 130, 246, 0.2);
+      color: #93c5fd;
+      border: 1px solid rgba(59, 130, 246, 0.35);
+      text-transform: uppercase;
+    }
+
+    .brand-subtitle {
+      font-size: 11px;
+      color: #94a3b8;
+      font-weight: 500;
+    }
+
+    .status-live {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 5px 10px;
+      border-radius: 999px;
+      background: rgba(16, 185, 129, 0.12);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      color: #34d399;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+      text-transform: uppercase;
+    }
+
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #10b981;
+      box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.25);
+    }
+
+    .topbar-actions {
+      display: flex;
+      align-items: center;
       gap: 8px;
       flex-wrap: wrap;
     }
 
-    .row-left-wrap { display: flex; align-items: center; gap: 12px; flex: 1; min-width: 220px; width: 100%; }
-    .row-main { flex: 1; min-width: 0; }
-    .row-top { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; flex-wrap: wrap; }
-    .cliente-nome { font-weight: 700; font-size: 15px; color: var(--text-main); }
-
-    .tag { font-size: 12px; font-weight: 700; padding: 3px 8px; border-radius: 5px; white-space: nowrap; }
-    .tag-lote { background: var(--warning-bg); color: var(--warning-text); }
-    .tag-item { background: var(--primary-light); color: var(--primary); }
-    .tag-pedido { background: #f1f5f9; color: var(--text-muted); font-weight: 600; }
-    .produto-desc { font-size: 13px; color: var(--text-muted); word-break: break-word; }
-
-    .row-metrics { display: flex; align-items: center; gap: 14px; text-align: right; }
-    .metric-box { min-width: 54px; }
-    .metric-box small { display: block; font-size: 10px; color: var(--text-muted); text-transform: uppercase; font-weight: 600; }
-    .metric-box strong { font-size: 15px; color: var(--text-main); }
-
-    .saldo-box {
-      background: var(--success-bg); padding: 8px 12px; border-radius: 8px;
-      min-width: 105px; text-align: right; border: 1px solid #a7f3d0;
-    }
-    .saldo-box small { display: block; font-size: 10px; font-weight: 700; color: var(--success); text-transform: uppercase; }
-    .saldo-box strong { font-size: 17px; font-weight: 800; color: var(--success); }
-
-    .btn-mais-um-painel {
-      background: var(--success);
-      color: #fff;
-      border: none;
-      padding: 8px 11px;
-      border-radius: 7px;
+    /* BOTÕES CORPORATIVOS */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      padding: 8px 13px;
+      font-family: 'Inter', sans-serif;
       font-size: 12px;
-      font-weight: 800;
+      font-weight: 600;
+      border-radius: var(--radius-sm);
+      border: 1px solid transparent;
       cursor: pointer;
+      text-decoration: none;
+      transition: all 0.15s ease;
       white-space: nowrap;
-      box-shadow: 0 2px 6px rgba(5, 150, 105, 0.22);
-    }
-    .btn-mais-um-painel:active {
-      transform: scale(0.96);
     }
 
-    @media (max-width: 640px) {
-      .header-actions { justify-content: space-between; }
-      .row-metrics {
-        display: grid; grid-template-columns: repeat(4, 1fr); width: 100%;
-        gap: 6px; padding-top: 10px; border-top: 1px dashed var(--border); text-align: center;
-      }
-      .metric-box { min-width: 0; }
-      .saldo-box { min-width: 0; text-align: center; padding: 6px 4px; }
-      .acoes-mobile {
-        grid-column: span 4; display: flex; justify-content: flex-end; gap: 8px; margin-top: 6px;
-      }
-      .btn-mais-um-painel {
-        grid-column: span 4;
-        width: 100%;
-        padding: 10px;
-      }
+    .btn svg {
+      width: 15px;
+      height: 15px;
+      flex-shrink: 0;
+    }
+
+    .btn-dark-outline {
+      background: #1e293b;
+      color: #e2e8f0;
+      border-color: #334155;
+    }
+    .btn-dark-outline:hover {
+      background: #334155;
+      color: #ffffff;
     }
 
     .btn-primary {
-      background: var(--primary); color: #fff; border: none; padding: 9px 14px;
-      border-radius: 7px; font-weight: 600; font-size: 13px; cursor: pointer; text-decoration: none;
+      background: var(--brand-primary);
+      color: #ffffff;
+      border-color: #1e40af;
     }
-    .btn-primary:hover { background: var(--primary-dark); }
+    .btn-primary:hover {
+      background: var(--brand-hover);
+    }
+
+    .btn-emerald {
+      background: var(--emerald-primary);
+      color: #ffffff;
+      border-color: #065f46;
+    }
+    .btn-emerald:hover {
+      background: #065f46;
+    }
+
+    .btn-amber {
+      background: #d97706;
+      color: #ffffff;
+      border-color: #b45309;
+    }
+    .btn-amber:hover {
+      background: #b45309;
+    }
+
     .btn-outline {
-      background: #fff; color: var(--text-main); border: 1px solid var(--border);
-      padding: 7px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; text-decoration: none;
+      background: #ffffff;
+      color: var(--text-secondary);
+      border-color: var(--border-strong);
     }
-    .btn-danger-solid {
-      background: var(--danger); color: #fff; border: none; padding: 9px 14px;
-      border-radius: 7px; font-size: 12px; font-weight: 700; cursor: pointer;
+    .btn-outline:hover {
+      background: var(--bg-subtle);
+      color: var(--text-primary);
     }
-    .btn-danger-solid:disabled { opacity: 0.35; cursor: not-allowed; }
+
     .btn-danger-outline {
-      background: #fff; color: var(--danger); border: 1px solid #fecaca;
-      padding: 7px 12px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer;
+      background: #ffffff;
+      color: var(--danger-primary);
+      border-color: var(--danger-border);
+    }
+    .btn-danger-outline:hover {
+      background: var(--danger-soft);
     }
 
-    .empty-state { padding: 36px 20px; text-align: center; color: var(--text-muted); font-size: 14px; }
-
-    .modal-bg {
-      display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.45);
-      align-items: center; justify-content: center; z-index: 100; padding: 14px;
+    .btn-xs {
+      padding: 5px 9px;
+      font-size: 11px;
+      border-radius: 5px;
     }
-    .modal {
-      background: var(--bg-card); border-radius: 12px; padding: 20px;
-      width: 100%; max-width: 480px; max-height: 92vh; overflow-y: auto;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
-    }
-    .modal h3 { font-size: 17px; margin-bottom: 14px; color: var(--text-main); }
 
-    .form-group { margin-bottom: 10px; position: relative; }
-    .form-group label { display: block; font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 4px; }
-    .form-group input {
-      width: 100%; padding: 9px 12px; border: 1px solid var(--border);
-      border-radius: 6px; font-size: 14px; background: #f8fafc; color: var(--text-main);
+    /* CONTAINER PRINCIPAL */
+    .main-container {
+      max-width: 1640px;
+      margin: 0 auto;
+      padding: 20px 24px 48px;
     }
-    .form-group input:focus { border-color: var(--primary); background: #fff; outline: none; }
 
-    .ac-dropdown {
-      display: none; position: absolute; top: 100%; left: 0; right: 0;
-      background: #fff; border: 2px solid var(--primary); border-radius: 8px;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.15); max-height: 180px; overflow-y: auto; z-index: 200;
+    /* FAIXA DE KPIs */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+      margin-bottom: 18px;
     }
-    .ac-row { padding: 9px 12px; border-bottom: 1px solid var(--border); cursor: pointer; font-size: 13px; }
-    .ac-row:hover { background: #e0f2fe; }
-    .ac-row strong { display: block; color: var(--primary); }
-    .ac-row small { color: var(--text-muted); font-size: 11px; }
 
-    .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 16px; }
+    .kpi-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-md);
+      padding: 16px 18px;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      border-left: 4px solid var(--brand-primary);
+    }
+
+    .kpi-card.kpi-emerald {
+      border-left-color: #059669;
+    }
+
+    .kpi-card.kpi-amber {
+      border-left-color: #d97706;
+    }
+
+    .kpi-card.kpi-slate {
+      border-left-color: #475569;
+    }
+
+    .kpi-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+
+    .kpi-value {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 26px;
+      font-weight: 800;
+      color: var(--text-primary);
+      letter-spacing: -0.5px;
+    }
+
+    .kpi-foot {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 6px;
+      font-weight: 500;
+    }
+
+    /* BARRA DE NAVEGAÇÃO POR ABAS CORPORATIVAS */
+    .tabs-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-md);
+      padding: 6px;
+      margin-bottom: 16px;
+      box-shadow: var(--shadow-sm);
+      flex-wrap: wrap;
+    }
+
+    .tabs-list {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .tab-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 16px;
+      border-radius: var(--radius-sm);
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--text-secondary);
+      font-family: 'Inter', sans-serif;
+      font-size: 12.5px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .tab-btn svg {
+      width: 15px;
+      height: 15px;
+    }
+
+    .tab-btn:hover {
+      background: var(--bg-subtle);
+      color: var(--text-primary);
+    }
+
+    .tab-btn.active {
+      background: #0f172a;
+      color: #ffffff;
+      font-weight: 700;
+    }
+
+    .tab-counter {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      padding: 1px 7px;
+      border-radius: 999px;
+      background: rgba(100, 116, 139, 0.15);
+      color: inherit;
+    }
+
+    .tab-btn.active .tab-counter {
+      background: rgba(255, 255, 255, 0.2);
+      color: #ffffff;
+    }
+
+    /* BARRA DE FILTROS E BUSCA */
+    .toolbar-panel {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-md);
+      padding: 14px 16px;
+      margin-bottom: 16px;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .toolbar-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .search-box {
+      position: relative;
+      flex: 1;
+      min-width: 280px;
+    }
+
+    .search-box svg {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 16px;
+      height: 16px;
+      color: var(--text-muted);
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 9px 12px 9px 36px;
+      font-family: 'Inter', sans-serif;
+      font-size: 13px;
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius-sm);
+      background: var(--bg-subtle);
+      color: var(--text-primary);
+      outline: none;
+      transition: border-color 0.15s ease, background 0.15s ease;
+    }
+
+    .search-input:focus {
+      background: #ffffff;
+      border-color: var(--brand-primary);
+      box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.1);
+    }
+
+    .client-chips {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .chip-btn {
+      padding: 5px 11px;
+      border-radius: 999px;
+      border: 1px solid var(--border-strong);
+      background: #ffffff;
+      color: var(--text-secondary);
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      text-transform: uppercase;
+    }
+
+    .chip-btn:hover {
+      border-color: var(--brand-primary);
+      color: var(--brand-primary);
+    }
+
+    .chip-btn.active {
+      background: var(--brand-primary);
+      border-color: var(--brand-primary);
+      color: #ffffff;
+    }
+
+    /* MINI-ETIQUETAS COLORIDAS (RASTREABILIDADE VISUAL) */
+    .etiqueta-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 9px;
+      border-radius: 4px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10.5px;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+      text-transform: uppercase;
+      cursor: pointer;
+      user-select: none;
+      border: 1px solid transparent;
+      transition: transform 0.1s ease;
+    }
+
+    .etiqueta-badge:hover {
+      transform: translateY(-1px);
+    }
+
+    .etiqueta-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 2px;
+      flex-shrink: 0;
+    }
+
+    .etiqueta-BRANCA {
+      background: #f8fafc;
+      color: #334155;
+      border-color: #94a3b8;
+    }
+    .etiqueta-BRANCA .etiqueta-dot {
+      background: #ffffff;
+      border: 1px solid #475569;
+    }
+
+    .etiqueta-VERDE {
+      background: #ecfdf5;
+      color: #065f46;
+      border-color: #6ee7b7;
+    }
+    .etiqueta-VERDE .etiqueta-dot {
+      background: #10b981;
+    }
+
+    .etiqueta-AMARELA {
+      background: #fefce8;
+      color: #854d0e;
+      border-color: #fde047;
+    }
+    .etiqueta-AMARELA .etiqueta-dot {
+      background: #eab308;
+    }
+
+    .etiqueta-ROSA {
+      background: #fdf2f8;
+      color: #9d174d;
+      border-color: #f9a8d4;
+    }
+    .etiqueta-ROSA .etiqueta-dot {
+      background: #ec4899;
+    }
+
+    .etiqueta-AZUL {
+      background: #eff6ff;
+      color: #1e40af;
+      border-color: #93c5fd;
+    }
+    .etiqueta-AZUL .etiqueta-dot {
+      background: #3b82f6;
+    }
+
+    .etiqueta-LARANJA {
+      background: #fff7ed;
+      color: #9a3412;
+      border-color: #fdba74;
+    }
+    .etiqueta-LARANJA .etiqueta-dot {
+      background: #f97316;
+    }
+
+    /* DATAGRID CORPORATIVO */
+    .datagrid-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-sm);
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+
+    .datagrid-header {
+      padding: 13px 18px;
+      background: var(--bg-subtle);
+      border-bottom: 1px solid var(--border-light);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .datagrid-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-primary);
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .table-responsive {
+      width: 100%;
+      overflow-x: auto;
+    }
+
+    table.datagrid {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+    }
+
+    table.datagrid th {
+      background: #f8fafc;
+      color: #475569;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      padding: 11px 14px;
+      border-bottom: 1px solid var(--border-strong);
+      white-space: nowrap;
+    }
+
+    table.datagrid td {
+      padding: 11px 14px;
+      border-bottom: 1px solid var(--border-light);
+      vertical-align: middle;
+      font-size: 12.5px;
+      color: var(--text-secondary);
+    }
+
+    table.datagrid tbody tr:hover {
+      background-color: #f8fafc;
+    }
+
+    table.datagrid tbody tr.row-expanded {
+      background-color: #eff6ff;
+    }
+
+    .cell-client {
+      font-weight: 700;
+      color: var(--text-primary);
+      font-size: 12px;
+    }
+
+    .cell-item {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+      font-size: 12.5px;
+      color: var(--brand-primary);
+    }
+
+    .cell-lote {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+      font-size: 12px;
+      padding: 3px 7px;
+      border-radius: 4px;
+      background: #f1f5f9;
+      color: #0f172a;
+      border: 1px solid #cbd5e1;
+      display: inline-block;
+    }
+
+    .cell-saldo {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 800;
+      font-size: 13.5px;
+      color: var(--emerald-primary);
+    }
+
+    .cell-timestamp {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+
+    /* SUB-TABELA DE PALETES EXPANDIDOS DO LOTE */
+    .subgrid-row td {
+      background: #f8fafc;
+      padding: 14px 20px;
+      border-bottom: 2px solid #cbd5e1;
+    }
+
+    .subgrid-box {
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+    }
+
+    .subgrid-header {
+      padding: 9px 14px;
+      background: #0f172a;
+      color: #ffffff;
+      font-size: 11.5px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    /* MODAIS CORPORATIVOS */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.65);
+      backdrop-filter: blur(2px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 200;
+      padding: 16px;
+    }
+
+    .modal-backdrop.open {
+      display: flex;
+    }
+
+    .modal-dialog {
+      background: #ffffff;
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border-strong);
+      width: 100%;
+      max-width: 720px;
+      max-height: 92vh;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 20px 25px -5px rgba(15, 23, 42, 0.25);
+      overflow: hidden;
+    }
+
+    .modal-dialog.modal-lg {
+      max-width: 980px;
+    }
+
+    .modal-header {
+      padding: 16px 20px;
+      background: #0f172a;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .modal-title {
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 0.2px;
+      text-transform: uppercase;
+    }
+
+    .modal-close {
+      background: transparent;
+      border: none;
+      color: #94a3b8;
+      cursor: pointer;
+      padding: 4px;
+    }
+    .modal-close:hover {
+      color: #ffffff;
+    }
+
+    .modal-body {
+      padding: 20px;
+      overflow-y: auto;
+    }
+
+    .modal-footer {
+      padding: 14px 20px;
+      background: var(--bg-subtle);
+      border-top: 1px solid var(--border-light);
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 14px;
+    }
+
+    .form-grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .form-group.full {
+      grid-column: 1 / -1;
+    }
+
+    .form-label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: var(--text-secondary);
+      letter-spacing: 0.3px;
+    }
+
+    .form-control {
+      padding: 9px 11px;
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius-sm);
+      font-family: 'Inter', sans-serif;
+      font-size: 13px;
+      color: var(--text-primary);
+      outline: none;
+    }
+
+    .form-control:focus {
+      border-color: var(--brand-primary);
+      box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.1);
+    }
+
+    /* SELETOR DE CORES DE ETIQUETA */
+    .color-picker-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 8px;
+    }
+
+    .color-option {
+      padding: 7px 6px;
+      border-radius: var(--radius-sm);
+      border: 2px solid var(--border-light);
+      text-align: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10.5px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+    }
+
+    .color-option.selected {
+      border-color: #0f172a;
+      box-shadow: 0 0 0 2px rgba(15, 23, 42, 0.15);
+    }
+
+    .tab-pane {
+      display: none;
+    }
+
+    .tab-pane.active {
+      display: block;
+    }
+
+    .empty-state {
+      padding: 36px 20px;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 13px;
+    }
+
+    /* TOAST DE NOTIFICAÇÃO CORPORATIVO */
+    .toast-container {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 300;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .toast-item {
+      background: #0f172a;
+      color: #ffffff;
+      padding: 12px 16px;
+      border-radius: var(--radius-sm);
+      border-left: 4px solid #3b82f6;
+      font-size: 12.5px;
+      font-weight: 600;
+      box-shadow: var(--shadow-md);
+      min-width: 280px;
+    }
+
+    .toast-item.sucesso {
+      border-left-color: #10b981;
+    }
+
+    .toast-item.erro {
+      border-left-color: #ef4444;
+    }
+
+    @media (max-width: 1024px) {
+      .kpi-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .form-grid, .form-grid-3 {
+        grid-template-columns: 1fr;
+      }
+      .color-picker-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    @media (max-width: 640px) {
+      .kpi-grid {
+        grid-template-columns: 1fr;
+      }
+      .topbar {
+        padding: 12px 14px;
+      }
+      .main-container {
+        padding: 14px;
+      }
+    }
   </style>
 </head>
-<body onclick="fecharDropdownsModal(event)">
+<body>
 
-  <div class="container">
-    <header>
-      <div class="brand-area">
-        <div class="brand-logo">FINART</div>
-        <div class="brand-title">
-          <h1>Controle de Paletes e Saldos</h1>
-          <span>Sincronização Instantânea Online • Multi-Cliente Dinâmico</span>
+  <!-- TOPBAR CORPORATIVO -->
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand-group">
+        <div class="brand-mark">FW</div>
+        <div>
+          <div class="brand-title">
+            FINART WMS ENTERPRISE
+            <span class="badge-version">v3.0 SQL + SNAPSHOT</span>
+          </div>
+          <div class="brand-subtitle">Sistema Corporativo de Controle de Estoque, Paletização e Expedição Rodoviária</div>
+        </div>
+        <div class="status-live" id="statusConexaoBadge">
+          <span class="status-dot" id="statusConexaoDot"></span>
+          <span id="statusConexaoTexto">TEMPO REAL ATIVO</span>
         </div>
       </div>
-      <div class="header-actions">
-        <div class="status-pill"><div class="dot"></div> Tempo Real</div>
-        <button class="btn-outline" onclick="exportarCSV()">📥 Exportar CSV</button>
-        <a href="/coletor.html" class="btn-outline">📱 Abrir Coletor</a>
-        <button class="btn-primary" onclick="abrirModalNovo()">+ Lançar Palete</button>
-      </div>
-    </header>
 
-    <div class="toolbar">
-      <div class="tabs">
-        <button class="tab-btn active" id="btn-aba-saldos" onclick="alternarAba('saldos')">
-          📦 Saldos por Lote <span class="tab-count" id="badge-qtd-lotes">0</span>
+      <div class="topbar-actions">
+        <button type="button" class="btn btn-dark-outline" onclick="exportarRelatorioPDF()" title="Gerar Relatório Corporativo em PDF para Impressão ou Arquivo">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+            <line x1="16" y1="13" x2="8" y2="13"></line>
+            <line x1="16" y1="17" x2="8" y2="17"></line>
+          </svg>
+          Exportar PDF
         </button>
-        <button class="tab-btn" id="btn-aba-historico" onclick="alternarAba('historico')">
-          🛠️ Histórico de Bipes (Corrigir) <span class="tab-count" id="badge-qtd-paletes">0</span>
+
+        <button type="button" class="btn btn-dark-outline" onclick="exportarPlanilhaCSV()" title="Exportar Saldos e Auditoria em CSV (Excel)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+          Exportar CSV
+        </button>
+
+        <button type="button" class="btn btn-dark-outline" onclick="exportarBackupCompleto()" title="Baixar Arquivo de Backup Completo (Banco + Expedições + Catálogo)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
+            <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path>
+            <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
+          </svg>
+          Exportar Backup
+        </button>
+
+        <button type="button" class="btn btn-dark-outline" onclick="document.getElementById('inputImportarBackup').click()" title="Restaurar Banco de Dados a partir de um Arquivo de Backup JSON">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="17 8 12 3 7 8"></polyline>
+            <line x1="12" y1="3" x2="12" y2="15"></line>
+          </svg>
+          Importar Backup
+        </button>
+        <input type="file" id="inputImportarBackup" accept=".json,application/json" style="display:none" onchange="importarBackupCompleto(event)" />
+
+        <button type="button" class="btn btn-amber" onclick="abrirModalExpedicao()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="1" y="3" width="15" height="13"></rect>
+            <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon>
+            <circle cx="5.5" cy="18.5" r="2.5"></circle>
+            <circle cx="18.5" cy="18.5" r="2.5"></circle>
+          </svg>
+          Carregar Caminhão
+        </button>
+
+        <button type="button" class="btn btn-emerald" onclick="abrirModalLancamentoManual()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+          Novo Lançamento
+        </button>
+
+        <a href="/coletor.html" class="btn btn-primary">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
+            <line x1="12" y1="18" x2="12.01" y2="18"></line>
+          </svg>
+          Abrir Coletor
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- CONTEÚDO PRINCIPAL -->
+  <main class="main-container">
+
+    <!-- FAIXA DE INDICADORES (KPIs) -->
+    <section class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-header">
+          <span>Lotes Ativos em Estoque</span>
+          <span>CONSOLIDADO</span>
+        </div>
+        <div class="kpi-value" id="kpiTotalLotes">0</div>
+        <div class="kpi-foot" id="kpiResumoClientes">0 clientes ativos no armazém</div>
+      </div>
+
+      <div class="kpi-card kpi-slate">
+        <div class="kpi-header">
+          <span>Paletes Disponíveis</span>
+          <span>FÍSICO EM PÁTIO</span>
+        </div>
+        <div class="kpi-value" id="kpiTotalPaletes">0</div>
+        <div class="kpi-foot" id="kpiTotalVolumes">0 volumes (caixas / sacarias)</div>
+      </div>
+
+      <div class="kpi-card kpi-emerald">
+        <div class="kpi-header">
+          <span>Saldo Disponível (Peças)</span>
+          <span>PRONTA ENTREGA</span>
+        </div>
+        <div class="kpi-value" id="kpiSaldoPecas">0</div>
+        <div class="kpi-foot">Peças líquidas disponíveis para expedição</div>
+      </div>
+
+      <div class="kpi-card kpi-amber">
+        <div class="kpi-header">
+          <span>Expedições / Caminhões</span>
+          <span>CARGAS SAÍDAS</span>
+        </div>
+        <div class="kpi-value" id="kpiTotalExpedidos">0</div>
+        <div class="kpi-foot" id="kpiDetalheExpedidos">0 romaneios | 0 peças expedidas</div>
+      </div>
+    </section>
+
+    <!-- NAVEGAÇÃO POR ABAS -->
+    <nav class="tabs-bar">
+      <div class="tabs-list">
+        <button type="button" class="tab-btn active" id="tabBtnEstoque" onclick="alternarAba('estoque')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+          </svg>
+          Saldos em Estoque (Lotes)
+          <span class="tab-counter" id="countTabEstoque">0</span>
+        </button>
+
+        <button type="button" class="tab-btn" id="tabBtnExpedicao" onclick="alternarAba('expedicao')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="1" y="3" width="15" height="13"></rect>
+            <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon>
+            <circle cx="5.5" cy="18.5" r="2.5"></circle>
+            <circle cx="18.5" cy="18.5" r="2.5"></circle>
+          </svg>
+          Expedição / Caminhões (Saídas)
+          <span class="tab-counter" id="countTabExpedicao">0</span>
+        </button>
+
+        <button type="button" class="tab-btn" id="tabBtnAuditoria" onclick="alternarAba('auditoria')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="8" y1="6" x2="21" y2="6"></line>
+            <line x1="8" y1="12" x2="21" y2="12"></line>
+            <line x1="8" y1="18" x2="21" y2="18"></line>
+            <line x1="3" y1="6" x2="3.01" y2="6"></line>
+            <line x1="3" y1="12" x2="3.01" y2="12"></line>
+            <line x1="3" y1="18" x2="3.01" y2="18"></line>
+          </svg>
+          Auditoria de Paletes (Entradas)
+          <span class="tab-counter" id="countTabAuditoria">0</span>
         </button>
       </div>
 
-      <div class="search-group">
-        <!-- CHIPS GERADOS DINAMICAMENTE CONFORME OS CLIENTES CADASTRADOS NO BANCO -->
-        <div class="filter-chips" id="container-chips-clientes"></div>
-        <input
-          type="text"
-          class="search-input"
-          id="campo-busca"
-          placeholder="Buscar cliente, lote, item..."
-          oninput="renderizarListas()"
-        />
+      <div style="font-size:11.5px; color:var(--text-muted); font-weight:600; padding-right:8px;" id="labelUltimaSincronizacao">
+        Sincronizado agora
+      </div>
+    </nav>
+
+    <!-- BARRA DE FILTROS GLOBAIS -->
+    <section class="toolbar-panel">
+      <div class="toolbar-row">
+        <div class="search-box">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <input
+            type="text"
+            id="inputBuscaGlobal"
+            class="search-input"
+            placeholder="Pesquisar por Cliente, Código do Item, Lote, Pedido, Produto ou Placa do Caminhão..."
+            oninput="renderizarTudo()"
+          />
+        </div>
+
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Cor da Etiqueta:</span>
+          <select id="selectFiltroCor" class="form-control" style="padding:6px 10px; font-size:12px;" onchange="renderizarTudo()">
+            <option value="TODAS">TODAS AS CORES</option>
+            <option value="BRANCA">ETIQUETA BRANCA</option>
+            <option value="VERDE">ETIQUETA VERDE</option>
+            <option value="AMARELA">ETIQUETA AMARELA</option>
+            <option value="ROSA">ETIQUETA ROSA</option>
+            <option value="AZUL">ETIQUETA AZUL</option>
+            <option value="LARANJA">ETIQUETA LARANJA</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="toolbar-row">
+        <div class="client-chips" id="containerChipsClientes">
+          <button type="button" class="chip-btn active" onclick="selecionarFiltroCliente('TODOS')">TODOS OS CLIENTES</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- =================================================================== -->
+    <!-- ABA 1: SALDOS EM ESTOQUE (CONSOLIDADO POR LOTE E ITEM)              -->
+    <!-- =================================================================== -->
+    <div class="tab-pane active" id="paneEstoque">
+      <div class="datagrid-card">
+        <div class="datagrid-header">
+          <div class="datagrid-title">
+            <span>Saldos Consolidados por Lote e Item (Estoque Disponível)</span>
+          </div>
+          <div style="font-size:11.5px; color:var(--text-muted);">
+            Clique na mini-etiqueta colorida para alterar a cor de identificação do lote ou em "Ver Paletes" para inspecionar cada palete.
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          <table class="datagrid">
+            <thead>
+              <tr>
+                <th>Etiqueta Física</th>
+                <th>Cliente</th>
+                <th>Item</th>
+                <th>Descrição Técnica do Produto</th>
+                <th>Pedido</th>
+                <th>Lote</th>
+                <th>Paletes</th>
+                <th>Volumes</th>
+                <th>Pçs/Vol</th>
+                <th>Saldo Disponível</th>
+                <th>Última Entrada (Data/Hora)</th>
+                <th style="text-align:right;">Operações</th>
+              </tr>
+            </thead>
+            <tbody id="tbodyConsolidado">
+              <tr>
+                <td colspan="12" class="empty-state">Carregando saldos de estoque...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
 
-    <div class="list-container" id="secao-saldos">
-      <div id="lista-consolidado"></div>
-    </div>
+    <!-- =================================================================== -->
+    <!-- ABA 2: EXPEDIÇÃO / CAMINHÕES (CARREGAMENTO E ROMANEIOS DE SAÍDA)    -->
+    <!-- =================================================================== -->
+    <div class="tab-pane" id="paneExpedicao">
+      <div class="datagrid-card">
+        <div class="datagrid-header">
+          <div class="datagrid-title">
+            <span>Romaneios de Carregamento de Caminhão (Saídas Registradas)</span>
+          </div>
+          <div>
+            <button type="button" class="btn btn-amber btn-xs" onclick="abrirModalExpedicao()">
+              + Novo Carregamento de Caminhão
+            </button>
+          </div>
+        </div>
 
-    <!-- ABA 2: AGRUPADA POR ITEM (SÓ ABRE OS PALETES DO ITEM QUANDO CLICA NELE) -->
-    <div class="list-container" id="secao-historico" style="display: none;">
-      <div class="bulk-bar">
-        <label class="check-label">
-          <input type="checkbox" class="checkbox-item" id="check-todos" onchange="alternarSelecionarTodos(this.checked)" />
-          <span>Selecionar Todos os Paletes</span>
-        </label>
-        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-          <button class="btn-danger-solid" id="btn-excluir-selecionados" disabled onclick="excluirSelecionados()">
-            🗑️ Excluir Selecionados (0)
-          </button>
+        <div class="table-responsive">
+          <table class="datagrid">
+            <thead>
+              <tr>
+                <th>Romaneio</th>
+                <th>Data / Hora da Saída</th>
+                <th>Placa do Caminhão</th>
+                <th>Motorista</th>
+                <th>Cliente / Destino</th>
+                <th>Itens e Lotes Carregados</th>
+                <th>Paletes</th>
+                <th>Volumes</th>
+                <th>Total Peças Expedidas</th>
+                <th style="text-align:right;">Ações</th>
+              </tr>
+            </thead>
+            <tbody id="tbodyExpedicoes">
+              <tr>
+                <td colspan="10" class="empty-state">Nenhuma expedição de caminhão registrada até o momento.</td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
-      <div id="lista-historico"></div>
+
+      <!-- TABELA DETALHADA DE PALETES EXPEDIDOS COM TIMESTAMPS DE ENTRADA E SAÍDA -->
+      <div class="datagrid-card">
+        <div class="datagrid-header">
+          <div class="datagrid-title">
+            <span>Rastreabilidade Individual de Paletes Expedidos (Entrada vs. Saída)</span>
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          <table class="datagrid">
+            <thead>
+              <tr>
+                <th>ID Palete</th>
+                <th>Etiqueta</th>
+                <th>Placa Caminhão</th>
+                <th>Cliente</th>
+                <th>Item</th>
+                <th>Lote</th>
+                <th>Volumes</th>
+                <th>Peças Expedidas</th>
+                <th>Data/Hora Entrada</th>
+                <th>Data/Hora Saída (Caminhão)</th>
+              </tr>
+            </thead>
+            <tbody id="tbodyPaletesExpedidos">
+              <tr>
+                <td colspan="10" class="empty-state">Nenhum palete expedido.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- =================================================================== -->
+    <!-- ABA 3: AUDITORIA DE PALETES (HISTÓRICO INDIVIDUAL EM ESTOQUE)       -->
+    <!-- =================================================================== -->
+    <div class="tab-pane" id="paneAuditoria">
+      <div class="datagrid-card">
+        <div class="datagrid-header">
+          <div class="datagrid-title">
+            <span>Auditoria Individual de Paletes em Estoque (Bipagens e Lançamentos)</span>
+          </div>
+          <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+            <button type="button" class="btn btn-amber btn-xs" id="btnExpedirSelecionados" onclick="expedirPaletesSelecionados()" style="display:none;">
+              Carregar Selecionados no Caminhão (<span id="countSelExpedir">0</span>)
+            </button>
+            <button type="button" class="btn btn-danger-outline btn-xs" id="btnExcluirSelecionados" onclick="excluirPaletesSelecionados()" style="display:none;">
+              Excluir Selecionados (<span id="countSelExcluir">0</span>)
+            </button>
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          <table class="datagrid">
+            <thead>
+              <tr>
+                <th style="width:36px;">
+                  <input type="checkbox" id="checkTodosAuditoria" onchange="alternarSelecaoTodosAuditoria(this.checked)" />
+                </th>
+                <th>ID</th>
+                <th>Etiqueta Física</th>
+                <th>Data/Hora Entrada</th>
+                <th>Cliente</th>
+                <th>Item</th>
+                <th>Produto</th>
+                <th>Pedido</th>
+                <th>Lote</th>
+                <th>Volumes</th>
+                <th>Pçs/Vol</th>
+                <th>Total Peças</th>
+                <th style="text-align:right;">Ações</th>
+              </tr>
+            </thead>
+            <tbody id="tbodyAuditoria">
+              <tr>
+                <td colspan="13" class="empty-state">Nenhum palete registrado no estoque ativo.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ===================================================================== -->
+  <!-- MODAL 1: CARREGAMENTO DE CAMINHÃO / EXPEDIÇÃO                         -->
+  <!-- ===================================================================== -->
+  <div class="modal-backdrop" id="modalExpedicao">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-header">
+        <div class="modal-title">Carregamento de Caminhão — Lançar Expedição e Deduzir do Estoque</div>
+      <button type="button" class="modal-close" onclick="fecharModalExpedicao()" aria-label="Fechar">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+      </div>
+      <div class="modal-body">
+        <div class="form-grid-3" style="margin-bottom:16px;">
+          <div class="form-group">
+            <label class="form-label">Placa do Caminhão / Veículo *</label>
+            <input type="text" id="expPlaca" class="form-control mono" placeholder="EX: ABC-1D23" style="text-transform:uppercase;" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Nome do Motorista / Transportadora</label>
+            <input type="text" id="expMotorista" class="form-control" placeholder="EX: JOÃO SILVA / TRANSP. RÁPIDA" style="text-transform:uppercase;" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Cliente / Destino da Carga</label>
+            <input type="text" id="expClienteDestino" class="form-control" placeholder="Preenchido automaticamente ou digite" style="text-transform:uppercase;" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Nº Romaneio / Nota Fiscal (Opcional)</label>
+            <input type="text" id="expRomaneio" class="form-control mono" placeholder="Gerado automaticamente se vazio" style="text-transform:uppercase;" />
+          </div>
+          <div class="form-group" style="grid-column: span 2;">
+            <label class="form-label">Observações da Expedição</label>
+            <input type="text" id="expObservacoes" class="form-control" placeholder="Ex: Carga paletizada com filme stretch, conferida na doca 02" />
+          </div>
+        </div>
+
+        <div style="background:#f8fafc; border:1px solid var(--border-strong); border-radius:var(--radius-sm); padding:12px 14px; margin-bottom:12px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;">
+          <div>
+            <div style="font-size:12px; font-weight:700; color:var(--text-primary); text-transform:uppercase;">
+              Selecione a Quantidade de Paletes de Cada Lote para Carregar no Caminhão
+            </div>
+            <div style="font-size:11.5px; color:var(--text-muted);">
+              Os paletes selecionados sairão imediatamente do saldo disponível em estoque e receberão carimbo de data/hora de saída.
+            </div>
+          </div>
+          <div style="display:flex; align-items:center; gap:14px;">
+            <div class="mono" style="font-size:12.5px; font-weight:700; color:var(--brand-primary);">
+              Selecionados: <span id="resumoExpPaletes">0</span> paletes | <span id="resumoExpPecas">0</span> peças
+            </div>
+          </div>
+        </div>
+
+        <div class="table-responsive" style="max-height:340px; border:1px solid var(--border-light); border-radius:var(--radius-sm);">
+          <table class="datagrid">
+            <thead>
+              <tr>
+                <th>Etiqueta</th>
+                <th>Cliente</th>
+                <th>Item</th>
+                <th>Lote</th>
+                <th>Disponível em Estoque</th>
+                <th>Saldo Disponível</th>
+                <th style="width:190px;">Qtd. Paletes a Carregar</th>
+              </tr>
+            </thead>
+            <tbody id="tbodySelecaoLotesExpedicao">
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" onclick="fecharModalExpedicao()">Cancelar</button>
+        <button type="button" class="btn btn-amber" onclick="confirmarCarregamentoCaminhao()">
+          Confirmar Carregamento e Baixar do Estoque
+        </button>
+      </div>
     </div>
   </div>
 
-  <!-- MODAL COM AUTO-COMPLETE DINÂMICO PARA QUALQUER CLIENTE, PRODUTO E ITEM -->
-  <div class="modal-bg" id="modal-edicao">
-    <div class="modal">
-      <h3 id="modal-titulo">Lançar Palete - FINART</h3>
-      <input type="hidden" id="edit-id" />
-
-      <div class="form-group">
-        <label>Código do Item (Digite p/ auto-completar)</label>
-        <input type="text" id="edit-item" autocomplete="off" placeholder="Ex: PT-7908, 721467 ou novo código" onfocus="filtrarSugestoesModal('item', this.value)" oninput="filtrarSugestoesModal('item', this.value)" />
-        <div class="ac-dropdown" id="drop-item"></div>
+  <!-- ===================================================================== -->
+  <!-- MODAL 2: NOVO LANÇAMENTO MANUAL / EDIÇÃO DE PALETE                    -->
+  <!-- ===================================================================== -->
+  <div class="modal-backdrop" id="modalPalete">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <div class="modal-title" id="tituloModalPalete">Novo Lançamento de Palete em Estoque</div>
+      <button type="button" class="modal-close" onclick="fecharModalPalete()" aria-label="Fechar">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
       </div>
+      <div class="modal-body">
+        <input type="hidden" id="formPaleteId" value="" />
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">Código do Item *</label>
+            <input type="text" id="formItem" class="form-control mono" placeholder="EX: PT-7908 ou 719935" oninput="autoPreencherPorItemModal(this.value)" style="text-transform:uppercase;" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Cliente *</label>
+            <input type="text" id="formCliente" class="form-control" placeholder="EX: DEVINTEX COSMETICOS" style="text-transform:uppercase;" />
+          </div>
+          <div class="form-group full">
+            <label class="form-label">Descrição Técnica do Produto *</label>
+            <input type="text" id="formProduto" class="form-control" placeholder="Descrição completa do item" style="text-transform:uppercase;" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Nº do Pedido (6 dígitos)</label>
+            <input type="text" id="formPedido" class="form-control mono" placeholder="EX: 003706" oninput="sincronizarLotePeloPedidoModal()" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Nº do Lote *</label>
+            <input type="text" id="formLote" class="form-control mono" placeholder="EX: 003706.1" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Volumes no Palete (Caixas/Sacarias) *</label>
+            <input type="number" id="formVolumes" class="form-control mono" min="1" max="500" value="15" oninput="recalcularPreviewModal()" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Peças por Volume *</label>
+            <input type="number" id="formPecasPorVolume" class="form-control mono" min="1" max="100000" placeholder="EX: 220" oninput="recalcularPreviewModal()" />
+          </div>
 
-      <div class="form-group">
-        <label>Descrição do Produto (Auto-complete pelo histórico)</label>
-        <input type="text" id="edit-produto" autocomplete="off" placeholder="Digite parte do nome do produto..." onfocus="filtrarSugestoesModal('produto', this.value)" oninput="filtrarSugestoesModal('produto', this.value)" />
-        <div class="ac-dropdown" id="drop-produto"></div>
-      </div>
+          <div class="form-group full">
+            <label class="form-label">Cor da Etiqueta Física do Palete / Lote</label>
+            <div class="color-picker-grid" id="seletorCoresModal">
+              <div class="color-option etiqueta-BRANCA selected" data-cor="BRANCA" onclick="selecionarCorModal('BRANCA')">
+                <span class="etiqueta-dot"></span> BRANCA
+              </div>
+              <div class="color-option etiqueta-VERDE" data-cor="VERDE" onclick="selecionarCorModal('VERDE')">
+                <span class="etiqueta-dot"></span> VERDE
+              </div>
+              <div class="color-option etiqueta-AMARELA" data-cor="AMARELA" onclick="selecionarCorModal('AMARELA')">
+                <span class="etiqueta-dot"></span> AMARELA
+              </div>
+              <div class="color-option etiqueta-ROSA" data-cor="ROSA" onclick="selecionarCorModal('ROSA')">
+                <span class="etiqueta-dot"></span> ROSA
+              </div>
+              <div class="color-option etiqueta-AZUL" data-cor="AZUL" onclick="selecionarCorModal('AZUL')">
+                <span class="etiqueta-dot"></span> AZUL
+              </div>
+              <div class="color-option etiqueta-LARANJA" data-cor="LARANJA" onclick="selecionarCorModal('LARANJA')">
+                <span class="etiqueta-dot"></span> LARANJA
+              </div>
+            </div>
+          </div>
 
-      <div class="form-group">
-        <label>Cliente (Aprende novos clientes automaticamente)</label>
-        <input type="text" id="edit-cliente" autocomplete="off" placeholder="Digite ou selecione o Cliente" onfocus="filtrarSugestoesModal('cliente', this.value)" oninput="filtrarSugestoesModal('cliente', this.value); autoAjustarVolumesPorClienteDinamico();" />
-        <div class="ac-dropdown" id="drop-cliente"></div>
-      </div>
-
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-        <div class="form-group">
-          <label>Pedido (Só números)</label>
-          <input type="text" id="edit-pedido" maxlength="6" placeholder="006437" oninput="mascaraPedido(this)" />
+          <div class="form-group full" style="background:var(--emerald-soft); border:1px solid var(--emerald-border); padding:12px 14px; border-radius:var(--radius-sm); display:flex; flex-direction:row; align-items:center; justify-content:space-between;">
+            <span style="font-size:12px; font-weight:700; color:var(--emerald-primary); text-transform:uppercase;">
+              Total Calculado do Palete:
+            </span>
+            <span class="mono" style="font-size:18px; font-weight:800; color:var(--emerald-primary);" id="previewTotalModal">
+              0 peças
+            </span>
+          </div>
         </div>
-        <div class="form-group">
-          <label>Nº do Lote (Máx 1 ponto)</label>
-          <input type="text" id="edit-lote" maxlength="8" placeholder="006437.1" oninput="mascaraLoteUnicoPonto(this)" />
-        </div>
       </div>
-
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-        <div class="form-group">
-          <label>Volumes no Palete (Inteiro)</label>
-          <input type="number" id="edit-volumes" min="1" max="300" step="1" />
-        </div>
-        <div class="form-group">
-          <label>Peças por Volume (Inteiro)</label>
-          <input type="number" id="edit-pecas" min="1" max="50000" step="1" />
-        </div>
-      </div>
-
-      <div class="modal-actions">
-        <button class="btn-outline" onclick="fecharModal()">Cancelar</button>
-        <button class="btn-primary" onclick="salvarEdicao()">Salvar Dados</button>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" onclick="fecharModalPalete()">Cancelar</button>
+        <button type="button" class="btn btn-emerald" onclick="salvarPaleteModal()">Salvar Registro no Estoque</button>
       </div>
     </div>
   </div>
+
+  <!-- CONTAINER DE NOTIFICAÇÕES -->
+  <div class="toast-container" id="toastContainer"></div>
 
   <script>
-    const API_BASE = window.location.protocol.startsWith('http')
-      ? ''
-      : 'https://finart-wms.onrender.com';
+    // =========================================================================
+    // ESTADO GLOBAL CORPORATIVO
+    // =========================================================================
+    const CHAVE_STORAGE_ESPELHO = 'finart_backup_enterprise_v3';
+    const CORES_CICLO = ['BRANCA', 'VERDE', 'AMARELA', 'ROSA', 'AZUL', 'LARANJA'];
 
-    (function limparCacheErrado() {
+    let estado = {
+      consolidado: [],
+      historico: [],
+      expedidos: [],
+      expedicoes: [],
+      catalogo: [],
+      abaAtiva: 'estoque',
+      filtroCliente: 'TODOS',
+      lotesExpandidos: new Set(),
+      selecionadosAuditoria: new Set(),
+      corModalSelecionada: 'BRANCA',
+      quantidadesExpedicaoPorLote: {}
+    };
+
+    // =========================================================================
+    // UTILITÁRIOS DE FORMATAÇÃO E TIMESTAMPS
+    // =========================================================================
+    function formatarNumero(num) {
+      return Number(num || 0).toLocaleString('pt-BR');
+    }
+
+    function formatarDataHora(valor) {
+      if (!valor) return '—';
       try {
-        const cat = JSON.parse(localStorage.getItem('finart_backup_catalogo') || '[]')
-          .filter(c => c.item !== 'PT-7808' && c.item !== 'PT7808');
-        localStorage.setItem('finart_backup_catalogo', JSON.stringify(cat));
+        const str = String(valor).trim();
+        const dataObj = str.includes('T') ? new Date(str) : new Date(str.replace(' ', 'T') + 'Z');
+        if (isNaN(dataObj.getTime())) return str;
+        return dataObj.toLocaleString('pt-BR', {
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit'
+        });
+      } catch (e) {
+        return String(valor);
+      }
+    }
+
+    function escaparHTML(str) {
+      return String(str || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    function exibirToast(mensagem, tipo = 'sucesso') {
+      const container = document.getElementById('toastContainer');
+      const div = document.createElement('div');
+      div.className = `toast-item ${tipo}`;
+      div.textContent = mensagem;
+      container.appendChild(div);
+      setTimeout(() => {
+        div.remove();
+      }, 4200);
+    }
+
+    function renderizarBadgeEtiqueta(cor = 'BRANCA', acaoOnClick = '') {
+      const c = CORES_CICLO.includes(String(cor).toUpperCase()) ? String(cor).toUpperCase() : 'BRANCA';
+      const attrClick = acaoOnClick ? `onclick="${acaoOnClick}" title="Clique para alternar a cor da mini-etiqueta"` : '';
+      return `
+        <span class="etiqueta-badge etiqueta-${c}" ${attrClick}>
+          <span class="etiqueta-dot"></span>
+          ${c}
+        </span>
+      `;
+    }
+
+    // =========================================================================
+    // SINCRONIZAÇÃO, PERSISTÊNCIA MULTICAMADA E AUTO-RESTORE
+    // =========================================================================
+    function salvarEspelhoLocal(dados) {
+      try {
+        const payload = {
+          atualizadoEm: Date.now(),
+          versaoExclusao: dados.versaoExclusao || 0,
+          historico: dados.historico || [],
+          expedidos: dados.expedidos || [],
+          expedicoes: dados.expedicoes || [],
+          catalogo: dados.catalogo || []
+        };
+        localStorage.setItem(CHAVE_STORAGE_ESPELHO, JSON.stringify(payload));
       } catch (e) {}
-    })();
-
-    let consolidadoCache = [];
-    let historicoCache = [];
-    let catalogoCache = [];
-    let idsSelecionados = new Set();
-    let gruposAbertos = new Set();
-    let assinaturaAnterior = '';
-    let filtroClienteRapido = '';
-
-    function limparPedidoEstrito(val = '') {
-      const semDatas = String(val || '').replace(/\b\d{1,2}\s*[\/.\-]\s*\d{1,2}\s*[\/.\-]\s*\d{2,4}\b/g, '');
-      return semDatas.trim().split('.')[0].replace(/\D/g, '').slice(0, 6);
     }
 
-    function limparLoteEstrito(val = '', pedidoRef = '') {
-      const semDatas = String(val || '').replace(/\b\d{1,2}\s*\/\s*\d{1,2}(?:\s*\/\s*\d{2,4})?\b/g, '');
-      let limpo = semDatas.replace(/,/g, '.').replace(/[^0-9.]/g, '');
-      const partes = limpo.split('.').filter(Boolean);
-      if (partes.length === 0) {
-        const p = limparPedidoEstrito(pedidoRef);
-        return p ? `${p}.1` : '';
-      }
-      if (partes.length === 1) {
-        const n = partes[0];
-        if (n.length === 7) return `${n.slice(0, 6)}.${n.slice(6, 7)}`;
-        return limpo.includes('.') ? `${n.slice(0, 6)}.` : n.slice(0, 6);
-      }
-      return `${partes[0].slice(0, 6)}.${partes[1].slice(0, 1)}`.slice(0, 8);
-    }
-
-    function mascaraPedido(input) {
-      input.value = limparPedidoEstrito(input.value);
-      if (input.value.length >= 5) {
-        document.getElementById('edit-lote').value = `${input.value}.1`;
-      }
-    }
-
-    function mascaraLoteUnicoPonto(input) {
-      input.value = limparLoteEstrito(input.value);
-    }
-
-    // Gera dinamicamente os botões de filtro para TODOS os clientes ativos (sem hardcode)
-    function renderizarChipsClientesDinamicos() {
-      const container = document.getElementById('container-chips-clientes');
-      if (!container) return;
-
-      const clientesAtivos = [
-        ...new Set(
-          consolidadoCache
-            .map(r => (r.cliente || '').trim().toUpperCase())
-            .filter(Boolean)
-        )
-      ];
-
-      if (clientesAtivos.length === 0) {
-        container.innerHTML = '';
-        return;
-      }
-
-      const htmlChips = [
-        `<button class="chip-filtro ${filtroClienteRapido === '' ? 'ativo' : ''}" onclick="definirFiltroCliente('')">Todos</button>`
-      ];
-
-      clientesAtivos.forEach(cli => {
-        const rotuloCurto = cli.split(/\s+/)[0];
-        const ativo = filtroClienteRapido === cli ? 'ativo' : '';
-        htmlChips.push(
-          `<button class="chip-filtro ${ativo}" onclick="definirFiltroCliente('${cli.replace(/'/g, "\\'")}')" title="${cli}">${rotuloCurto}</button>`
-        );
-      });
-
-      container.innerHTML = htmlChips.join('');
-    }
-
-    function definirFiltroCliente(cli) {
-      filtroClienteRapido = cli;
-      renderizarChipsClientesDinamicos();
-      renderizarListas();
-    }
-
-    function exportarCSV() {
-      if (!consolidadoCache || consolidadoCache.length === 0) {
-        alert('Nenhum saldo disponível para exportar.');
-        return;
-      }
-      const linhas = [
-        ['CLIENTE', 'PEDIDO', 'LOTE', 'ITEM', 'PRODUTO', 'PALETES', 'VOLUMES', 'PECAS_POR_VOLUME', 'SALDO_TOTAL_PECAS']
-      ];
-      consolidadoCache.forEach(r => {
-        linhas.push([
-          `"${(r.cliente || '').replace(/"/g, '""')}"`,
-          `"${limparPedidoEstrito(r.pedido || r.lote)}"`,
-          `"${limparLoteEstrito(r.lote, r.pedido)}"`,
-          `"${r.item}"`,
-          `"${(r.produto || '').replace(/"/g, '""')}"`,
-          r.total_paletes,
-          r.total_caixas_ou_sacaria,
-          r.qtd_pecas_por_volume,
-          r.saldo_total_pecas
-        ]);
-      });
-      const csvContent = '\uFEFF' + linhas.map(e => e.join(';')).join('\n');
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `FINART_Saldos_${new Date().toISOString().slice(0, 10)}.csv`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    }
-
-    function fecharDropdownsModal(e) {
-      if (e && e.target && e.target.tagName === 'INPUT') return;
-      document.querySelectorAll('.ac-dropdown').forEach(d => d.style.display = 'none');
-    }
-
-    function filtrarSugestoesModal(tipo, valor) {
-      document.querySelectorAll('.ac-dropdown').forEach(d => d.style.display = 'none');
-      const termo = (valor || '').trim().toUpperCase();
-
-      if (tipo === 'cliente') {
-        const dropCli = document.getElementById('drop-cliente');
-        const clientesUnicos = [
-          ...new Set([
-            ...catalogoCache.map(c => c.cliente),
-            ...historicoCache.map(h => h.cliente)
-          ].filter(Boolean))
-        ].filter(cli => cli.toUpperCase().includes(termo));
-
-        if (clientesUnicos.length === 0) return;
-        dropCli.innerHTML = clientesUnicos.map(cli => `
-          <div class="ac-row" onclick="escolherClienteModal('${cli.replace(/'/g, "\\'")}')">
-            <strong>${cli}</strong>
-          </div>
-        `).join('');
-        dropCli.style.display = 'block';
-        return;
-      }
-
-      const drop = document.getElementById(tipo === 'item' ? 'drop-item' : 'drop-produto');
-      const filtrados = catalogoCache.filter(c =>
-        c.item !== 'PT-7808' && (
-          c.item.toUpperCase().includes(termo) ||
-          c.produto.toUpperCase().includes(termo)
-        )
-      );
-      if (filtrados.length === 0) return;
-
-      drop.innerHTML = filtrados.map((c, i) => `
-        <div class="ac-row" onclick="escolherSugestaoModal(${i}, '${tipo}')">
-          <strong>${c.item} — ${c.produto}</strong>
-          <small>${c.cliente} • Padrão: ${c.padrao_volumes_palete} vol. x ${c.qtd_padrao_pecas} pçs</small>
-        </div>
-      `).join('');
-      drop.dataset.lista = JSON.stringify(filtrados);
-      drop.style.display = 'block';
-    }
-
-    function escolherClienteModal(cli) {
-      document.getElementById('edit-cliente').value = cli;
-      autoAjustarVolumesPorClienteDinamico();
-      fecharDropdownsModal();
-    }
-
-    function escolherSugestaoModal(idx, tipo) {
-      const drop = document.getElementById(tipo === 'item' ? 'drop-item' : 'drop-produto');
-      const lista = JSON.parse(drop.dataset.lista || '[]');
-      const c = lista[idx];
-      if (!c) return;
-
-      document.getElementById('edit-item').value = c.item;
-      document.getElementById('edit-produto').value = c.produto;
-      document.getElementById('edit-cliente').value = c.cliente;
-      document.getElementById('edit-volumes').value = c.padrao_volumes_palete;
-      if (c.qtd_padrao_pecas > 0) {
-        document.getElementById('edit-pecas').value = c.qtd_padrao_pecas;
-      }
-      fecharDropdownsModal();
-    }
-
-    function alternarAba(aba) {
-      document.getElementById('secao-saldos').style.display = aba === 'saldos' ? 'block' : 'none';
-      document.getElementById('secao-historico').style.display = aba === 'historico' ? 'block' : 'none';
-      document.getElementById('btn-aba-saldos').classList.toggle('active', aba === 'saldos');
-      document.getElementById('btn-aba-historico').classList.toggle('active', aba === 'historico');
-    }
-
-    function abrirGrupoEspecificoNoHistorico(chaveGrupo) {
-      gruposAbertos.add(chaveGrupo);
-      alternarAba('historico');
-      renderizarListas();
-    }
-
-    function alternarGrupoExpandido(chaveGrupo) {
-      if (gruposAbertos.has(chaveGrupo)) {
-        gruposAbertos.delete(chaveGrupo);
-      } else {
-        gruposAbertos.add(chaveGrupo);
-      }
-      renderizarListas();
-    }
-
-    async function somarMaisUmPaleteDiretoDoPainel(evento, itemCod, loteCod) {
-      evento.stopPropagation();
-      const ultimoPalete = historicoCache.find(
-        h => h.item.toUpperCase() === itemCod.toUpperCase() &&
-             limparLoteEstrito(h.lote, h.pedido) === loteCod
-      );
-      if (!ultimoPalete) return;
-
+    async function tentarAutoRestaurarSeBancoVazio(dadosServidor) {
       try {
-        await fetch(`${API_BASE}/api/paletes`, {
+        const totalServidor = (dadosServidor.historico || []).length + (dadosServidor.expedidos || []).length;
+        if (totalServidor > 0) return false;
+
+        const bruto = localStorage.getItem(CHAVE_STORAGE_ESPELHO);
+        if (!bruto) return false;
+        const cache = JSON.parse(bruto);
+        const temDadosCache =
+          (Array.isArray(cache.historico) && cache.historico.length > 0) ||
+          (Array.isArray(cache.expedidos) && cache.expedidos.length > 0);
+
+        if (!temDadosCache) return false;
+
+        const resp = await fetch('/api/restaurar-backup', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            cliente: ultimoPalete.cliente,
-            pedido: ultimoPalete.pedido,
-            lote: loteCod,
-            item: ultimoPalete.item,
-            produto: ultimoPalete.produto,
-            qtd_volumes_palete: ultimoPalete.qtd_volumes_palete,
-            qtd_pecas_por_volume: ultimoPalete.qtd_pecas_por_volume,
-            volume_etiqueta: ''
+            historico: cache.historico || [],
+            expedidos: cache.expedidos || [],
+            expedicoes: cache.expedicoes || [],
+            catalogo: cache.catalogo || []
           })
         });
-        await carregarDashboard(true);
-      } catch (e) {}
-    }
-
-    async function carregarDashboard(forcarRender = false) {
-      try {
-        const res = await fetch(`${API_BASE}/api/dashboard?t=${Date.now()}`, {
-          cache: 'no-store'
-        });
-        const { consolidado, historico, catalogo } = await res.json();
-
-        const backupLocal = JSON.parse(localStorage.getItem('finart_backup_paletes') || '[]');
-        const catalogoLocal = JSON.parse(localStorage.getItem('finart_backup_catalogo') || '[]')
-          .filter(c => c.item !== 'PT-7808');
-
-        if (historico.length === 0 && backupLocal.length > 0) {
-          const rRest = await fetch(`${API_BASE}/api/restaurar-backup`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ historico: backupLocal, catalogo: catalogoLocal })
-          });
-          const resJson = await rRest.json();
-          if (resJson && resJson.restaurado) {
-            return carregarDashboard(true);
-          } else {
-            localStorage.setItem('finart_backup_paletes', '[]');
-          }
-        } else {
-          localStorage.setItem('finart_backup_paletes', JSON.stringify(historico));
-        }
-
-        if (catalogo && catalogo.length > 0) {
-          catalogoCache = catalogo.filter(c => c.item !== 'PT-7808');
-          localStorage.setItem('finart_backup_catalogo', JSON.stringify(catalogoCache));
-        }
-
-        const novaAssinatura = JSON.stringify({ consolidado, historico });
-        if (!forcarRender && novaAssinatura === assinaturaAnterior) {
-          return;
-        }
-        assinaturaAnterior = novaAssinatura;
-
-        consolidadoCache = consolidado || [];
-        historicoCache = historico || [];
-
-        document.getElementById('badge-qtd-lotes').innerText = consolidadoCache.length;
-        document.getElementById('badge-qtd-paletes').innerText = historicoCache.length;
-
-        const idsAtuais = new Set(historicoCache.map(h => Number(h.id)));
-        idsSelecionados.forEach(id => {
-          if (!idsAtuais.has(Number(id))) idsSelecionados.delete(id);
-        });
-
-        renderizarChipsClientesDinamicos();
-        renderizarListas();
+        const resJson = await resp.json();
+        return Boolean(resJson && resJson.restaurado);
       } catch (e) {
-        console.error('Erro ao buscar dados:', e);
-      }
-    }
-
-    // 100% AGNÓSTICO: consulta o catálogo aprendido do item ou do cliente
-    function autoAjustarVolumesPorClienteDinamico() {
-      const cli = (document.getElementById('edit-cliente').value || '').toUpperCase().trim();
-      const item = (document.getElementById('edit-item').value || '').toUpperCase().trim();
-
-      const catItem = catalogoCache.find(c => c.item.toUpperCase() === item);
-      if (catItem && catItem.padrao_volumes_palete > 0) {
-        document.getElementById('edit-volumes').value = catItem.padrao_volumes_palete;
-        return;
-      }
-
-      const catCli = catalogoCache.find(c => c.cliente.toUpperCase() === cli && c.padrao_volumes_palete >= 10);
-      if (catCli && !document.getElementById('edit-volumes').value) {
-        document.getElementById('edit-volumes').value = catCli.padrao_volumes_palete;
-      }
-    }
-
-    function passaFiltroBuscaECliente(registro, termo) {
-      if (filtroClienteRapido && (registro.cliente || '').toUpperCase().trim() !== filtroClienteRapido) {
         return false;
       }
-      if (!termo) return true;
-      return (
-        (registro.cliente || '').toLowerCase().includes(termo) ||
-        (registro.lote || '').toLowerCase().includes(termo) ||
-        (registro.item || '').toLowerCase().includes(termo) ||
-        (registro.produto || '').toLowerCase().includes(termo)
-      );
     }
 
-    function renderizarListas() {
-      const termo = (document.getElementById('campo-busca').value || '').toLowerCase();
+    async function carregarDashboard() {
+      try {
+        const resp = await fetch('/api/dashboard?t=' + Date.now(), { cache: 'no-store' });
+        if (!resp.ok) throw new Error('Falha ao consultar servidor');
+        const dados = await resp.json();
 
-      // 1. ABA SALDOS CONSOLIDADOS
-      const divCons = document.getElementById('lista-consolidado');
-      const consFiltrado = consolidadoCache.filter(r => passaFiltroBuscaECliente(r, termo));
+        const restaurou = await tentarAutoRestaurarSeBancoVazio(dados);
+        if (restaurou) {
+          return carregarDashboard();
+        }
 
-      if (consFiltrado.length === 0) {
-        divCons.innerHTML = `<div class="empty-state">Nenhum palete bipado até o momento. Clique em "+ Lançar Palete" ou bipe pelo celular.</div>`;
-      } else {
-        divCons.innerHTML = consFiltrado.map(r => {
-          const loteFormatado = limparLoteEstrito(r.lote, r.pedido);
-          const chaveGrupo = `${r.item}__${loteFormatado}`;
-          return `
-            <div class="list-row" onclick="abrirGrupoEspecificoNoHistorico('${chaveGrupo}')" style="cursor:pointer;" title="Clique para ver ou editar os paletes deste item">
-              <div class="row-left-wrap">
-                <div class="row-main">
-                  <div class="row-top">
-                    <span class="cliente-nome">${r.cliente}</span>
-                    <span class="tag tag-lote">Lote: ${loteFormatado}</span>
-                    <span class="tag tag-item">${r.item}</span>
-                    <span class="tag tag-pedido">Ped: ${limparPedidoEstrito(r.pedido || r.lote)}</span>
-                  </div>
-                  <div class="produto-desc">${r.produto} <small style="color:var(--primary); font-weight:600;">(Toque p/ ver paletes)</small></div>
-                </div>
-              </div>
-              <div class="row-metrics">
-                <div class="metric-box"><small>Paletes</small><strong>${r.total_paletes}</strong></div>
-                <div class="metric-box"><small>Volumes</small><strong>${r.total_caixas_ou_sacaria}</strong></div>
-                <div class="metric-box"><small>Pçs/Vol</small><strong>${r.qtd_pecas_por_volume}</strong></div>
-                <div class="saldo-box"><small>Saldo Total</small><strong>${r.saldo_total_pecas.toLocaleString('pt-BR')}</strong></div>
-                <button class="btn-mais-um-painel" onclick="somarMaisUmPaleteDiretoDoPainel(event, '${r.item}', '${loteFormatado}')" title="Somar +1 palete idêntico neste lote">
-                  ⚡ +1 Palete
-                </button>
-              </div>
-            </div>
-          `;
-        }).join('');
+        estado.consolidado = dados.consolidado || [];
+        estado.historico = dados.historico || [];
+        estado.expedidos = dados.expedidos || [];
+        estado.expedicoes = dados.expedicoes || [];
+        estado.catalogo = dados.catalogo || [];
+
+        if (estado.historico.length > 0 || estado.expedidos.length > 0) {
+          salvarEspelhoLocal(dados);
+        }
+
+        document.getElementById('labelUltimaSincronizacao').textContent =
+          'Atualizado às ' + new Date().toLocaleTimeString('pt-BR');
+
+        renderizarChipsClientes();
+        renderizarTudo();
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    function iniciarStreamTempoReal() {
+      try {
+        const ev = new EventSource('/api/stream');
+        ev.onopen = () => {
+          document.getElementById('statusConexaoTexto').textContent = 'TEMPO REAL ATIVO';
+          document.getElementById('statusConexaoDot').style.background = '#10b981';
+        };
+        ev.onmessage = (msg) => {
+          try {
+            const data = JSON.parse(msg.data);
+            if (data.atualizar) {
+              carregarDashboard();
+            }
+          } catch (e) {}
+        };
+        ev.onerror = () => {
+          document.getElementById('statusConexaoTexto').textContent = 'RECONECTANDO...';
+          document.getElementById('statusConexaoDot').style.background = '#f59e0b';
+        };
+      } catch (e) {}
+    }
+
+    // =========================================================================
+    // FILTROS E RENDERIZAÇÃO DE INTERFACE
+    // =========================================================================
+    function renderizarChipsClientes() {
+      const clientesSet = new Set();
+      estado.consolidado.forEach((c) => {
+        if (c.cliente) clientesSet.add(c.cliente.toUpperCase().trim());
+      });
+      estado.expedidos.forEach((x) => {
+        if (x.cliente) clientesSet.add(x.cliente.toUpperCase().trim());
+      });
+
+      const clientes = Array.from(clientesSet).sort();
+      const container = document.getElementById('containerChipsClientes');
+
+      let html = `<button type="button" class="chip-btn ${estado.filtroCliente === 'TODOS' ? 'active' : ''}" onclick="selecionarFiltroCliente('TODOS')">TODOS OS CLIENTES (${clientes.length})</button>`;
+      clientes.forEach((cli) => {
+        const ativo = estado.filtroCliente === cli ? 'active' : '';
+        html += `<button type="button" class="chip-btn ${ativo}" onclick="selecionarFiltroCliente('${escaparHTML(cli)}')">${escaparHTML(cli)}</button>`;
+      });
+      container.innerHTML = html;
+    }
+
+    function selecionarFiltroCliente(cliente) {
+      estado.filtroCliente = cliente;
+      renderizarChipsClientes();
+      renderizarTudo();
+    }
+
+    function alternarAba(aba) {
+      estado.abaAtiva = aba;
+      document.getElementById('tabBtnEstoque').classList.toggle('active', aba === 'estoque');
+      document.getElementById('tabBtnExpedicao').classList.toggle('active', aba === 'expedicao');
+      document.getElementById('tabBtnAuditoria').classList.toggle('active', aba === 'auditoria');
+
+      document.getElementById('paneEstoque').classList.toggle('active', aba === 'estoque');
+      document.getElementById('paneExpedicao').classList.toggle('active', aba === 'expedicao');
+      document.getElementById('paneAuditoria').classList.toggle('active', aba === 'auditoria');
+    }
+
+    function passaFiltroGlobal(registro) {
+      const termo = (document.getElementById('inputBuscaGlobal').value || '').trim().toUpperCase();
+      const corFiltro = document.getElementById('selectFiltroCor').value || 'TODAS';
+
+      if (estado.filtroCliente !== 'TODOS') {
+        const cliReg = String(registro.cliente || registro.cliente_destino || '').toUpperCase().trim();
+        if (cliReg !== estado.filtroCliente) return false;
       }
 
-      // 2. ABA HISTÓRICO: AGRUPADA POR ITEM E LOTE EM GAVETAS EXPANSÍVEIS
-      const divHist = document.getElementById('lista-historico');
-      const histFiltrado = historicoCache.filter(i => passaFiltroBuscaECliente(i, termo));
+      if (corFiltro !== 'TODAS') {
+        const corReg = String(registro.cor_etiqueta || 'BRANCA').toUpperCase().trim();
+        if (corReg !== corFiltro) return false;
+      }
 
-      atualizarBarraSelecao(histFiltrado);
+      if (!termo) return true;
 
-      if (histFiltrado.length === 0) {
-        divHist.innerHTML = `<div class="empty-state">Nenhum registro encontrado no histórico.</div>`;
+      const campos = [
+        registro.cliente,
+        registro.cliente_destino,
+        registro.item,
+        registro.produto,
+        registro.lote,
+        registro.pedido,
+        registro.placa_caminhao,
+        registro.motorista,
+        registro.codigo_romaneio
+      ]
+        .filter(Boolean)
+        .join(' ')
+        .toUpperCase();
+
+      return campos.includes(termo);
+    }
+
+    function renderizarTudo() {
+      const lotesFiltrados = estado.consolidado.filter(passaFiltroGlobal);
+      const historicoFiltrado = estado.historico.filter(passaFiltroGlobal);
+      const expedidosFiltrados = estado.expedidos.filter(passaFiltroGlobal);
+
+      // Atualiza KPIs
+      const totalLotes = lotesFiltrados.length;
+      const totalPaletes = lotesFiltrados.reduce((acc, l) => acc + Number(l.total_paletes || 0), 0);
+      const totalVolumes = lotesFiltrados.reduce((acc, l) => acc + Number(l.total_caixas_ou_sacaria || 0), 0);
+      const totalPecasEstoque = lotesFiltrados.reduce((acc, l) => acc + Number(l.saldo_total_pecas || 0), 0);
+      const clientesUnicos = new Set(lotesFiltrados.map((l) => l.cliente)).size;
+
+      const totalPaletesExpedidos = estado.expedidos.length;
+      const totalPecasExpedidas = estado.expedidos.reduce((acc, p) => acc + Number(p.saldo_total_pecas || 0), 0);
+
+      document.getElementById('kpiTotalLotes').textContent = formatarNumero(totalLotes);
+      document.getElementById('kpiResumoClientes').textContent = `${clientesUnicos} cliente(s) com saldo ativo`;
+      document.getElementById('kpiTotalPaletes').textContent = formatarNumero(totalPaletes);
+      document.getElementById('kpiTotalVolumes').textContent = `${formatarNumero(totalVolumes)} volumes (caixas / sacarias)`;
+      document.getElementById('kpiSaldoPecas').textContent = formatarNumero(totalPecasEstoque);
+      document.getElementById('kpiTotalExpedidos').textContent = formatarNumero(totalPaletesExpedidos);
+      document.getElementById('kpiDetalheExpedidos').textContent = `${formatarNumero(estado.expedicoes.length)} romaneio(s) | ${formatarNumero(totalPecasExpedidas)} peças expedidas`;
+
+      // Contadores das Abas
+      document.getElementById('countTabEstoque').textContent = totalLotes;
+      document.getElementById('countTabExpedicao').textContent = estado.expedicoes.length;
+      document.getElementById('countTabAuditoria').textContent = historicoFiltrado.length;
+
+      renderizarTabelaConsolidado(lotesFiltrados);
+      renderizarTabelaExpedicoes(expedidosFiltrados);
+      renderizarTabelaAuditoria(historicoFiltrado);
+    }
+
+    function renderizarTabelaConsolidado(lotes) {
+      const tbody = document.getElementById('tbodyConsolidado');
+      if (!lotes.length) {
+        tbody.innerHTML = `<tr><td colspan="12" class="empty-state">Nenhum lote em estoque encontrado para os filtros selecionados.</td></tr>`;
         return;
       }
 
-      const mapaGrupos = new Map();
-      histFiltrado.forEach(item => {
-        const loteOk = limparLoteEstrito(item.lote, item.pedido);
-        const chave = `${item.item}__${loteOk}`;
-        if (!mapaGrupos.has(chave)) {
-          mapaGrupos.set(chave, {
-            chave,
-            item: item.item,
-            lote: loteOk,
-            pedido: limparPedidoEstrito(item.pedido || item.lote),
-            cliente: item.cliente,
-            produto: item.produto,
-            paletes: [],
-            somaVolumes: 0,
-            somaPecas: 0
-          });
-        }
-        const g = mapaGrupos.get(chave);
-        g.paletes.push(item);
-        g.somaVolumes += Number(item.qtd_volumes_palete);
-        g.somaPecas += Number(item.saldo_total_pecas);
-      });
+      let html = '';
+      lotes.forEach((l) => {
+        const chaveLote = `${l.lote}__${l.item}`;
+        const expandido = estado.lotesExpandidos.has(chaveLote);
+        const corAtual = l.cor_etiqueta || 'BRANCA';
 
-      divHist.innerHTML = Array.from(mapaGrupos.values()).map(grupo => {
-        const estaAberto = gruposAbertos.has(grupo.chave) || termo.length > 0;
-        const todosDoGrupoMarcados = grupo.paletes.every(p => idsSelecionados.has(Number(p.id)));
-        const idsGrupoJson = JSON.stringify(grupo.paletes.map(p => Number(p.id)));
-
-        return `
-          <div>
-            <div class="grupo-header ${estaAberto ? 'aberto' : ''}" onclick="alternarGrupoExpandido('${grupo.chave}')">
-              <div class="row-left-wrap">
-                <input
-                  type="checkbox"
-                  class="checkbox-item"
-                  ${todosDoGrupoMarcados ? 'checked' : ''}
-                  onclick="event.stopPropagation()"
-                  onchange="selecionarTodosDoGrupo(${idsGrupoJson}, this.checked)"
-                />
-                <span class="seta-expansao">▶</span>
-                <div class="row-main">
-                  <div class="row-top">
-                    <span class="tag tag-item">${grupo.item}</span>
-                    <span class="cliente-nome">${grupo.cliente}</span>
-                    <span class="tag tag-lote">Lote: ${grupo.lote}</span>
-                    <span class="tag tag-pedido">${grupo.paletes.length} palete(s)</span>
-                  </div>
-                  <div class="produto-desc">
-                    ${grupo.produto} • <strong style="color:var(--primary)">${estaAberto ? 'Clique p/ recolher lista' : 'Clique p/ abrir os paletes deste item'}</strong>
-                  </div>
-                </div>
-              </div>
-              <div class="row-metrics">
-                <div class="metric-box"><small>Paletes</small><strong>${grupo.paletes.length}</strong></div>
-                <div class="metric-box"><small>Volumes</small><strong>${grupo.somaVolumes}</strong></div>
-                <div class="saldo-box"><small>Saldo Item</small><strong>${grupo.somaPecas.toLocaleString('pt-BR')}</strong></div>
-              </div>
-            </div>
-
-            <div class="gaveta-paletes ${estaAberto ? 'aberta' : ''}">
-              <div class="sub-barra-grupo">
-                <span>Mostrando os <strong>${grupo.paletes.length} palete(s)</strong> do item <strong>${grupo.item}</strong> (Lote ${grupo.lote})</span>
-                <button class="btn-danger-outline" style="padding:4px 10px;" onclick="excluirGrupoInteiro(${idsGrupoJson})">
-                  🗑️ Excluir Todos deste Item
-                </button>
-              </div>
-              ${grupo.paletes.map(item => {
-                const idNum = Number(item.id);
-                const marcado = idsSelecionados.has(idNum);
-                return `
-                  <div class="list-row ${marcado ? 'selecionado' : ''}">
-                    <div class="row-left-wrap">
-                      <input
-                        type="checkbox"
-                        class="checkbox-item"
-                        ${marcado ? 'checked' : ''}
-                        onchange="alternarSelecaoItem(${idNum}, this.checked)"
-                      />
-                      <div class="row-main" onclick="alternarSelecaoItem(${idNum}, !idsSelecionados.has(${idNum}))" style="cursor:pointer;">
-                        <div class="row-top">
-                          <span class="tag tag-pedido">Palete #${idNum}</span>
-                          <span class="tag tag-item">${item.item}</span>
-                          <span class="tag tag-lote">Lote: ${grupo.lote}</span>
-                        </div>
-                        <div class="produto-desc">
-                          Apontado em ${new Date(item.data_hora).toLocaleString('pt-BR')}
-                        </div>
-                      </div>
-                    </div>
-                    <div class="row-metrics">
-                      <div class="metric-box"><small>Volumes</small><strong>${item.qtd_volumes_palete}</strong></div>
-                      <div class="metric-box"><small>Pçs/Vol</small><strong>${item.qtd_pecas_por_volume}</strong></div>
-                      <div class="saldo-box"><small>Total Palete</small><strong>${item.saldo_total_pecas.toLocaleString('pt-BR')}</strong></div>
-                      <div class="acoes-mobile">
-                        <button class="btn-outline" onclick="abrirModalEdicao(${idNum})">Editar</button>
-                        <button class="btn-danger-outline" onclick="excluirPalete(${idNum})">🗑️ Excluir</button>
-                      </div>
-                    </div>
-                  </div>
-                `;
-              }).join('')}
-            </div>
-          </div>
+        html += `
+          <tr class="${expandido ? 'row-expanded' : ''}">
+            <td>
+              ${renderizarBadgeEtiqueta(
+                corAtual,
+                `alternarCorLoteRapido('${escaparHTML(l.lote)}', '${escaparHTML(l.item)}', '${escaparHTML(corAtual)}')`
+              )}
+            </td>
+            <td class="cell-client">${escaparHTML(l.cliente)}</td>
+            <td class="cell-item">${escaparHTML(l.item)}</td>
+            <td style="max-width:310px; font-weight:500;">${escaparHTML(l.produto)}</td>
+            <td class="mono">${escaparHTML(l.pedido || '—')}</td>
+            <td><span class="cell-lote">${escaparHTML(l.lote)}</span></td>
+            <td class="mono" style="font-weight:700;">${formatarNumero(l.total_paletes)} PLT</td>
+            <td class="mono">${formatarNumero(l.total_caixas_ou_sacaria)} VOL</td>
+            <td class="mono">${formatarNumero(l.qtd_pecas_por_volume)}</td>
+            <td class="cell-saldo">${formatarNumero(l.saldo_total_pecas)} pçs</td>
+            <td class="cell-timestamp">${formatarDataHora(l.ultima_atualizacao)}</td>
+            <td style="text-align:right; white-space:nowrap;">
+              <button type="button" class="btn btn-amber btn-xs" onclick="abrirModalExpedicaoComLote('${escaparHTML(l.lote)}', '${escaparHTML(l.item)}')">
+                Expedir Caminhão
+              </button>
+              <button type="button" class="btn btn-outline btn-xs" onclick="alternarExpansaoLote('${escaparHTML(chaveLote)}')">
+                ${expandido ? 'Ocultar Paletes' : `Ver Paletes (${l.total_paletes})`}
+              </button>
+            </td>
+          </tr>
         `;
-      }).join('');
-    }
 
-    function selecionarTodosDoGrupo(idsArray, marcar) {
-      idsArray.forEach(id => {
-        if (marcar) idsSelecionados.add(Number(id));
-        else idsSelecionados.delete(Number(id));
+        if (expandido) {
+          const paletesDoLote = estado.historico.filter(
+            (p) =>
+              String(p.lote).toUpperCase().trim() === String(l.lote).toUpperCase().trim() &&
+              String(p.item).toUpperCase().trim() === String(l.item).toUpperCase().trim()
+          );
+
+          html += `
+            <tr class="subgrid-row">
+              <td colspan="12">
+                <div class="subgrid-box">
+                  <div class="subgrid-header">
+                    <span>PALETES INDIVIDUAIS DO LOTE ${escaparHTML(l.lote)} — ITEM ${escaparHTML(l.item)} (${paletesDoLote.length} paletes ativos)</span>
+                    <button type="button" class="btn btn-amber btn-xs" onclick="abrirModalExpedicaoComLote('${escaparHTML(l.lote)}', '${escaparHTML(l.item)}')">
+                      Carregar Lote no Caminhão
+                    </button>
+                  </div>
+                  <table class="datagrid">
+                    <thead>
+                      <tr>
+                        <th>ID Palete</th>
+                        <th>Etiqueta Física</th>
+                        <th>Timestamp de Entrada</th>
+                        <th>Volumes no Palete</th>
+                        <th>Peças / Volume</th>
+                        <th>Saldo do Palete</th>
+                        <th style="text-align:right;">Ações no Palete</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      ${paletesDoLote
+                        .map(
+                          (p, idx) => `
+                        <tr>
+                          <td class="mono">#${p.id} (Palete ${paletesDoLote.length - idx})</td>
+                          <td>
+                            ${renderizarBadgeEtiqueta(
+                              p.cor_etiqueta || corAtual,
+                              `alternarCorPaleteIndividual(${p.id}, '${escaparHTML(p.cor_etiqueta || corAtual)}')`
+                            )}
+                          </td>
+                          <td class="cell-timestamp">${formatarDataHora(p.data_hora)}</td>
+                          <td class="mono">${formatarNumero(p.qtd_volumes_palete)} VOL</td>
+                          <td class="mono">${formatarNumero(p.qtd_pecas_por_volume)} pçs</td>
+                          <td class="cell-saldo">${formatarNumero(p.saldo_total_pecas)} pçs</td>
+                          <td style="text-align:right;">
+                            <button type="button" class="btn btn-outline btn-xs" onclick="abrirModalEditarPalete(${p.id})">Editar</button>
+                            <button type="button" class="btn btn-danger-outline btn-xs" onclick="excluirPaleteUnico(${p.id})">Excluir</button>
+                          </td>
+                        </tr>
+                      `
+                        )
+                        .join('')}
+                    </tbody>
+                  </table>
+                </div>
+              </td>
+            </tr>
+          `;
+        }
       });
-      renderizarListas();
+
+      tbody.innerHTML = html;
     }
 
-    async function excluirGrupoInteiro(idsArray) {
-      const setRemover = new Set(idsArray.map(Number));
-      historicoCache = historicoCache.filter(p => !setRemover.has(Number(p.id)));
-      localStorage.setItem('finart_backup_paletes', JSON.stringify(historicoCache));
-      idsArray.forEach(id => idsSelecionados.delete(Number(id)));
-      renderizarListas();
-
-      try {
-        await fetch(`${API_BASE}/api/paletes/excluir-multiplos`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ids: idsArray })
-        });
-      } catch (e) {}
-
-      await carregarDashboard(true);
-    }
-
-    function alternarSelecaoItem(id, marcado) {
-      const idNum = Number(id);
-      if (marcado) idsSelecionados.add(idNum);
-      else idsSelecionados.delete(idNum);
-      renderizarListas();
-    }
-
-    function alternarSelecionarTodos(marcarTodos) {
-      const termo = (document.getElementById('campo-busca').value || '').toLowerCase();
-      const visiveis = historicoCache.filter(i => passaFiltroBuscaECliente(i, termo));
-      visiveis.forEach(i => {
-        const idNum = Number(i.id);
-        if (marcarTodos) idsSelecionados.add(idNum);
-        else idsSelecionados.delete(idNum);
-      });
-      renderizarListas();
-    }
-
-    function atualizarBarraSelecao(listaVisivel) {
-      const btn = document.getElementById('btn-excluir-selecionados');
-      const checkTodos = document.getElementById('check-todos');
-      const qtd = idsSelecionados.size;
-
-      btn.innerText = `🗑️ Excluir Selecionados (${qtd})`;
-      btn.disabled = qtd === 0;
-
-      if (listaVisivel.length > 0 && listaVisivel.every(i => idsSelecionados.has(Number(i.id)))) {
-        checkTodos.checked = true;
+    function alternarExpansaoLote(chave) {
+      if (estado.lotesExpandidos.has(chave)) {
+        estado.lotesExpandidos.delete(chave);
       } else {
-        checkTodos.checked = false;
+        estado.lotesExpandidos.add(chave);
+      }
+      renderizarTudo();
+    }
+
+    // =========================================================================
+    // ALTERAÇÃO RÁPIDA DE COR DA MINI-ETIQUETA (LOTE OU PALETE)
+    // =========================================================================
+    async function alternarCorLoteRapido(lote, item, corAtual) {
+      const idx = CORES_CICLO.indexOf(String(corAtual || 'BRANCA').toUpperCase());
+      const proximaCor = CORES_CICLO[(idx + 1) % CORES_CICLO.length];
+      try {
+        const resp = await fetch('/api/paletes/cor', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ lote, item, cor_etiqueta: proximaCor })
+        });
+        if (resp.ok) {
+          exibirToast(`Etiqueta do Lote ${lote} alterada para ${proximaCor}`, 'sucesso');
+          carregarDashboard();
+        }
+      } catch (e) {}
+    }
+
+    async function alternarCorPaleteIndividual(id, corAtual) {
+      const idx = CORES_CICLO.indexOf(String(corAtual || 'BRANCA').toUpperCase());
+      const proximaCor = CORES_CICLO[(idx + 1) % CORES_CICLO.length];
+      try {
+        const resp = await fetch('/api/paletes/cor', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id, cor_etiqueta: proximaCor })
+        });
+        if (resp.ok) {
+          exibirToast(`Etiqueta do Palete #${id} alterada para ${proximaCor}`, 'sucesso');
+          carregarDashboard();
+        }
+      } catch (e) {}
+    }
+
+    // =========================================================================
+    // RENDERIZAÇÃO DA ABA DE EXPEDIÇÕES E CAMINHÕES
+    // =========================================================================
+    function renderizarTabelaExpedicoes(expedidosFiltrados) {
+      const tbodyExp = document.getElementById('tbodyExpedicoes');
+      const expedicoesFiltradas = estado.expedicoes.filter(passaFiltroGlobal);
+
+      if (!expedicoesFiltradas.length) {
+        tbodyExp.innerHTML = `<tr><td colspan="10" class="empty-state">Nenhum romaneio de caminhão registrado. Clique em "Carregar Caminhão" para iniciar uma expedição.</td></tr>`;
+      } else {
+        tbodyExp.innerHTML = expedicoesFiltradas
+          .map((ex) => {
+            let itensLista = [];
+            try {
+              itensLista = typeof ex.itens_resumo === 'string' ? JSON.parse(ex.itens_resumo) : ex.itens_resumo || [];
+            } catch (e) {}
+
+            const resumoHtml = itensLista
+              .map(
+                (it) =>
+                  `<div style="margin-bottom:4px; display:flex; align-items:center; gap:6px;">
+                    ${renderizarBadgeEtiqueta(it.cor_etiqueta || 'BRANCA')}
+                    <span class="mono" style="font-weight:700;">${escaparHTML(it.item)}</span>
+                    <span>Lote ${escaparHTML(it.lote)}</span>
+                    <span class="mono" style="color:var(--text-muted);">(${it.paletes} PLT / ${formatarNumero(it.pecas)} pçs)</span>
+                  </div>`
+              )
+              .join('');
+
+            return `
+              <tr>
+                <td class="mono" style="font-weight:700; color:var(--brand-primary);">${escaparHTML(ex.codigo_romaneio)}</td>
+                <td class="cell-timestamp">${formatarDataHora(ex.data_hora_saida)}</td>
+                <td><span class="cell-lote">${escaparHTML(ex.placa_caminhao)}</span></td>
+                <td style="font-weight:600;">${escaparHTML(ex.motorista || '—')}</td>
+                <td class="cell-client">${escaparHTML(ex.cliente_destino || '—')}</td>
+                <td>${resumoHtml || '—'}</td>
+                <td class="mono" style="font-weight:700;">${formatarNumero(ex.total_paletes)} PLT</td>
+                <td class="mono">${formatarNumero(ex.total_volumes)} VOL</td>
+                <td class="cell-saldo">${formatarNumero(ex.total_pecas)} pçs</td>
+                <td style="text-align:right; white-space:nowrap;">
+                  <button type="button" class="btn btn-outline btn-xs" onclick="imprimirRomaneioIndividual(${ex.id})">PDF Romaneio</button>
+                  <button type="button" class="btn btn-danger-outline btn-xs" onclick="estornarExpedicao(${ex.id}, '${escaparHTML(ex.codigo_romaneio)}')">Estornar</button>
+                </td>
+              </tr>
+            `;
+          })
+          .join('');
+      }
+
+      const tbodyPalExp = document.getElementById('tbodyPaletesExpedidos');
+      if (!expedidosFiltrados.length) {
+        tbodyPalExp.innerHTML = `<tr><td colspan="10" class="empty-state">Nenhum palete expedido até o momento.</td></tr>`;
+      } else {
+        tbodyPalExp.innerHTML = expedidosFiltrados
+          .map(
+            (p) => `
+          <tr>
+            <td class="mono">#${p.id}</td>
+            <td>${renderizarBadgeEtiqueta(p.cor_etiqueta || 'BRANCA')}</td>
+            <td><span class="cell-lote">${escaparHTML(p.placa_caminhao || '—')}</span></td>
+            <td class="cell-client">${escaparHTML(p.cliente)}</td>
+            <td class="cell-item">${escaparHTML(p.item)}</td>
+            <td><span class="cell-lote">${escaparHTML(p.lote)}</span></td>
+            <td class="mono">${formatarNumero(p.qtd_volumes_palete)} VOL</td>
+            <td class="cell-saldo">${formatarNumero(p.saldo_total_pecas)} pçs</td>
+            <td class="cell-timestamp">${formatarDataHora(p.data_hora)}</td>
+            <td class="cell-timestamp" style="color:var(--amber-primary); font-weight:700;">${formatarDataHora(p.data_hora_saida)}</td>
+          </tr>
+        `
+          )
+          .join('');
       }
     }
 
-    async function excluirSelecionados() {
-      const ids = Array.from(idsSelecionados).map(Number);
-      if (ids.length === 0) return;
+    // =========================================================================
+    // RENDERIZAÇÃO DA ABA DE AUDITORIA DE PALETES (ENTRADAS)
+    // =========================================================================
+    function renderizarTabelaAuditoria(historico) {
+      const tbody = document.getElementById('tbodyAuditoria');
+      atualizarBotoesSelecaoAuditoria();
 
-      const btn = document.getElementById('btn-excluir-selecionados');
-      btn.disabled = true;
-      btn.innerText = 'Excluindo...';
+      if (!historico.length) {
+        tbody.innerHTML = `<tr><td colspan="13" class="empty-state">Nenhum palete encontrado.</td></tr>`;
+        return;
+      }
 
-      const setRemover = new Set(ids);
-      historicoCache = historicoCache.filter(p => !setRemover.has(Number(p.id)));
-      localStorage.setItem('finart_backup_paletes', JSON.stringify(historicoCache));
-      idsSelecionados.clear();
-      renderizarListas();
+      tbody.innerHTML = historico
+        .map((p) => {
+          const marcado = estado.selecionadosAuditoria.has(p.id) ? 'checked' : '';
+          return `
+            <tr>
+              <td>
+                <input type="checkbox" ${marcado} onchange="alternarSelecaoPaleteAuditoria(${p.id}, this.checked)" />
+              </td>
+              <td class="mono">#${p.id}</td>
+              <td>
+                ${renderizarBadgeEtiqueta(
+                  p.cor_etiqueta || 'BRANCA',
+                  `alternarCorPaleteIndividual(${p.id}, '${escaparHTML(p.cor_etiqueta || 'BRANCA')}')`
+                )}
+              </td>
+              <td class="cell-timestamp">${formatarDataHora(p.data_hora)}</td>
+              <td class="cell-client">${escaparHTML(p.cliente)}</td>
+              <td class="cell-item">${escaparHTML(p.item)}</td>
+              <td style="max-width:260px;">${escaparHTML(p.produto)}</td>
+              <td class="mono">${escaparHTML(p.pedido || '—')}</td>
+              <td><span class="cell-lote">${escaparHTML(p.lote)}</span></td>
+              <td class="mono">${formatarNumero(p.qtd_volumes_palete)}</td>
+              <td class="mono">${formatarNumero(p.qtd_pecas_por_volume)}</td>
+              <td class="cell-saldo">${formatarNumero(p.saldo_total_pecas)} pçs</td>
+              <td style="text-align:right; white-space:nowrap;">
+                <button type="button" class="btn btn-outline btn-xs" onclick="abrirModalEditarPalete(${p.id})">Editar</button>
+                <button type="button" class="btn btn-danger-outline btn-xs" onclick="excluirPaleteUnico(${p.id})">Excluir</button>
+              </td>
+            </tr>
+          `;
+        })
+        .join('');
+    }
+
+    function alternarSelecaoPaleteAuditoria(id, checked) {
+      if (checked) estado.selecionadosAuditoria.add(id);
+      else estado.selecionadosAuditoria.delete(id);
+      atualizarBotoesSelecaoAuditoria();
+    }
+
+    function alternarSelecaoTodosAuditoria(checked) {
+      const filtrados = estado.historico.filter(passaFiltroGlobal);
+      filtrados.forEach((p) => {
+        if (checked) estado.selecionadosAuditoria.add(p.id);
+        else estado.selecionadosAuditoria.delete(p.id);
+      });
+      renderizarTudo();
+    }
+
+    function atualizarBotoesSelecaoAuditoria() {
+      const qtd = estado.selecionadosAuditoria.size;
+      const btnExp = document.getElementById('btnExpedirSelecionados');
+      const btnExc = document.getElementById('btnExcluirSelecionados');
+      document.getElementById('countSelExpedir').textContent = qtd;
+      document.getElementById('countSelExcluir').textContent = qtd;
+      btnExp.style.display = qtd > 0 ? 'inline-flex' : 'none';
+      btnExc.style.display = qtd > 0 ? 'inline-flex' : 'none';
+    }
+
+    // =========================================================================
+    // FLUXO DE CARREGAMENTO DE CAMINHÃO (MODAL DE EXPEDIÇÃO)
+    // =========================================================================
+    function abrirModalExpedicao(lotePreSelecionado = '', itemPreSelecionado = '') {
+      estado.quantidadesExpedicaoPorLote = {};
+
+      if (lotePreSelecionado && itemPreSelecionado) {
+        const chave = `${lotePreSelecionado}__${itemPreSelecionado}`;
+        const loteObj = estado.consolidado.find(
+          (l) =>
+            String(l.lote).toUpperCase() === String(lotePreSelecionado).toUpperCase() &&
+            String(l.item).toUpperCase() === String(itemPreSelecionado).toUpperCase()
+        );
+        if (loteObj) {
+          estado.quantidadesExpedicaoPorLote[chave] = Number(loteObj.total_paletes);
+          document.getElementById('expClienteDestino').value = loteObj.cliente || '';
+        }
+      }
+
+      renderizarLinhasModalExpedicao();
+      document.getElementById('modalExpedicao').classList.add('open');
+    }
+
+    function abrirModalExpedicaoComLote(lote, item) {
+      abrirModalExpedicao(lote, item);
+    }
+
+    function fecharModalExpedicao() {
+      document.getElementById('modalExpedicao').classList.remove('open');
+    }
+
+    function renderizarLinhasModalExpedicao() {
+      const tbody = document.getElementById('tbodySelecaoLotesExpedicao');
+      if (!estado.consolidado.length) {
+        tbody.innerHTML = `<tr><td colspan="7" class="empty-state">Não há lotes disponíveis em estoque para carregar.</td></tr>`;
+        atualizarResumoModalExpedicao();
+        return;
+      }
+
+      tbody.innerHTML = estado.consolidado
+        .map((l) => {
+          const chave = `${l.lote}__${l.item}`;
+          const qtdSel = Number(estado.quantidadesExpedicaoPorLote[chave] || 0);
+          return `
+            <tr>
+              <td>${renderizarBadgeEtiqueta(l.cor_etiqueta || 'BRANCA')}</td>
+              <td class="cell-client">${escaparHTML(l.cliente)}</td>
+              <td class="cell-item">${escaparHTML(l.item)}</td>
+              <td><span class="cell-lote">${escaparHTML(l.lote)}</span></td>
+              <td class="mono" style="font-weight:700;">${formatarNumero(l.total_paletes)} paletes (${formatarNumero(l.total_caixas_ou_sacaria)} vol)</td>
+              <td class="cell-saldo">${formatarNumero(l.saldo_total_pecas)} pçs</td>
+              <td>
+                <div style="display:flex; align-items:center; gap:6px;">
+                  <input
+                    type="number"
+                    class="form-control mono"
+                    style="width:85px; padding:5px 8px;"
+                    min="0"
+                    max="${l.total_paletes}"
+                    value="${qtdSel}"
+                    oninput="definirQtdLoteExpedicao('${escaparHTML(chave)}', this.value, ${l.total_paletes}, '${escaparHTML(l.cliente)}')"
+                  />
+                  <button type="button" class="btn btn-outline btn-xs" onclick="definirQtdLoteExpedicao('${escaparHTML(chave)}', ${l.total_paletes}, ${l.total_paletes}, '${escaparHTML(l.cliente)}'); renderizarLinhasModalExpedicao();">
+                    Tudo (${l.total_paletes})
+                  </button>
+                </div>
+              </td>
+            </tr>
+          `;
+        })
+        .join('');
+
+      atualizarResumoModalExpedicao();
+    }
+
+    function definirQtdLoteExpedicao(chave, valor, maxPaletes, clienteLote) {
+      let num = parseInt(valor, 10);
+      if (isNaN(num) || num < 0) num = 0;
+      if (num > maxPaletes) num = maxPaletes;
+      estado.quantidadesExpedicaoPorLote[chave] = num;
+
+      const campoCli = document.getElementById('expClienteDestino');
+      if (num > 0 && !campoCli.value && clienteLote) {
+        campoCli.value = clienteLote;
+      }
+      atualizarResumoModalExpedicao();
+    }
+
+    function atualizarResumoModalExpedicao() {
+      let totalPaletes = 0;
+      let totalPecas = 0;
+
+      Object.entries(estado.quantidadesExpedicaoPorLote).forEach(([chave, qtd]) => {
+        if (!qtd || qtd <= 0) return;
+        const [lote, item] = chave.split('__');
+        const paletesDisp = estado.historico.filter(
+          (p) =>
+            String(p.lote).toUpperCase() === String(lote).toUpperCase() &&
+            String(p.item).toUpperCase() === String(item).toUpperCase()
+        );
+        const selecionados = paletesDisp.slice(0, qtd);
+        totalPaletes += selecionados.length;
+        totalPecas += selecionados.reduce((acc, p) => acc + Number(p.saldo_total_pecas || 0), 0);
+      });
+
+      document.getElementById('resumoExpPaletes').textContent = formatarNumero(totalPaletes);
+      document.getElementById('resumoExpPecas').textContent = formatarNumero(totalPecas);
+    }
+
+    async function confirmarCarregamentoCaminhao() {
+      const placa = (document.getElementById('expPlaca').value || '').trim().toUpperCase();
+      const motorista = (document.getElementById('expMotorista').value || '').trim().toUpperCase();
+      const cliente_destino = (document.getElementById('expClienteDestino').value || '').trim().toUpperCase();
+      const codigo_romaneio = (document.getElementById('expRomaneio').value || '').trim().toUpperCase();
+      const observacoes = (document.getElementById('expObservacoes').value || '').trim();
+
+      if (!placa) {
+        exibirToast('Informe a Placa do Caminhão para registrar a expedição.', 'erro');
+        return;
+      }
+
+      const idsParaCarregar = [];
+      Object.entries(estado.quantidadesExpedicaoPorLote).forEach(([chave, qtd]) => {
+        if (!qtd || qtd <= 0) return;
+        const [lote, item] = chave.split('__');
+        const paletesDisp = estado.historico.filter(
+          (p) =>
+            String(p.lote).toUpperCase() === String(lote).toUpperCase() &&
+            String(p.item).toUpperCase() === String(item).toUpperCase()
+        );
+        paletesDisp.slice(0, qtd).forEach((p) => idsParaCarregar.push(p.id));
+      });
+
+      if (idsParaCarregar.length === 0) {
+        exibirToast('Selecione ao menos 1 palete para carregar no caminhão.', 'erro');
+        return;
+      }
 
       try {
-        await fetch(`${API_BASE}/api/paletes/excluir-multiplos`, {
+        const resp = await fetch('/api/expedicoes/carregar', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            ids_paletes: idsParaCarregar,
+            placa_caminhao: placa,
+            motorista,
+            cliente_destino,
+            codigo_romaneio,
+            observacoes
+          })
+        });
+        const dados = await resp.json();
+        if (!resp.ok) {
+          exibirToast(dados.erro || 'Erro ao registrar carregamento.', 'erro');
+          return;
+        }
+
+        fecharModalExpedicao();
+        document.getElementById('expPlaca').value = '';
+        document.getElementById('expMotorista').value = '';
+        document.getElementById('expRomaneio').value = '';
+        document.getElementById('expObservacoes').value = '';
+
+        exibirToast(
+          `Romaneio ${dados.codigo_romaneio} concluído: ${dados.total_paletes} paletes (${formatarNumero(dados.total_pecas)} pçs) carregados no caminhão ${dados.placa_caminhao}.`,
+          'sucesso'
+        );
+        alternarAba('expedicao');
+        carregarDashboard();
+      } catch (e) {
+        exibirToast('Erro de comunicação ao registrar expedição.', 'erro');
+      }
+    }
+
+    async function expedirPaletesSelecionados() {
+      if (estado.selecionadosAuditoria.size === 0) return;
+      const placa = prompt('Informe a PLACA DO CAMINHÃO para expedir os paletes selecionados:', '');
+      if (!placa || !placa.trim()) return;
+      const motorista = prompt('Informe o NOME DO MOTORISTA / TRANSPORTADORA (opcional):', '') || '';
+
+      try {
+        const resp = await fetch('/api/expedicoes/carregar', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            ids_paletes: Array.from(estado.selecionadosAuditoria),
+            placa_caminhao: placa.trim().toUpperCase(),
+            motorista: motorista.trim().toUpperCase()
+          })
+        });
+        const dados = await resp.json();
+        if (!resp.ok) {
+          exibirToast(dados.erro || 'Erro ao expedir selecionados.', 'erro');
+          return;
+        }
+        estado.selecionadosAuditoria.clear();
+        exibirToast(`Carga expedida no caminhão ${dados.placa_caminhao} (${dados.total_paletes} paletes).`, 'sucesso');
+        alternarAba('expedicao');
+        carregarDashboard();
+      } catch (e) {
+        exibirToast('Falha ao expedir paletes selecionados.', 'erro');
+      }
+    }
+
+    async function estornarExpedicao(id, romaneio) {
+      if (!confirm(`Deseja estornar o Romaneio ${romaneio}? Os paletes retornarão imediatamente para o estoque disponível.`)) {
+        return;
+      }
+      try {
+        const resp = await fetch(`/api/expedicoes/${id}/estornar`, { method: 'POST' });
+        if (resp.ok) {
+          exibirToast(`Romaneio ${romaneio} estornado. Paletes devolvidos ao estoque.`, 'sucesso');
+          carregarDashboard();
+        }
+      } catch (e) {
+        exibirToast('Erro ao estornar expedição.', 'erro');
+      }
+    }
+
+    // =========================================================================
+    // MODAL DE LANÇAMENTO MANUAL E EDIÇÃO DE PALETE
+    // =========================================================================
+    function selecionarCorModal(cor) {
+      estado.corModalSelecionada = cor;
+      document.querySelectorAll('#seletorCoresModal .color-option').forEach((el) => {
+        el.classList.toggle('selected', el.getAttribute('data-cor') === cor);
+      });
+    }
+
+    function abrirModalLancamentoManual() {
+      document.getElementById('tituloModalPalete').textContent = 'Novo Lançamento de Palete em Estoque';
+      document.getElementById('formPaleteId').value = '';
+      document.getElementById('formItem').value = '';
+      document.getElementById('formCliente').value = '';
+      document.getElementById('formProduto').value = '';
+      document.getElementById('formPedido').value = '';
+      document.getElementById('formLote').value = '';
+      document.getElementById('formVolumes').value = '15';
+      document.getElementById('formPecasPorVolume').value = '';
+      selecionarCorModal('BRANCA');
+      recalcularPreviewModal();
+      document.getElementById('modalPalete').classList.add('open');
+    }
+
+    function abrirModalEditarPalete(id) {
+      const p = estado.historico.find((x) => Number(x.id) === Number(id));
+      if (!p) return;
+
+      document.getElementById('tituloModalPalete').textContent = `Editar Palete #${p.id} — Lote ${p.lote}`;
+      document.getElementById('formPaleteId').value = p.id;
+      document.getElementById('formItem').value = p.item || '';
+      document.getElementById('formCliente').value = p.cliente || '';
+      document.getElementById('formProduto').value = p.produto || '';
+      document.getElementById('formPedido').value = p.pedido || '';
+      document.getElementById('formLote').value = p.lote || '';
+      document.getElementById('formVolumes').value = p.qtd_volumes_palete || 15;
+      document.getElementById('formPecasPorVolume').value = p.qtd_pecas_por_volume || 0;
+      selecionarCorModal(p.cor_etiqueta || 'BRANCA');
+      recalcularPreviewModal();
+      document.getElementById('modalPalete').classList.add('open');
+    }
+
+    function fecharModalPalete() {
+      document.getElementById('modalPalete').classList.remove('open');
+    }
+
+    function autoPreencherPorItemModal(codigoDigitado) {
+      const cod = String(codigoDigitado || '').trim().toUpperCase();
+      if (!cod) return;
+
+      const ultimoHist = estado.historico.find((h) => String(h.item).toUpperCase() === cod);
+      const itemCat = estado.catalogo.find((c) => String(c.item).toUpperCase() === cod);
+      const ref = ultimoHist || itemCat;
+
+      if (ref) {
+        document.getElementById('formCliente').value = ref.cliente || '';
+        document.getElementById('formProduto').value = ref.produto || '';
+        document.getElementById('formVolumes').value =
+          ref.qtd_volumes_palete || ref.padrao_volumes_palete || 15;
+        document.getElementById('formPecasPorVolume').value =
+          ref.qtd_pecas_por_volume || ref.qtd_padrao_pecas || '';
+        selecionarCorModal(ref.cor_etiqueta || ref.cor_padrao || 'BRANCA');
+        recalcularPreviewModal();
+      }
+    }
+
+    function sincronizarLotePeloPedidoModal() {
+      const ped = (document.getElementById('formPedido').value || '').replace(/\D/g, '').slice(0, 6);
+      const campoLote = document.getElementById('formLote');
+      if (ped.length >= 4 && (!campoLote.value || campoLote.value.endsWith('.1'))) {
+        campoLote.value = `${ped}.1`;
+      }
+    }
+
+    function recalcularPreviewModal() {
+      const vols = parseInt(document.getElementById('formVolumes').value, 10) || 0;
+      const pecas = parseInt(document.getElementById('formPecasPorVolume').value, 10) || 0;
+      document.getElementById('previewTotalModal').textContent = `${formatarNumero(vols * pecas)} peças`;
+    }
+
+    async function salvarPaleteModal() {
+      const id = document.getElementById('formPaleteId').value;
+      const payload = {
+        item: (document.getElementById('formItem').value || '').trim().toUpperCase(),
+        cliente: (document.getElementById('formCliente').value || '').trim().toUpperCase(),
+        produto: (document.getElementById('formProduto').value || '').trim().toUpperCase(),
+        pedido: (document.getElementById('formPedido').value || '').trim(),
+        lote: (document.getElementById('formLote').value || '').trim(),
+        qtd_volumes_palete: parseInt(document.getElementById('formVolumes').value, 10) || 0,
+        qtd_pecas_por_volume: parseInt(document.getElementById('formPecasPorVolume').value, 10) || 0,
+        cor_etiqueta: estado.corModalSelecionada
+      };
+
+      const url = id ? `/api/paletes/${id}` : '/api/paletes';
+      const metodo = id ? 'PUT' : 'POST';
+
+      try {
+        const resp = await fetch(url, {
+          method: metodo,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const dados = await resp.json();
+        if (!resp.ok) {
+          exibirToast(dados.erro || 'Verifique os campos obrigatórios.', 'erro');
+          return;
+        }
+        fecharModalPalete();
+        exibirToast(id ? `Palete #${id} atualizado com sucesso.` : 'Novo palete lançado no estoque.', 'sucesso');
+        carregarDashboard();
+      } catch (e) {
+        exibirToast('Erro ao salvar registro.', 'erro');
+      }
+    }
+
+    async function excluirPaleteUnico(id) {
+      if (!confirm(`Confirmar a exclusão definitiva do Palete #${id} do estoque?`)) return;
+      try {
+        const resp = await fetch(`/api/paletes/${id}`, { method: 'DELETE' });
+        if (resp.ok) {
+          estado.selecionadosAuditoria.delete(id);
+          exibirToast(`Palete #${id} removido do estoque.`, 'sucesso');
+          carregarDashboard();
+        }
+      } catch (e) {}
+    }
+
+    async function excluirPaletesSelecionados() {
+      const ids = Array.from(estado.selecionadosAuditoria);
+      if (!ids.length) return;
+      if (!confirm(`Confirmar exclusão de ${ids.length} palete(s) selecionado(s)?`)) return;
+
+      try {
+        const resp = await fetch('/api/paletes/excluir-multiplos', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ ids })
         });
+        if (resp.ok) {
+          estado.selecionadosAuditoria.clear();
+          exibirToast(`${ids.length} palete(s) excluído(s).`, 'sucesso');
+          carregarDashboard();
+        }
       } catch (e) {}
-
-      await carregarDashboard(true);
     }
 
-    async function excluirPalete(id) {
-      const idNum = Number(id);
-      historicoCache = historicoCache.filter(p => Number(p.id) !== idNum);
-      localStorage.setItem('finart_backup_paletes', JSON.stringify(historicoCache));
-      idsSelecionados.delete(idNum);
-      renderizarListas();
+    // =========================================================================
+    // FERRAMENTAS CORPORATIVAS DE BACKUP (EXPORTAR / IMPORTAR JSON) E CSV
+    // =========================================================================
+    function exportarBackupCompleto() {
+      window.location.href = '/api/backup/exportar';
+      exibirToast('Download do pacote de Backup Corporativo iniciado.', 'sucesso');
+    }
+
+    async function importarBackupCompleto(event) {
+      const arquivo = event.target.files && event.target.files[0];
+      if (!arquivo) return;
 
       try {
-        await fetch(`${API_BASE}/api/paletes/${idNum}`, { method: 'DELETE' });
-      } catch (e) {}
+        const texto = await arquivo.text();
+        const pacote = JSON.parse(texto);
 
-      await carregarDashboard(true);
-    }
+        if (!confirm('Deseja restaurar este arquivo de backup no servidor? Todos os saldos, históricos, expedições e catálogo do backup serão carregados.')) {
+          event.target.value = '';
+          return;
+        }
 
-    function abrirModalNovo() {
-      document.getElementById('modal-titulo').innerText = 'Lançar Palete - FINART';
-      document.getElementById('edit-id').value = '';
-      document.getElementById('edit-cliente').value = '';
-      document.getElementById('edit-pedido').value = '';
-      document.getElementById('edit-lote').value = '';
-      document.getElementById('edit-item').value = '';
-      document.getElementById('edit-produto').value = '';
-      document.getElementById('edit-volumes').value = '';
-      document.getElementById('edit-pecas').value = '';
-      document.getElementById('modal-edicao').style.display = 'flex';
-    }
+        const resp = await fetch('/api/backup/importar', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(pacote)
+        });
+        const dados = await resp.json();
+        event.target.value = '';
 
-    function abrirModalEdicao(id) {
-      const reg = historicoCache.find(r => Number(r.id) === Number(id));
-      if (!reg) return;
-      const pedLimpo = limparPedidoEstrito(reg.pedido || reg.lote);
-      const loteLimpo = limparLoteEstrito(reg.lote, pedLimpo);
+        if (!resp.ok) {
+          exibirToast(dados.erro || 'Arquivo de backup inválido.', 'erro');
+          return;
+        }
 
-      document.getElementById('modal-titulo').innerText = `Corrigir Palete #${id}`;
-      document.getElementById('edit-id').value = reg.id;
-      document.getElementById('edit-cliente').value = reg.cliente;
-      document.getElementById('edit-pedido').value = pedLimpo;
-      document.getElementById('edit-lote').value = loteLimpo;
-      document.getElementById('edit-item').value = reg.item;
-      document.getElementById('edit-produto').value = reg.produto;
-      document.getElementById('edit-volumes').value = reg.qtd_volumes_palete;
-      document.getElementById('edit-pecas').value = reg.qtd_pecas_por_volume;
-      document.getElementById('modal-edicao').style.display = 'flex';
-    }
-
-    function fecharModal() {
-      document.getElementById('modal-edicao').style.display = 'none';
-    }
-
-    async function salvarEdicao() {
-      const id = document.getElementById('edit-id').value;
-      const pedLimpo = limparPedidoEstrito(document.getElementById('edit-pedido').value);
-      let loteLimpo = limparLoteEstrito(document.getElementById('edit-lote').value, pedLimpo);
-      if (loteLimpo.endsWith('.')) loteLimpo += '1';
-
-      const payload = {
-        cliente: document.getElementById('edit-cliente').value,
-        pedido: pedLimpo,
-        lote: loteLimpo,
-        item: document.getElementById('edit-item').value,
-        produto: document.getElementById('edit-produto').value,
-        qtd_volumes_palete: parseInt(document.getElementById('edit-volumes').value, 10),
-        qtd_pecas_por_volume: parseInt(document.getElementById('edit-pecas').value, 10)
-      };
-
-      const url = id ? `${API_BASE}/api/paletes/${id}` : `${API_BASE}/api/paletes`;
-      const method = id ? 'PUT' : 'POST';
-
-      const res = await fetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-
-      if (res.ok) {
-        fecharModal();
-        await carregarDashboard(true);
-      } else {
-        const err = await res.json();
-        alert(err.erro || 'Erro ao salvar');
+        exibirToast(`Backup restaurado com sucesso (${dados.quantidade_paletes} paletes sincronizados).`, 'sucesso');
+        carregarDashboard();
+      } catch (e) {
+        event.target.value = '';
+        exibirToast('Erro ao ler arquivo JSON de backup.', 'erro');
       }
     }
 
-    function conectarStream() {
-      const stream = new EventSource(`${API_BASE}/api/stream`);
-      stream.onmessage = () => carregarDashboard(true);
-      stream.onerror = () => {
-        stream.close();
-        setTimeout(conectarStream, 2000);
-      };
+    function exportarPlanilhaCSV() {
+      const linhas = [
+        ['STATUS', 'ETIQUETA', 'CLIENTE', 'ITEM', 'PRODUTO', 'PEDIDO', 'LOTE', 'PALETES', 'VOLUMES', 'PECAS_POR_VOL', 'SALDO_PECAS', 'ULTIMA_ATUALIZACAO']
+      ];
+
+      estado.consolidado.forEach((l) => {
+        linhas.push([
+          'EM_ESTOQUE',
+          l.cor_etiqueta || 'BRANCA',
+          `"${String(l.cliente || '').replace(/"/g, '""')}"`,
+          l.item,
+          `"${String(l.produto || '').replace(/"/g, '""')}"`,
+          l.pedido || '',
+          l.lote,
+          l.total_paletes,
+          l.total_caixas_ou_sacaria,
+          l.qtd_pecas_por_volume,
+          l.saldo_total_pecas,
+          formatarDataHora(l.ultima_atualizacao)
+        ]);
+      });
+
+      const csvContent = '\uFEFF' + linhas.map((e) => e.join(';')).join('\n');
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `FINART_WMS_SALDOS_${new Date().toISOString().slice(0, 10)}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
     }
 
-    document.addEventListener('visibilitychange', () => {
-      if (!document.hidden) carregarDashboard();
-    });
-    window.addEventListener('focus', () => carregarDashboard());
-    setInterval(() => carregarDashboard(false), 2500);
+    // =========================================================================
+    // GERADOR DE RELATÓRIO CORPORATIVO EM PDF (SALDOS + EXPEDIÇÕES)
+    // =========================================================================
+    function exportarRelatorioPDF() {
+      const lotes = estado.consolidado.filter(passaFiltroGlobal);
+      const expedicoes = estado.expedicoes.filter(passaFiltroGlobal);
+      const dataEmissao = new Date().toLocaleString('pt-BR');
 
-    conectarStream();
-    carregarDashboard(true);
+      const totalPaletes = lotes.reduce((acc, l) => acc + Number(l.total_paletes || 0), 0);
+      const totalVolumes = lotes.reduce((acc, l) => acc + Number(l.total_caixas_ou_sacaria || 0), 0);
+      const totalPecas = lotes.reduce((acc, l) => acc + Number(l.saldo_total_pecas || 0), 0);
+
+      const janelaPDF = window.open('', '_blank', 'width=1120,height=820');
+      if (!janelaPDF) {
+        exibirToast('Permita pop-ups no navegador para gerar o PDF corporativo.', 'erro');
+        return;
+      }
+
+      const linhasEstoqueHTML = lotes
+        .map(
+          (l) => `
+        <tr>
+          <td class="mono">${escaparHTML(l.cor_etiqueta || 'BRANCA')}</td>
+          <td><strong>${escaparHTML(l.cliente)}</strong></td>
+          <td class="mono"><strong>${escaparHTML(l.item)}</strong></td>
+          <td>${escaparHTML(l.produto)}</td>
+          <td class="mono">${escaparHTML(l.pedido || '—')}</td>
+          <td class="mono"><strong>${escaparHTML(l.lote)}</strong></td>
+          <td class="mono" style="text-align:right;">${formatarNumero(l.total_paletes)}</td>
+          <td class="mono" style="text-align:right;">${formatarNumero(l.total_caixas_ou_sacaria)}</td>
+          <td class="mono" style="text-align:right;">${formatarNumero(l.qtd_pecas_por_volume)}</td>
+          <td class="mono" style="text-align:right;"><strong>${formatarNumero(l.saldo_total_pecas)}</strong></td>
+          <td class="mono">${formatarDataHora(l.ultima_atualizacao)}</td>
+        </tr>
+      `
+        )
+        .join('');
+
+      const linhasExpedicoesHTML = expedicoes
+        .map(
+          (ex) => `
+        <tr>
+          <td class="mono"><strong>${escaparHTML(ex.codigo_romaneio)}</strong></td>
+          <td class="mono">${formatarDataHora(ex.data_hora_saida)}</td>
+          <td class="mono"><strong>${escaparHTML(ex.placa_caminhao)}</strong></td>
+          <td>${escaparHTML(ex.motorista || '—')}</td>
+          <td>${escaparHTML(ex.cliente_destino || '—')}</td>
+          <td class="mono" style="text-align:right;">${formatarNumero(ex.total_paletes)}</td>
+          <td class="mono" style="text-align:right;">${formatarNumero(ex.total_volumes)}</td>
+          <td class="mono" style="text-align:right;"><strong>${formatarNumero(ex.total_pecas)}</strong></td>
+        </tr>
+      `
+        )
+        .join('');
+
+      janelaPDF.document.write(`
+        <!DOCTYPE html>
+        <html lang="pt-BR">
+        <head>
+          <meta charset="UTF-8" />
+          <title>Relatório Oficial FINART WMS — ${dataEmissao}</title>
+          <style>
+            @page { size: A4 landscape; margin: 12mm; }
+            body { font-family: 'Inter', Arial, sans-serif; color: #0f172a; font-size: 11px; margin: 0; }
+            .mono { font-family: 'Courier New', monospace; }
+            .header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #0f172a; padding-bottom: 10px; margin-bottom: 14px; }
+            .title { font-size: 18px; font-weight: 800; letter-spacing: -0.3px; }
+            .subtitle { font-size: 11px; color: #475569; margin-top: 3px; }
+            .kpi-strip { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 16px; }
+            .kpi-box { border: 1px solid #cbd5e1; padding: 8px 12px; border-radius: 4px; background: #f8fafc; }
+            .kpi-box span { display: block; font-size: 9.5px; text-transform: uppercase; color: #64748b; font-weight: 700; }
+            .kpi-box strong { font-size: 16px; font-family: 'Courier New', monospace; color: #0f172a; }
+            h2 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.4px; margin: 16px 0 8px; color: #0f172a; border-left: 4px solid #1d4ed8; padding-left: 8px; }
+            table { width: 100%; border-collapse: collapse; margin-bottom: 16px; }
+            th { background: #0f172a; color: #ffffff; font-size: 9.5px; text-transform: uppercase; padding: 6px 8px; text-align: left; }
+            td { padding: 6px 8px; border-bottom: 1px solid #cbd5e1; font-size: 10px; }
+            tr:nth-child(even) td { background: #f8fafc; }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <div>
+              <div class="title">FINART WMS ENTERPRISE — RELATÓRIO DE SALDOS E EXPEDIÇÕES</div>
+              <div class="subtitle">Controle Físico de Paletização, Rastreabilidade por Lote e Movimentação de Caminhões</div>
+            </div>
+            <div style="text-align:right; font-size:10.5px;">
+              <div><strong>EMISSÃO:</strong> ${dataEmissao}</div>
+              <div><strong>FILTRO CLIENTE:</strong> ${escaparHTML(estado.filtroCliente)}</div>
+            </div>
+          </div>
+
+          <div class="kpi-strip">
+            <div class="kpi-box">
+              <span>Lotes Ativos em Estoque</span>
+              <strong>${formatarNumero(lotes.length)}</strong>
+            </div>
+            <div class="kpi-box">
+              <span>Paletes em Estoque</span>
+              <strong>${formatarNumero(totalPaletes)} PLT</strong>
+            </div>
+            <div class="kpi-box">
+              <span>Volumes Totais</span>
+              <strong>${formatarNumero(totalVolumes)} VOL</strong>
+            </div>
+            <div class="kpi-box">
+              <span>Saldo Disponível (Peças)</span>
+              <strong>${formatarNumero(totalPecas)} PÇS</strong>
+            </div>
+          </div>
+
+          <h2>1. Posição Consolidada de Estoque Disponível (Por Lote e Item)</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>Etiqueta</th>
+                <th>Cliente</th>
+                <th>Item</th>
+                <th>Descrição do Produto</th>
+                <th>Pedido</th>
+                <th>Lote</th>
+                <th style="text-align:right;">Paletes</th>
+                <th style="text-align:right;">Volumes</th>
+                <th style="text-align:right;">Pçs/Vol</th>
+                <th style="text-align:right;">Saldo Total</th>
+                <th>Última Entrada</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${linhasEstoqueHTML || '<tr><td colspan="11">Sem lotes ativos no filtro atual.</td></tr>'}
+            </tbody>
+          </table>
+
+          <h2>2. Histórico de Expedições Rodoviárias (Caminhões Carregados)</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>Romaneio</th>
+                <th>Data/Hora Saída</th>
+                <th>Placa Caminhão</th>
+                <th>Motorista</th>
+                <th>Cliente / Destino</th>
+                <th style="text-align:right;">Paletes</th>
+                <th style="text-align:right;">Volumes</th>
+                <th style="text-align:right;">Peças Expedidas</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${linhasExpedicoesHTML || '<tr><td colspan="8">Nenhuma expedição registrada.</td></tr>'}
+            </tbody>
+          </table>
+
+          <script>
+            window.onload = function() {
+              setTimeout(function() { window.print(); }, 250);
+            };
+          <\/script>
+        </body>
+        </html>
+      `);
+      janelaPDF.document.close();
+    }
+
+    function imprimirRomaneioIndividual(idExpedicao) {
+      const ex = estado.expedicoes.find((x) => Number(x.id) === Number(idExpedicao));
+      if (!ex) return;
+
+      let itens = [];
+      try {
+        itens = typeof ex.itens_resumo === 'string' ? JSON.parse(ex.itens_resumo) : ex.itens_resumo || [];
+      } catch (e) {}
+
+      const win = window.open('', '_blank', 'width=960,height=720');
+      if (!win) return;
+
+      win.document.write(`
+        <!DOCTYPE html>
+        <html lang="pt-BR">
+        <head>
+          <meta charset="UTF-8" />
+          <title>Romaneio de Embarque ${escaparHTML(ex.codigo_romaneio)}</title>
+          <style>
+            @page { size: A4 portrait; margin: 14mm; }
+            body { font-family: Arial, sans-serif; color: #0f172a; font-size: 12px; }
+            .box { border: 1px solid #0f172a; padding: 14px; margin-bottom: 16px; }
+            table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+            th, td { border: 1px solid #cbd5e1; padding: 8px; text-align: left; font-size: 11px; }
+            th { background: #0f172a; color: #fff; text-transform: uppercase; }
+            .assinaturas { display: grid; grid-template-columns: 1fr 1fr; gap: 36px; margin-top: 56px; text-align: center; }
+            .linha-ass { border-top: 1px solid #0f172a; padding-top: 6px; font-weight: bold; }
+          </style>
+        </head>
+        <body>
+          <div class="box">
+            <h1 style="margin:0 0 6px; font-size:18px;">FINART WMS — ROMANEIO DE EXPEDIÇÃO E CARREGAMENTO</h1>
+            <div><strong>ROMANEIO:</strong> ${escaparHTML(ex.codigo_romaneio)} | <strong>DATA/HORA SAÍDA:</strong> ${formatarDataHora(ex.data_hora_saida)}</div>
+            <div style="margin-top:6px;"><strong>PLACA DO CAMINHÃO:</strong> ${escaparHTML(ex.placa_caminhao)} | <strong>MOTORISTA:</strong> ${escaparHTML(ex.motorista || '—')}</div>
+            <div style="margin-top:6px;"><strong>CLIENTE / DESTINO:</strong> ${escaparHTML(ex.cliente_destino || '—')}</div>
+            ${ex.observacoes ? `<div style="margin-top:6px;"><strong>OBSERVAÇÕES:</strong> ${escaparHTML(ex.observacoes)}</div>` : ''}
+          </div>
+
+          <table>
+            <thead>
+              <tr>
+                <th>Etiqueta</th>
+                <th>Item</th>
+                <th>Lote</th>
+                <th>Descrição do Produto</th>
+                <th>Paletes</th>
+                <th>Volumes</th>
+                <th>Total Peças</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${itens
+                .map(
+                  (i) => `
+                <tr>
+                  <td>${escaparHTML(i.cor_etiqueta || 'BRANCA')}</td>
+                  <td><strong>${escaparHTML(i.item)}</strong></td>
+                  <td><strong>${escaparHTML(i.lote)}</strong></td>
+                  <td>${escaparHTML(i.produto)}</td>
+                  <td>${formatarNumero(i.paletes)} PLT</td>
+                  <td>${formatarNumero(i.volumes)} VOL</td>
+                  <td><strong>${formatarNumero(i.pecas)} PÇS</strong></td>
+                </tr>
+              `
+                )
+                .join('')}
+            </tbody>
+          </table>
+
+          <div style="margin-top:16px; font-size:13px; font-weight:bold; text-align:right;">
+            TOTAL CARREGADO NO VEÍCULO: ${formatarNumero(ex.total_paletes)} PALETES | ${formatarNumero(ex.total_volumes)} VOLUMES | ${formatarNumero(ex.total_pecas)} PEÇAS
+          </div>
+
+          <div class="assinaturas">
+            <div class="linha-ass">Conferente de Expedição (FINART)</div>
+            <div class="linha-ass">Motorista / Transportador (${escaparHTML(ex.placa_caminhao)})</div>
+          </div>
+
+          <script>
+            window.onload = function() { setTimeout(function() { window.print(); }, 250); };
+          <\/script>
+        </body>
+        </html>
+      `);
+      win.document.close();
+    }
+
+    // Inicialização imediata
+    window.addEventListener('DOMContentLoaded', () => {
+      carregarDashboard();
+      iniciarStreamTempoReal();
+      setInterval(carregarDashboard, 15000);
+    });
   </script>
 </body>
 </html>

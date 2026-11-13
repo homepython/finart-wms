@@ -3,12 +3,13 @@ const sqlite3 = require('sqlite3').verbose();
 const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
+const crypto = require('crypto');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(cors());
-app.use(express.json({ limit: '15mb' }));
+app.use(express.json({ limit: '25mb' }));
 
 const publicDir = path.join(__dirname, 'public');
 app.use(express.static(publicDir));
@@ -19,7 +20,7 @@ app.get('/', (req, res) => {
   const p2 = path.join(__dirname, 'index.html');
   if (fs.existsSync(p1)) return res.sendFile(p1);
   if (fs.existsSync(p2)) return res.sendFile(p2);
-  res.send('Servidor FINART Online');
+  res.send('FINART WMS Enterprise Server Online');
 });
 
 app.get('/coletor.html', (req, res) => {
@@ -79,10 +80,20 @@ app.get('/api/stream', (req, res) => {
 });
 
 // ============================================================================
-// 2. MOTOR DE SANITIZAÇÃO, TIPAGEM ESTRITA E FUZZY MATCHING (BASE FIEL 80%)
+// 2. MOTOR DE SANITIZAÇÃO, TIPAGEM ESTRITA, CORES E FUZZY MATCHING (80%)
 // ============================================================================
+const CORES_ETIQUETA_VALIDAS = ['BRANCA', 'VERDE', 'AMARELA', 'ROSA', 'AZUL', 'LARANJA'];
+
+function sanitizarCorEtiqueta(cor = '') {
+  const c = String(cor || '').trim().toUpperCase();
+  return CORES_ETIQUETA_VALIDAS.includes(c) ? c : 'BRANCA';
+}
+
+function obterTimestampISO() {
+  return new Date().toISOString();
+}
+
 function sanitizarPedido(valor = '') {
-  // Remove datas antes de sanitizar pedido
   const semDatas = String(valor || '')
     .replace(/\b\d{1,2}\s*[\/.\-]\s*\d{1,2}\s*[\/.\-]\s*\d{2,4}\b/g, '')
     .trim();
@@ -115,7 +126,6 @@ function sanitizarLote(valor = '', pedidoFallback = '') {
 function validarInteiroPaletizacao(valor, min = 1, max = 50000) {
   if (valor === null || valor === undefined) return 0;
   const str = String(valor).trim();
-  // Rejeita imediatamente se contiver barra de data (ex: 12/11)
   if (str.includes('/')) return 0;
   const num = parseInt(str.replace(/\D/g, ''), 10);
   if (!Number.isInteger(num) || num < min || num > max) return 0;
@@ -126,13 +136,13 @@ function corrigirCodigoItem(itemBruto = '', produtoTexto = '') {
   let cod = String(itemBruto || '').trim().toUpperCase().replace(/\s+/g, '');
   const prod = String(produtoTexto || '').toUpperCase();
 
-  // Rejeita se o código de item parecer uma data
   if (/^\d{1,2}[\/.\-]\d{1,2}/.test(cod)) {
     cod = '';
   }
 
-  // Extrai código terminado em MP no final da descrição, se existir
-  const matchMP = prod.match(/\b((?:PT|FR|IT|CD|MP|EM)-[A-Z0-9]{3,8})MP\b/i) || prod.match(/\b((?:PT|FR)-\d{4,6})MP\b/i);
+  const matchMP =
+    prod.match(/\b((?:PT|FR|IT|CD|MP|EM)-[A-Z0-9]{3,8})MP\b/i) ||
+    prod.match(/\b((?:PT|FR)-\d{4,6})MP\b/i);
   if (matchMP) {
     cod = matchMP[1].toUpperCase();
   }
@@ -172,7 +182,6 @@ function distanciaLevenshtein(a = '', b = '') {
   return matriz[s2.length][s1.length];
 }
 
-// Retorna percentual de similaridade entre 0 e 100
 function calcularSimilaridadeFuzzy(a = '', b = '') {
   const s1 = String(a || '').toUpperCase().trim().replace(/\s+/g, ' ');
   const s2 = String(b || '').toUpperCase().trim().replace(/\s+/g, ' ');
@@ -184,7 +193,6 @@ function calcularSimilaridadeFuzzy(a = '', b = '') {
   return Math.max(0, Math.round(((maxLen - dist) / maxLen) * 100));
 }
 
-// Avalia um candidato de leitura contra um registro da Base Fiel (limiar >= 80%)
 function avaliarMatchBaseFiel(leitura, base) {
   if (!base) return null;
 
@@ -194,7 +202,6 @@ function avaliarMatchBaseFiel(leitura, base) {
   const simProduto = leitura.produto && base.produto ? calcularSimilaridadeFuzzy(leitura.produto, base.produto) : 0;
   const simCliente = leitura.cliente && base.cliente ? calcularSimilaridadeFuzzy(leitura.cliente, base.cliente) : 0;
 
-  // Calcula a maior similaridade de identificador chave (Lote, Pedido, Item) + composição
   const metricasValidas = [];
   if (simLote > 0) metricasValidas.push(simLote * 1.25);
   if (simItem > 0) metricasValidas.push(simItem * 1.25);
@@ -210,7 +217,6 @@ function avaliarMatchBaseFiel(leitura, base) {
 
   const scoreFinal = Math.max(melhorChave, mediaPonderada);
 
-  // Verifica se pertence ao mesmo contexto (Item igual ou >= 80% E Lote/Pedido >= 80%, ou Lote idêntico)
   const mesmoContexto =
     (simItem >= 80 && (simLote >= 75 || !leitura.lote)) ||
     (simLote >= 80 && (simItem >= 75 || !leitura.item)) ||
@@ -221,19 +227,19 @@ function avaliarMatchBaseFiel(leitura, base) {
 
   const divergencias = [];
   if (leitura.lote && leitura.lote !== base.lote) {
-    divergencias.push(`Lote lido "${leitura.lote}" → Base Fiel "${base.lote}"`);
+    divergencias.push(`Lote lido "${leitura.lote}" -> Base Fiel "${base.lote}"`);
   }
   if (leitura.pedido && leitura.pedido !== base.pedido) {
-    divergencias.push(`Pedido lido "${leitura.pedido}" → Base Fiel "${base.pedido}"`);
+    divergencias.push(`Pedido lido "${leitura.pedido}" -> Base Fiel "${base.pedido}"`);
   }
   if (leitura.item && leitura.item.toUpperCase() !== base.item.toUpperCase()) {
-    divergencias.push(`Item lido "${leitura.item}" → Base Fiel "${base.item}"`);
+    divergencias.push(`Item lido "${leitura.item}" -> Base Fiel "${base.item}"`);
   }
   if (leitura.cliente && leitura.cliente.toUpperCase() !== base.cliente.toUpperCase()) {
-    divergencias.push(`Cliente lido "${leitura.cliente}" → Base Fiel "${base.cliente}"`);
+    divergencias.push(`Cliente lido "${leitura.cliente}" -> Base Fiel "${base.cliente}"`);
   }
   if (leitura.qtd_pecas && Number(leitura.qtd_pecas) !== Number(base.qtd_pecas_por_volume)) {
-    divergencias.push(`Peças/Vol lido "${leitura.qtd_pecas}" → Base Fiel "${base.qtd_pecas_por_volume}"`);
+    divergencias.push(`Peças/Vol lido "${leitura.qtd_pecas}" -> Base Fiel "${base.qtd_pecas_por_volume}"`);
   }
 
   return {
@@ -245,12 +251,14 @@ function avaliarMatchBaseFiel(leitura, base) {
 }
 
 // ============================================================================
-// 3. BANCO DE DADOS SQLITE3 (AGNÓSTICO E AUTO-APRENDIZADO CONTÍNUO)
+// 3. BANCO DE DADOS SQLITE3 + MIGRAÇÕES + SNAPSHOT PERSISTENTE E EXPEDIÇÃO
 // ============================================================================
 const dbPath = path.join(__dirname, 'finart.db');
+const snapshotPath = path.join(__dirname, 'finart_snapshot.json');
+
 const db = new sqlite3.Database(dbPath, (err) => {
   if (err) console.error('Erro ao abrir banco:', err.message);
-  else console.log(`✅ Banco FINART conectado em: ${dbPath}`);
+  else console.log(`Banco FINART Enterprise conectado em: ${dbPath}`);
 });
 
 const SEMENTE_INICIAL_CATALOGO = {
@@ -259,42 +267,48 @@ const SEMENTE_INICIAL_CATALOGO = {
     produto: 'FRA 300 ML CÔNICO ATIV. R 28 410 TP PUSH PULL BRANCO 2515 -MP-FR-12588MP',
     padrao_volumes: 15,
     qtd_pecas: 220,
-    embalagem: 'CAIXA'
+    embalagem: 'CAIXA',
+    cor_padrao: 'BRANCA'
   },
   '719935': {
     cliente: 'FLORA PRODS DE HIG E LIM',
     produto: 'FRA 300 ML FLORA 24 410 PUSH PULL ROSA 22908/2 CPP PÓS DANOS SOL. MAR E',
     padrao_volumes: 20,
     qtd_pecas: 252,
-    embalagem: 'CAIXA'
+    embalagem: 'CAIXA',
+    cor_padrao: 'ROSA'
   },
   '721467': {
     cliente: 'FLORA PRODS DE HIG E LIM',
     produto: 'FRA 300 ML FLORA 24 410 PUSH PULL VERDE CLARO 04.001.04.0498 ATIVADOR',
     padrao_volumes: 20,
     qtd_pecas: 252,
-    embalagem: 'CAIXA'
+    embalagem: 'CAIXA',
+    cor_padrao: 'VERDE'
   },
   'PT-7908': {
     cliente: 'DEVINTEX COSMETICOS',
     produto: 'PT 1000 GRS REDONDO 3 ENTRADAS BRANCO 2515 PT-7908MP',
     padrao_volumes: 22,
     qtd_pecas: 59,
-    embalagem: 'SACARIA'
+    embalagem: 'SACARIA',
+    cor_padrao: 'BRANCA'
   },
   'PT-12236': {
     cliente: 'DEVINTEX COSMETICOS',
     produto: 'PT 300 GRS MAIONESE MATIZADOR NATURAL PT-12236MP',
     padrao_volumes: 15,
     qtd_pecas: 180,
-    embalagem: 'CAIXA'
+    embalagem: 'CAIXA',
+    cor_padrao: 'BRANCA'
   },
   'PT-12590': {
     cliente: 'DEVINTEX COSMETICOS',
     produto: 'PT 500 GRS REDONDO 3 ENTRADAS BRANCO 2515 PT-12590MP',
     padrao_volumes: 15,
     qtd_pecas: 120,
-    embalagem: 'CAIXA'
+    embalagem: 'CAIXA',
+    cor_padrao: 'AMARELA'
   }
 };
 
@@ -310,7 +324,8 @@ db.serialize(() => {
       produto TEXT NOT NULL,
       padrao_volumes_palete INTEGER NOT NULL,
       qtd_padrao_pecas INTEGER DEFAULT 0,
-      tipo_embalagem TEXT DEFAULT 'CAIXA'
+      tipo_embalagem TEXT DEFAULT 'CAIXA',
+      cor_padrao TEXT DEFAULT 'BRANCA'
     )
   `);
 
@@ -326,7 +341,29 @@ db.serialize(() => {
       qtd_volumes_palete INTEGER NOT NULL,
       saldo_total_pecas INTEGER NOT NULL,
       volume_etiqueta TEXT DEFAULT '',
-      data_hora DATETIME DEFAULT CURRENT_TIMESTAMP
+      cor_etiqueta TEXT DEFAULT 'BRANCA',
+      status TEXT DEFAULT 'ESTOQUE',
+      expedicao_id INTEGER DEFAULT NULL,
+      placa_caminhao TEXT DEFAULT '',
+      motorista TEXT DEFAULT '',
+      data_hora DATETIME DEFAULT CURRENT_TIMESTAMP,
+      data_hora_saida DATETIME DEFAULT NULL
+    )
+  `);
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS expedicoes_caminhoes (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      codigo_romaneio TEXT NOT NULL,
+      placa_caminhao TEXT NOT NULL,
+      motorista TEXT DEFAULT '',
+      cliente_destino TEXT DEFAULT '',
+      observacoes TEXT DEFAULT '',
+      total_paletes INTEGER NOT NULL,
+      total_volumes INTEGER NOT NULL,
+      total_pecas INTEGER NOT NULL,
+      itens_resumo TEXT DEFAULT '[]',
+      data_hora_saida DATETIME DEFAULT CURRENT_TIMESTAMP
     )
   `);
 
@@ -336,44 +373,217 @@ db.serialize(() => {
     )
   `);
 
+  // Migrações seguras para bancos existentes
+  const migracoes = [
+    `ALTER TABLE catalogo_itens ADD COLUMN cor_padrao TEXT DEFAULT 'BRANCA'`,
+    `ALTER TABLE paletes_bipados ADD COLUMN cor_etiqueta TEXT DEFAULT 'BRANCA'`,
+    `ALTER TABLE paletes_bipados ADD COLUMN status TEXT DEFAULT 'ESTOQUE'`,
+    `ALTER TABLE paletes_bipados ADD COLUMN expedicao_id INTEGER DEFAULT NULL`,
+    `ALTER TABLE paletes_bipados ADD COLUMN placa_caminhao TEXT DEFAULT ''`,
+    `ALTER TABLE paletes_bipados ADD COLUMN motorista TEXT DEFAULT ''`,
+    `ALTER TABLE paletes_bipados ADD COLUMN data_hora_saida DATETIME DEFAULT NULL`
+  ];
+  migracoes.forEach((sql) => {
+    db.run(sql, () => {});
+  });
+
   db.run(`CREATE INDEX IF NOT EXISTS idx_paletes_lote_item ON paletes_bipados (lote, item)`);
   db.run(`CREATE INDEX IF NOT EXISTS idx_paletes_item ON paletes_bipados (item)`);
+  db.run(`CREATE INDEX IF NOT EXISTS idx_paletes_status ON paletes_bipados (status)`);
 
   db.run(`DELETE FROM catalogo_itens WHERE item = 'PT-7808' OR item = 'PT7808'`);
   db.run(`UPDATE paletes_bipados SET item = 'PT-7908' WHERE item = 'PT-7808' OR item = 'PT7808'`);
+  db.run(`UPDATE paletes_bipados SET status = 'ESTOQUE' WHERE status IS NULL OR status = ''`);
+  db.run(`UPDATE paletes_bipados SET cor_etiqueta = 'BRANCA' WHERE cor_etiqueta IS NULL OR cor_etiqueta = ''`);
 
-  // Usa INSERT OR IGNORE para preservar padrões aprendidos/editados pelo operador
   const stmt = db.prepare(`
-    INSERT OR IGNORE INTO catalogo_itens (item, cliente, produto, padrao_volumes_palete, qtd_padrao_pecas, tipo_embalagem)
-    VALUES (?, ?, ?, ?, ?, ?)
+    INSERT OR IGNORE INTO catalogo_itens (item, cliente, produto, padrao_volumes_palete, qtd_padrao_pecas, tipo_embalagem, cor_padrao)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
   `);
   Object.entries(SEMENTE_INICIAL_CATALOGO).forEach(([cod, d]) => {
-    stmt.run(cod, d.cliente, d.produto, d.padrao_volumes, d.qtd_pecas, d.embalagem);
+    stmt.run(cod, d.cliente, d.produto, d.padrao_volumes, d.qtd_pecas, d.embalagem, d.cor_padrao);
   });
   stmt.finalize();
 
-  // Higieniza registros antigos que possam ter datas no campo volume_etiqueta ou pontos duplicados
-  db.all(`SELECT id, pedido, lote, item, produto, volume_etiqueta FROM paletes_bipados`, [], (err, rows) => {
-    if (!err && Array.isArray(rows) && rows.length > 0) {
-      rows.forEach((r) => {
-        const pedOk = sanitizarPedido(r.pedido || r.lote);
-        const loteOk = sanitizarLote(r.lote, pedOk);
-        const itemOk = corrigirCodigoItem(r.item, r.produto);
-        const volLimpo = /^\d{1,2}\/\d{1,2}(\/\d{2,4})?$/.test(String(r.volume_etiqueta || '').trim())
-          ? ''
-          : r.volume_etiqueta;
-        if (pedOk !== r.pedido || loteOk !== r.lote || itemOk !== r.item || volLimpo !== r.volume_etiqueta) {
-          db.run(
-            `UPDATE paletes_bipados SET pedido = ?, lote = ?, item = ?, volume_etiqueta = ? WHERE id = ?`,
-            [pedOk, loteOk, itemOk, volLimpo, r.id]
-          );
-        }
-      });
+  // Higieniza registros antigos e restaura de finart_snapshot.json se o banco estiver vazio no boot
+  db.get(`SELECT COUNT(*) AS total FROM paletes_bipados`, [], (errCnt, rowCnt) => {
+    if (!errCnt && rowCnt && rowCnt.total === 0 && fs.existsSync(snapshotPath)) {
+      try {
+        const snap = JSON.parse(fs.readFileSync(snapshotPath, 'utf8'));
+        restaurarPacoteCompletoNoBanco(snap, () => {
+          console.log('Snapshot local restaurado automaticamente na inicialização.');
+        });
+      } catch (e) {}
     }
   });
 });
 
-// Cálculo 100% dinâmico de padrão de volumes (baseado no histórico/catálogo do item ou cliente)
+// Gera pacote completo para Snapshot em Disco, Cloud Webhook ou Exportação de Backup
+function gerarPacoteBackupCompleto(callback) {
+  db.all(`SELECT * FROM catalogo_itens WHERE item != 'PT-7808' ORDER BY item ASC`, [], (e1, catalogo) => {
+    db.all(`SELECT * FROM paletes_bipados ORDER BY id ASC`, [], (e2, paletes) => {
+      db.all(`SELECT * FROM expedicoes_caminhoes ORDER BY id ASC`, [], (e3, expedicoes) => {
+        db.all(`SELECT id FROM ids_excluidos ORDER BY id ASC`, [], (e4, excluidos) => {
+          const dados = {
+            sistema: 'FINART_WMS_ENTERPRISE',
+            versao_schema: '3.0',
+            gerado_em: obterTimestampISO(),
+            catalogo: catalogo || [],
+            paletes: paletes || [],
+            expedicoes: expedicoes || [],
+            ids_excluidos: (excluidos || []).map((r) => r.id)
+          };
+          const jsonStr = JSON.stringify({
+            catalogo: dados.catalogo,
+            paletes: dados.paletes,
+            expedicoes: dados.expedicoes
+          });
+          dados.checksum = crypto.createHash('sha256').update(jsonStr).digest('hex').slice(0, 16);
+          callback(null, dados);
+        });
+      });
+    });
+  });
+}
+
+function salvarSnapshotPersistente() {
+  gerarPacoteBackupCompleto((err, pacote) => {
+    if (err || !pacote) return;
+    try {
+      fs.writeFileSync(snapshotPath, JSON.stringify(pacote, null, 2), 'utf8');
+    } catch (e) {}
+
+    // Se houver CLOUD_BACKUP_WEBHOOK configurado no Render, espelha na nuvem externa automaticamente
+    if (process.env.CLOUD_BACKUP_WEBHOOK) {
+      try {
+        fetch(process.env.CLOUD_BACKUP_WEBHOOK, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(pacote)
+        }).catch(() => {});
+      } catch (e) {}
+    }
+  });
+}
+
+function restaurarPacoteCompletoNoBanco(pacote, callback, ignorarExcluidos = false) {
+  if (!pacote || typeof pacote !== 'object') return callback(new Error('Pacote inválido'));
+
+  const catalogo = Array.isArray(pacote.catalogo) ? pacote.catalogo : [];
+  const paletes = Array.isArray(pacote.paletes)
+    ? pacote.paletes
+    : Array.isArray(pacote.historico)
+      ? pacote.historico
+      : [];
+  const expedicoes = Array.isArray(pacote.expedicoes) ? pacote.expedicoes : [];
+  const idsExcluidosPacote = Array.isArray(pacote.ids_excluidos) ? pacote.ids_excluidos : [];
+
+  db.serialize(() => {
+    db.all(`SELECT id FROM ids_excluidos`, [], (errEx, exRows) => {
+      const setExcluidos = new Set([
+        ...(ignorarExcluidos ? [] : (exRows || []).map((r) => Number(r.id))),
+        ...(ignorarExcluidos ? [] : idsExcluidosPacote.map(Number))
+      ]);
+
+      db.run(`BEGIN TRANSACTION`);
+
+      if (ignorarExcluidos) {
+        db.run(`DELETE FROM paletes_bipados`);
+        db.run(`DELETE FROM expedicoes_caminhoes`);
+        db.run(`DELETE FROM ids_excluidos`);
+      }
+
+      if (catalogo.length > 0) {
+        const stmtCat = db.prepare(`
+          INSERT OR REPLACE INTO catalogo_itens
+          (item, cliente, produto, padrao_volumes_palete, qtd_padrao_pecas, tipo_embalagem, cor_padrao)
+          VALUES (?, ?, ?, ?, ?, ?, ?)
+        `);
+        catalogo.forEach((c) => {
+          const cod = corrigirCodigoItem(c.item, c.produto);
+          if (cod && cod !== 'PT-7808') {
+            stmtCat.run(
+              cod,
+              String(c.cliente || '').toUpperCase().trim(),
+              String(c.produto || '').toUpperCase().trim(),
+              Number(c.padrao_volumes_palete) || 15,
+              Number(c.qtd_padrao_pecas) || 0,
+              c.tipo_embalagem || 'CAIXA',
+              sanitizarCorEtiqueta(c.cor_padrao)
+            );
+          }
+        });
+        stmtCat.finalize();
+      }
+
+      if (expedicoes.length > 0) {
+        const stmtExp = db.prepare(`
+          INSERT OR REPLACE INTO expedicoes_caminhoes
+          (id, codigo_romaneio, placa_caminhao, motorista, cliente_destino, observacoes, total_paletes, total_volumes, total_pecas, itens_resumo, data_hora_saida)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `);
+        expedicoes.forEach((ex) => {
+          stmtExp.run(
+            ex.id,
+            ex.codigo_romaneio || `ROM-${ex.id}`,
+            String(ex.placa_caminhao || '').toUpperCase(),
+            String(ex.motorista || '').toUpperCase(),
+            String(ex.cliente_destino || '').toUpperCase(),
+            ex.observacoes || '',
+            Number(ex.total_paletes) || 0,
+            Number(ex.total_volumes) || 0,
+            Number(ex.total_pecas) || 0,
+            typeof ex.itens_resumo === 'string' ? ex.itens_resumo : JSON.stringify(ex.itens_resumo || []),
+            ex.data_hora_saida || obterTimestampISO()
+          );
+        });
+        stmtExp.finalize();
+      }
+
+      const paletesValidos = paletes.filter((p) => !setExcluidos.has(Number(p.id)));
+      if (paletesValidos.length > 0) {
+        const stmtPal = db.prepare(`
+          INSERT OR REPLACE INTO paletes_bipados
+          (id, pedido, lote, item, cliente, produto, qtd_pecas_por_volume, qtd_volumes_palete, saldo_total_pecas, volume_etiqueta, cor_etiqueta, status, expedicao_id, placa_caminhao, motorista, data_hora, data_hora_saida)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `);
+        paletesValidos.forEach((p) => {
+          const pedOk = sanitizarPedido(p.pedido || p.lote);
+          const loteOk = sanitizarLote(p.lote, pedOk);
+          const itemOk = corrigirCodigoItem(p.item, p.produto);
+          const vols = Number(p.qtd_volumes_palete) || 15;
+          const pecas = Number(p.qtd_pecas_por_volume) || 0;
+          stmtPal.run(
+            p.id,
+            pedOk,
+            loteOk,
+            itemOk,
+            String(p.cliente || '').toUpperCase().trim(),
+            String(p.produto || '').toUpperCase().trim(),
+            pecas,
+            vols,
+            Number(p.saldo_total_pecas) || vols * pecas,
+            p.volume_etiqueta || '',
+            sanitizarCorEtiqueta(p.cor_etiqueta),
+            p.status === 'EXPEDIDO' ? 'EXPEDIDO' : 'ESTOQUE',
+            p.expedicao_id || null,
+            String(p.placa_caminhao || '').toUpperCase(),
+            String(p.motorista || '').toUpperCase(),
+            p.data_hora || obterTimestampISO(),
+            p.data_hora_saida || null
+          );
+        });
+        stmtPal.finalize();
+      }
+
+      db.run(`COMMIT`, (errCommit) => {
+        salvarSnapshotPersistente();
+        callback(errCommit, paletesValidos.length);
+      });
+    });
+  });
+}
+
 function calcularPadraoPaleteDinamico(item = '', cliente = '', padraoSalvoItem = 0, catalogoRows = []) {
   if (padraoSalvoItem && Number(padraoSalvoItem) > 0) {
     return Number(padraoSalvoItem);
@@ -394,7 +604,6 @@ function calcularPadraoPaleteDinamico(item = '', cliente = '', padraoSalvoItem =
       (c) => c.cliente.toUpperCase() === cliUpper && c.padrao_volumes_palete >= 10
     );
     if (itensDoCliente.length > 0) {
-      // Usa a moda (padrão mais frequente daquele cliente)
       const contagem = {};
       let melhorPadrao = itensDoCliente[0].padrao_volumes_palete;
       let maxFreq = 0;
@@ -421,11 +630,9 @@ function higienizarDatasERuidosOCR(textoBruto = '') {
 
   let limpo = String(textoBruto || '')
     .replace(/\r/g, '')
-    // Remove marcações de papelão/caixa e máquina
     .replace(/\bPA[A-Z]{2,5}\s*\d{4,9}\b/gi, ' ')
     .replace(/\bMQN\s*\d{1,4}\b/gi, ' ')
     .replace(/N[º°o]\s*PED\.?\s*CLIENTE\s*:?/gi, ' ')
-    // Remove blocos explícitos de DATA, FABRICAÇÃO, VALIDADE, VENCIMENTO, EMISSÃO e HORA
     .replace(
       /\b(?:DATA(?:\s*DE\s*FAB(?:RICA[CÇ][AÃ]O)?)?|DT\.?\s*FAB|FAB(?:RICA[CÇ][AÃ]O)?|VAL(?:IDADE)?|VENC(?:IMENTO)?|EMISS[AÃ]O)\s*[:.\-]?\s*(\d{1,2}\s*[\/.\-]\s*\d{1,2}(?:\s*[\/.\-]\s*\d{2,4})?)/gi,
       (m, d) => {
@@ -433,19 +640,15 @@ function higienizarDatasERuidosOCR(textoBruto = '') {
         return ' [DATA_REMOVIDA] ';
       }
     )
-    // Remove qualquer data completa DD/MM/AAAA, DD/MM/AA, DD.MM.AAAA ou AAAA-MM-DD
     .replace(/\b(0?[1-9]|[12]\d|3[01])\s*[\/.\-]\s*(0?[1-9]|1[0-2])\s*[\/.\-]\s*(20\d{2}|\d{2})\b/g, (m) => {
       datasEncontradas.push(m);
       return ' [DATA_REMOVIDA] ';
     })
-    // Remove datas parciais MM/AAAA (ex: 11/2026, 08/2025)
     .replace(/\b(0?[1-9]|1[0-2])\s*\/\s*(20[2-3]\d)\b/g, (m) => {
       datasEncontradas.push(m);
       return ' [DATA_REMOVIDA] ';
     })
-    // Remove horários HH:MM(:SS)
     .replace(/\b([01]?\d|2[0-3]):[0-5]\d(?::[0-5]\d)?\b/g, ' ')
-    // Normaliza cabeçalhos comuns de etiquetas logísticas com ruído de OCR
     .replace(/\b(?:OTD|0TD|QTO|QID|QT0|QTD\.|QUANT(?:IDADE)?)\s*:?/gi, 'QTD:')
     .replace(/\b(?:1TEM|lTEM|!TEM|ITEN|IIEM|\|TEM|TEM:|COD(?:IGO)?\s*ITEM)\s*:?/gi, 'ITEM:')
     .replace(/\b(?:PR0DUTO|PRODUT0|PRODUTO\.|DESCRI[CÇ][AÃ]O)\s*:?/gi, 'PRODUTO:')
@@ -460,23 +663,19 @@ function higienizarDatasERuidosOCR(textoBruto = '') {
   return { textoLimpo: limpo, datasEncontradas };
 }
 
-// Extrai o nome de QUALQUER cliente da etiqueta de forma 100% agnóstica
 function extrairClienteAgnostico(textoLimpo = '', clientesConhecidos = []) {
-  // 1. Verifica se algum cliente já conhecido no banco está escrito na etiqueta (exato ou fuzzy >= 85%)
   const textoUpper = textoLimpo.toUpperCase();
   for (const cliBanco of clientesConhecidos) {
     const nomeLimpo = String(cliBanco || '').toUpperCase().trim();
     if (nomeLimpo.length >= 3 && textoUpper.includes(nomeLimpo)) {
       return nomeLimpo;
     }
-    // Verifica primeira palavra forte do cliente (ex: >= 5 letras)
     const primeiraPalavra = nomeLimpo.split(/\s+/)[0];
     if (primeiraPalavra.length >= 6 && textoUpper.includes(primeiraPalavra)) {
       return nomeLimpo;
     }
   }
 
-  // 2. Extração explícita via campo CLIENTE: / DESTINATÁRIO: / EMPRESA:
   const mCliExplicito = textoLimpo.match(
     /CLIENTE\s*[:.\-]?\s*([A-ZÀ-Ú0-9][A-ZÀ-Ú0-9\s.\-&\/]{2,55}?)(?=\bPEDIDO|\bITEM|\bPRODUTO|\bLOTE|\bQTD|\bVOL|\bCNPJ|\[DATA_REMOVIDA\]|\n|$)/i
   );
@@ -487,7 +686,6 @@ function extrairClienteAgnostico(textoLimpo = '', clientesConhecidos = []) {
       .trim()
       .toUpperCase();
     if (candidato.length >= 3 && !/^(PEDIDO|ITEM|PRODUTO|LOTE|QTD|DATA|VOLUME)$/.test(candidato)) {
-      // Verifica se tem alta similaridade (>= 82%) com algum cliente já cadastrado para evitar duplicar por 1 letra
       for (const cliBanco of clientesConhecidos) {
         if (calcularSimilaridadeFuzzy(candidato, cliBanco) >= 82) {
           return cliBanco.toUpperCase();
@@ -497,7 +695,6 @@ function extrairClienteAgnostico(textoLimpo = '', clientesConhecidos = []) {
     }
   }
 
-  // 3. Heurística de Linha de Cabeçalho (para etiquetas onde o nome do cliente vem no topo sem o rótulo "CLIENTE:")
   const linhas = textoLimpo
     .split('\n')
     .map((l) => l.replace(/\[DATA_REMOVIDA\]/g, '').trim().toUpperCase())
@@ -508,7 +705,6 @@ function extrairClienteAgnostico(textoLimpo = '', clientesConhecidos = []) {
   for (let i = 0; i < Math.min(linhas.length, 4); i++) {
     const linha = linhas[i];
     if (palavrasReservadas.test(linha)) continue;
-    // Deve conter pelo menos uma palavra alfabética de >= 4 letras e não ser descrição de frasco/pote
     if (/[A-ZÀ-Ú]{4,}/.test(linha) && !/\b(GRS|ML|MG|KG|LITROS|REDONDO|CONICO|PUSH\s*PULL)\b/i.test(linha)) {
       const limpo = linha
         .replace(/[^A-ZÀ-Ú0-9\s.\-&]/gi, ' ')
@@ -538,7 +734,6 @@ app.post('/api/interpretar-bipe', (req, res) => {
     return res.status(400).json({ erro: 'Nenhuma imagem recebida.' });
   }
 
-  // ETAPA 1: Higienização estrita de Datas (DD/MM/AAAA, FAB, VAL) e ruídos
   const { textoLimpo: texto } = higienizarDatasERuidosOCR(`${brCode}\n${ocrRaw}`);
 
   let candidatosItem = [];
@@ -549,7 +744,6 @@ app.post('/api/interpretar-bipe', (req, res) => {
   let produtoLido = '';
   let volumeSequencialEtiqueta = '';
 
-  // 1. Código de Barras / QR estruturado (ITEM;LOTE;QTD)
   const mBarcode = texto.match(/([A-Z]{2,4}\s*-\s*[A-Z0-9]{3,8}|\d{5,8})\s*[;:,]\s*(\d{5,8})\s*[;:,]\s*(\d{1,5})/i);
   if (mBarcode) {
     candidatosItem.push(mBarcode[1].replace(/\s+/g, '').toUpperCase());
@@ -561,7 +755,6 @@ app.post('/api/interpretar-bipe', (req, res) => {
     qtdPorVolume = validarInteiroPaletizacao(mBarcode[3], 1, 25000);
   }
 
-  // 2. PEDIDO explícito
   const regexPedidos = /PEDIDO\s*[:.\-]?\s*(\d{4,6})(?!\.\d)/gi;
   let mPed;
   while ((mPed = regexPedidos.exec(texto)) !== null) {
@@ -572,7 +765,6 @@ app.post('/api/interpretar-bipe', (req, res) => {
     }
   }
 
-  // 3. LOTE explícito ou padrão numérico com sufixo .1 / .2
   const regexLotes = /(?:LOTE\s*[:.\-]?\s*(\d{4,6}\s*[\.,]\s*\d)|\b(00\d{4}\s*[\.,]\s*\d)\b)/gi;
   let mLote;
   while ((mLote = regexLotes.exec(texto)) !== null) {
@@ -583,7 +775,6 @@ app.post('/api/interpretar-bipe', (req, res) => {
     if (p) candidatosPedido.push(p);
   }
 
-  // 4. Padrão numérico de pedido (00XXXX)
   const regexZeroZero = /\b(00\d{4})\b/g;
   let mZZ;
   while ((mZZ = regexZeroZero.exec(texto)) !== null) {
@@ -592,7 +783,6 @@ app.post('/api/interpretar-bipe', (req, res) => {
     candidatosLote.push(sanitizarLote('', p));
   }
 
-  // 5. Códigos de item alfanuméricos (PT-XXXX, FR-XXXX, ou qualquer XX-XXXX)
   const regexTodosPrefixados = /\b([A-Z]{2,3}\s*-\s*\d{3,7})(?:MP)?\b/gi;
   let matchPref;
   while ((matchPref = regexTodosPrefixados.exec(texto)) !== null) {
@@ -600,7 +790,6 @@ app.post('/api/interpretar-bipe', (req, res) => {
     candidatosItem.push(c);
   }
 
-  // 6. Campo ITEM explícito (aceita códigos de qualquer cliente novo)
   const mItemExplicito = texto.match(/ITEM\s*[:.\-]?\s*([A-Z0-9\-]{3,15})/i);
   if (mItemExplicito) {
     const cand = mItemExplicito[1].trim().toUpperCase();
@@ -609,7 +798,6 @@ app.post('/api/interpretar-bipe', (req, res) => {
     }
   }
 
-  // 7. Códigos numéricos de 5 a 7 dígitos (excluindo anos e pedidos)
   const regexDigitosItem = /\b([1-9]\d{4,6})\b/g;
   let mDig;
   while ((mDig = regexDigitosItem.exec(texto)) !== null) {
@@ -619,7 +807,6 @@ app.post('/api/interpretar-bipe', (req, res) => {
     }
   }
 
-  // 8. Captura Multilinha da Descrição do Produto
   const mBlocoProduto =
     texto.match(/PRODUTO\s*[:.\-]?\s*([\s\S]{4,160}?)(?=\bQTD[:\s]|\bLOTE[:\s]|\bVOL|\bPESO|\[DATA_REMOVIDA\]|\b00\d{4}\.\d\b|$)/i) ||
     texto.match(/\b((?:PT|FRA|POTE|FRASCO|TAMPA|CAIXA)\s+\d{2,4}\s*(?:GRS|ML|G|KG)[\s\S]{4,140}?)(?=\bQTD[:\s]|\bLOTE[:\s]|\[DATA_REMOVIDA\]|\b00\d{4}\.\d\b|$)/i);
@@ -638,7 +825,6 @@ app.post('/api/interpretar-bipe', (req, res) => {
     if (prodLimpo.length >= 4) produtoLido = prodLimpo;
   }
 
-  // 9. Extração ESTRITA de Quantidade de Peças por Volume (Ignorando anos 2020-2035 e datas!)
   if (!qtdPorVolume) {
     const mQtdDireta = texto.match(/QTD\s*[:.\-\s]*(\d{1,5})\b(?!\s*[\/.\-]\s*\d)/i);
     if (mQtdDireta) {
@@ -656,14 +842,12 @@ app.post('/api/interpretar-bipe', (req, res) => {
     }
   }
 
-  // 10. Extração ESTRITA de Volume / Caixas (SOMENTE se explícito com VOL/CAIXAS, NUNCA aceitando datas!)
   const mVolInteiro = texto.match(/\b(?:VOL(?:UMES?)?|CAIXAS|SACOS|SACARIAS)\s*[:.\-]?\s*(\d{1,3})\b(?!\s*\/\s*\d{1,2}\s*\/)/i);
   if (mVolInteiro) {
     const vInt = validarInteiroPaletizacao(mVolInteiro[1], 1, 150);
     if (vInt > 0) qtdVolumesEtiqueta = vInt;
   }
 
-  // Sequencial de volume (ex: VOL: 112/160), exigindo que NÃO seja data (denominador > 12 quando sem rótulo VOL)
   const mVolSeq = texto.match(/\bVOL(?:UME)?\s*[:.\-]?\s*(\d{1,4}\s*\/\s*\d{1,4})\b/i);
   if (mVolSeq) {
     volumeSequencialEtiqueta = mVolSeq[1].replace(/\s+/g, '');
@@ -672,10 +856,9 @@ app.post('/api/interpretar-bipe', (req, res) => {
   db.all(`SELECT * FROM catalogo_itens WHERE item != 'PT-7808'`, [], (errCat, catalogoRows) => {
     if (errCat) return res.status(500).json({ erro: errCat.message });
 
-    db.all(`SELECT * FROM paletes_bipados ORDER BY id DESC LIMIT 250`, [], (errHist, histRows) => {
+    db.all(`SELECT * FROM paletes_bipados WHERE COALESCE(status, 'ESTOQUE') = 'ESTOQUE' ORDER BY id DESC LIMIT 250`, [], (errHist, histRows) => {
       const historico = histRows || [];
 
-      // Lista dinâmica de todos os clientes já conhecidos no banco
       const clientesConhecidos = [
         ...new Set([
           ...catalogoRows.map((c) => c.cliente),
@@ -685,7 +868,6 @@ app.post('/api/interpretar-bipe', (req, res) => {
 
       const clienteExtraidoEtiqueta = extrairClienteAgnostico(texto, clientesConhecidos);
 
-      // Escolha do código do item (Exato ou Fuzzy >= 85% contra o catálogo/histórico)
       let itemEscolhido = corrigirCodigoItem(candidatosItem[0] || '', produtoLido);
 
       for (const candBruto of candidatosItem) {
@@ -698,7 +880,6 @@ app.post('/api/interpretar-bipe', (req, res) => {
         }
       }
 
-      // Se não achou item pelo código mas leu a descrição do produto, tenta cruzar pela descrição (>= 80% fuzzy)
       if (!itemEscolhido && produtoLido.length >= 8) {
         for (const cat of catalogoRows) {
           if (calcularSimilaridadeFuzzy(produtoLido, cat.produto) >= 80 || cat.produto.toUpperCase().includes(produtoLido.slice(0, 15))) {
@@ -719,9 +900,6 @@ app.post('/api/interpretar-bipe', (req, res) => {
         }
       }
 
-      // ======================================================================
-      // MOTOR DE "BASE FIEL" COM FUZZY MATCHING (>= 80% DE SIMILARIDADE)
-      // ======================================================================
       const leituraBruta = {
         item: itemEscolhido,
         lote: loteLidoNaCamera,
@@ -731,7 +909,6 @@ app.post('/api/interpretar-bipe', (req, res) => {
         qtd_pecas: qtdPorVolume
       };
 
-      // Candidatos a Base Fiel: 1º a Base Fiel enviada pelo Coletor na sessão, depois os lotes ativos no banco
       const basesCandidatas = [];
       if (baseFielCliente && baseFielCliente.item && baseFielCliente.lote) {
         basesCandidatas.push(baseFielCliente);
@@ -762,24 +939,23 @@ app.post('/api/interpretar-bipe', (req, res) => {
             similaridade: melhorMatchFiel.similaridade,
             auto_corrigido: false,
             divergencias: melhorMatchFiel.divergencias,
-            mensagem: `Similaridade de ${melhorMatchFiel.similaridade}% com a Base Fiel ativa (${bf.item} • Lote ${bf.lote}). Foram detectados ruídos de OCR (${melhorMatchFiel.divergencias.join(' | ')}). Toque abaixo para Auto-Corrigir com 1 clique!`,
+            mensagem: `Similaridade de ${melhorMatchFiel.similaridade}% com a Base Fiel ativa (${bf.item} / Lote ${bf.lote}). Divergências detectadas: ${melhorMatchFiel.divergencias.join(' | ')}.`,
             item_lido: itemEscolhido || '(não lido)',
             lote_lido: loteLidoNaCamera || '(não lido)',
             pedido_lido: pedidoLidoNaCamera || '(não lido)',
             cliente_lido: clienteExtraidoEtiqueta || '(não lido)',
             produto_lido: produtoLido || '(não lido)',
             qtd_pecas_lida: qtdPorVolume || 0,
-            // Dados perfeitos da Base Fiel para substituição com 1 clique
             item_sugerido: bf.item,
             cliente_sugerido: bf.cliente,
             produto_sugerido: bf.produto,
             lote_sugerido: bf.lote,
             pedido_sugerido: bf.pedido,
             qtd_pecas_sugerida: bf.qtd_pecas_por_volume,
-            qtd_volumes_sugerida: bf.qtd_volumes_palete
+            qtd_volumes_sugerida: bf.qtd_volumes_palete,
+            cor_etiqueta_sugerida: bf.cor_etiqueta || 'BRANCA'
           };
         } else {
-          // 100% compatível com a Base Fiel: preenche campos ausentes automaticamente
           itemEscolhido = bf.item;
           loteFinal = bf.lote;
           pedidoFinal = bf.pedido;
@@ -796,14 +972,12 @@ app.post('/api/interpretar-bipe', (req, res) => {
       const ultimoPaletePadraoDoItem = paletesDesteItem.find((p) => p.qtd_volumes_palete >= 10) || ultimoPaleteDoItem;
       const refItemConfiavel = ultimoPaleteDoItem || catItem;
 
-      // Trava 422 contra leitura vazia
       if (!itemEscolhido && !pedidoFinal && !loteFinal && !produtoLido && !clienteExtraidoEtiqueta) {
         return res.status(422).json({
           erro: 'Etiqueta não identificada na imagem. Enquadre a etiqueta com boa iluminação e tente novamente.'
         });
       }
 
-      // Resolução 100% Agnóstica do Cliente (Prioriza Base Confiável do Item -> Etiqueta Lida -> Vazio p/ operador confirmar)
       const clienteFinal =
         (refItemConfiavel && refItemConfiavel.cliente) ||
         clienteExtraidoEtiqueta ||
@@ -835,6 +1009,10 @@ app.post('/api/interpretar-bipe', (req, res) => {
         catalogoRows
       );
       const tipoEmbalagem = (catItem && catItem.tipo_embalagem) || (padraoVolumes === 22 ? 'SACARIA' : 'CAIXA');
+      const corSugerida =
+        (ultimoPaleteDoItem && ultimoPaleteDoItem.cor_etiqueta) ||
+        (catItem && catItem.cor_padrao) ||
+        'BRANCA';
 
       res.json({
         item: itemEscolhido,
@@ -843,6 +1021,7 @@ app.post('/api/interpretar-bipe', (req, res) => {
         cliente: clienteFinal,
         produto: produtoFinal || (itemEscolhido ? `PRODUTO ITEM ${itemEscolhido}` : ''),
         tipoEmbalagem,
+        cor_etiqueta: sanitizarCorEtiqueta(corSugerida),
         volume_etiqueta: volumeSequencialEtiqueta,
         qtd_pecas_por_volume: qtdPecasFinal,
         qtd_volumes_sugerida: padraoVolumes,
@@ -854,7 +1033,7 @@ app.post('/api/interpretar-bipe', (req, res) => {
 });
 
 // ============================================================================
-// 5. SALVAR PALETE E GRAVAR NOVOS CLIENTES/ITENS NA BASE FIEL AUTOMATICAMENTE
+// 5. SALVAR PALETE COM MINI-ETIQUETA COLORIDA E TIMESTAMP PRECISO
 // ============================================================================
 app.post('/api/paletes', (req, res) => {
   const {
@@ -865,7 +1044,8 @@ app.post('/api/paletes', (req, res) => {
     produto,
     qtd_pecas_por_volume,
     qtd_volumes_palete,
-    volume_etiqueta
+    volume_etiqueta,
+    cor_etiqueta
   } = req.body;
 
   const volumes = validarInteiroPaletizacao(qtd_volumes_palete, 1, 500);
@@ -873,6 +1053,8 @@ app.post('/api/paletes', (req, res) => {
   const itemLimpo = corrigirCodigoItem(item, produto);
   const pedidoLimpo = sanitizarPedido(pedido || lote);
   const loteLimpo = sanitizarLote(lote, pedidoLimpo);
+  const corLimpa = sanitizarCorEtiqueta(cor_etiqueta);
+  const timestampEntrada = obterTimestampISO();
 
   db.get(`SELECT * FROM catalogo_itens WHERE UPPER(TRIM(item)) = ?`, [itemLimpo], (errCat, catRow) => {
     db.get(
@@ -902,8 +1084,6 @@ app.post('/api/paletes', (req, res) => {
         }
 
         const saldoTotalPecas = pecasUnificada * volumes;
-
-        // Aprende automaticamente qualquer novo cliente, item e padrão de paletização
         const padraoParaAprender =
           volumes >= 10
             ? volumes
@@ -912,29 +1092,28 @@ app.post('/api/paletes', (req, res) => {
               : volumes;
         const tipoEmb = padraoParaAprender === 22 ? 'SACARIA' : 'CAIXA';
 
-        // Garante que volume_etiqueta nunca salve uma data acidental
         const volEtiquetaLimpo = /^\d{1,2}\/\d{1,2}(\/\d{2,4})?$/.test(String(volume_etiqueta || '').trim())
           ? ''
           : String(volume_etiqueta || '').trim();
 
         db.serialize(() => {
           db.run(
-            `INSERT OR REPLACE INTO catalogo_itens (item, cliente, produto, padrao_volumes_palete, qtd_padrao_pecas, tipo_embalagem)
-             VALUES (?, ?, ?, ?, ?, ?)`,
-            [itemLimpo, clienteUnificado, produtoUnificado, padraoParaAprender, pecasUnificada, tipoEmb]
+            `INSERT OR REPLACE INTO catalogo_itens (item, cliente, produto, padrao_volumes_palete, qtd_padrao_pecas, tipo_embalagem, cor_padrao)
+             VALUES (?, ?, ?, ?, ?, ?, ?)`,
+            [itemLimpo, clienteUnificado, produtoUnificado, padraoParaAprender, pecasUnificada, tipoEmb, corLimpa]
           );
 
           db.run(
             `UPDATE paletes_bipados 
-             SET cliente = ?, produto = ?, qtd_pecas_por_volume = ?, saldo_total_pecas = qtd_volumes_palete * ?
-             WHERE UPPER(TRIM(lote)) = ? AND UPPER(TRIM(item)) = ?`,
-            [clienteUnificado, produtoUnificado, pecasUnificada, pecasUnificada, loteLimpo, itemLimpo]
+             SET cliente = ?, produto = ?, qtd_pecas_por_volume = ?, saldo_total_pecas = qtd_volumes_palete * ?, cor_etiqueta = ?
+             WHERE UPPER(TRIM(lote)) = ? AND UPPER(TRIM(item)) = ? AND COALESCE(status, 'ESTOQUE') = 'ESTOQUE'`,
+            [clienteUnificado, produtoUnificado, pecasUnificada, pecasUnificada, corLimpa, loteLimpo, itemLimpo]
           );
 
           db.run(
             `INSERT INTO paletes_bipados 
-            (pedido, lote, item, cliente, produto, qtd_pecas_por_volume, qtd_volumes_palete, saldo_total_pecas, volume_etiqueta)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            (pedido, lote, item, cliente, produto, qtd_pecas_por_volume, qtd_volumes_palete, saldo_total_pecas, volume_etiqueta, cor_etiqueta, status, data_hora)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'ESTOQUE', ?)`,
             [
               pedidoLimpo,
               loteLimpo,
@@ -944,10 +1123,14 @@ app.post('/api/paletes', (req, res) => {
               pecasUnificada,
               volumes,
               saldoTotalPecas,
-              volEtiquetaLimpo
+              volEtiquetaLimpo,
+              corLimpa,
+              timestampEntrada
             ],
             function (err) {
               if (err) return res.status(500).json({ erro: err.message });
+              salvarSnapshotPersistente();
+
               const baseFielAtualizada = {
                 id: this.lastID,
                 cliente: clienteUnificado,
@@ -957,7 +1140,9 @@ app.post('/api/paletes', (req, res) => {
                 produto: produtoUnificado,
                 qtd_volumes_palete: volumes,
                 qtd_pecas_por_volume: pecasUnificada,
-                saldo_total_pecas: saldoTotalPecas
+                saldo_total_pecas: saldoTotalPecas,
+                cor_etiqueta: corLimpa,
+                data_hora: timestampEntrada
               };
               notificarTelasInstantaneamente({
                 acao: 'novo_palete',
@@ -971,6 +1156,8 @@ app.post('/api/paletes', (req, res) => {
                 id: this.lastID,
                 pedido: pedidoLimpo,
                 lote: loteLimpo,
+                cor_etiqueta: corLimpa,
+                data_hora: timestampEntrada,
                 saldo_total_pecas: saldoTotalPecas,
                 base_fiel: baseFielAtualizada
               });
@@ -982,97 +1169,290 @@ app.post('/api/paletes', (req, res) => {
   });
 });
 
-// ============================================================================
-// 6. AUTO-RESTAURAÇÃO DE BACKUP BLINDADA CONTRA CONCORRÊNCIA
-// ============================================================================
-app.post('/api/restaurar-backup', (req, res) => {
-  if (restaurandoBackupMutex) {
-    return res.json({ restaurado: false, motivo: 'Restauração já em andamento.' });
+// Alteração rápida de cor da mini-etiqueta de um lote ou palete
+app.patch('/api/paletes/cor', (req, res) => {
+  const { id, lote, item, cor_etiqueta } = req.body;
+  const corLimpa = sanitizarCorEtiqueta(cor_etiqueta);
+
+  if (id) {
+    db.run(`UPDATE paletes_bipados SET cor_etiqueta = ? WHERE id = ?`, [corLimpa, Number(id)], function (err) {
+      if (err) return res.status(500).json({ erro: err.message });
+      salvarSnapshotPersistente();
+      notificarTelasInstantaneamente({ acao: 'cor_atualizada', id: Number(id), cor_etiqueta: corLimpa });
+      res.json({ sucesso: true, cor_etiqueta: corLimpa });
+    });
+    return;
   }
 
-  const { historico, catalogo } = req.body;
-  restaurandoBackupMutex = true;
-
-  db.serialize(() => {
-    if (Array.isArray(catalogo) && catalogo.length > 0) {
-      const stmtCat = db.prepare(`
-        INSERT OR IGNORE INTO catalogo_itens (item, cliente, produto, padrao_volumes_palete, qtd_padrao_pecas, tipo_embalagem)
-        VALUES (?, ?, ?, ?, ?, ?)
-      `);
-      catalogo.forEach((c) => {
-        const codCorrigido = corrigirCodigoItem(c.item, c.produto);
-        if (codCorrigido && codCorrigido !== 'PT-7808') {
-          stmtCat.run(
-            codCorrigido,
-            String(c.cliente || '').toUpperCase(),
-            String(c.produto || '').toUpperCase(),
-            c.padrao_volumes_palete || 15,
-            c.qtd_padrao_pecas || 0,
-            c.tipo_embalagem || 'CAIXA'
-          );
+  if (lote && item) {
+    db.serialize(() => {
+      db.run(
+        `UPDATE paletes_bipados SET cor_etiqueta = ? WHERE UPPER(TRIM(lote)) = ? AND UPPER(TRIM(item)) = ?`,
+        [corLimpa, String(lote).toUpperCase().trim(), String(item).toUpperCase().trim()]
+      );
+      db.run(
+        `UPDATE catalogo_itens SET cor_padrao = ? WHERE UPPER(TRIM(item)) = ?`,
+        [corLimpa, String(item).toUpperCase().trim()],
+        function (err) {
+          if (err) return res.status(500).json({ erro: err.message });
+          salvarSnapshotPersistente();
+          notificarTelasInstantaneamente({ acao: 'cor_lote_atualizada', lote, item, cor_etiqueta: corLimpa });
+          res.json({ sucesso: true, cor_etiqueta: corLimpa });
         }
-      });
-      stmtCat.finalize();
-    }
+      );
+    });
+    return;
+  }
 
-    if (!Array.isArray(historico) || historico.length === 0) {
-      restaurandoBackupMutex = false;
-      return res.json({ restaurado: false });
-    }
+  res.status(400).json({ erro: 'Informe id ou lote+item para alterar a cor da etiqueta.' });
+});
 
-    db.get(`SELECT COUNT(*) AS total FROM paletes_bipados`, [], (err, row) => {
-      if (err || (row && row.total > 0)) {
-        restaurandoBackupMutex = false;
-        return res.json({ restaurado: false });
+// ============================================================================
+// 6. FLUXO DE EXPEDIÇÃO / CARREGAMENTO DE CAMINHÃO (DEDUÇÃO DE ESTOQUE + TIMESTAMP)
+// ============================================================================
+app.post('/api/expedicoes/carregar', (req, res) => {
+  const {
+    ids_paletes,
+    placa_caminhao,
+    motorista,
+    cliente_destino,
+    codigo_romaneio,
+    observacoes
+  } = req.body;
+
+  const placaLimpa = String(placa_caminhao || '').trim().toUpperCase();
+  const motoristaLimpo = String(motorista || '').trim().toUpperCase();
+  const destinoLimpo = String(cliente_destino || '').trim().toUpperCase();
+  const obsLimpa = String(observacoes || '').trim();
+  const dataSaidaISO = obterTimestampISO();
+
+  if (!placaLimpa) {
+    return res.status(400).json({ erro: 'Informe a Placa do Caminhão / Veículo para registrar a expedição.' });
+  }
+
+  if (!Array.isArray(ids_paletes) || ids_paletes.length === 0) {
+    return res.status(400).json({ erro: 'Selecione ao menos 1 palete em estoque para carregar no caminhão.' });
+  }
+
+  const idsNum = ids_paletes.map(Number).filter(Boolean);
+  const placeholders = idsNum.map(() => '?').join(',');
+
+  db.all(
+    `SELECT * FROM paletes_bipados WHERE id IN (${placeholders}) AND COALESCE(status, 'ESTOQUE') = 'ESTOQUE'`,
+    idsNum,
+    (errSel, rows) => {
+      if (errSel) return res.status(500).json({ erro: errSel.message });
+      if (!rows || rows.length === 0) {
+        return res.status(400).json({ erro: 'Os paletes selecionados já foram expedidos ou não estão disponíveis.' });
       }
 
-      db.all(`SELECT id FROM ids_excluidos`, [], (errEx, excluidosRows) => {
-        const setExcluidos = new Set((excluidosRows || []).map((r) => Number(r.id)));
-        const validos = historico.filter((p) => !setExcluidos.has(Number(p.id)));
+      const totalPaletes = rows.length;
+      const totalVolumes = rows.reduce((acc, r) => acc + Number(r.qtd_volumes_palete || 0), 0);
+      const totalPecas = rows.reduce((acc, r) => acc + Number(r.saldo_total_pecas || 0), 0);
+      const clienteAuto = destinoLimpo || rows[0].cliente || '';
 
-        if (validos.length === 0) {
-          restaurandoBackupMutex = false;
-          return res.json({ restaurado: false });
-        }
-
-        db.run(`BEGIN TRANSACTION`);
-        const stmt = db.prepare(`
-          INSERT OR IGNORE INTO paletes_bipados
-          (id, pedido, lote, item, cliente, produto, qtd_pecas_por_volume, qtd_volumes_palete, saldo_total_pecas, volume_etiqueta, data_hora)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `);
-        validos.forEach((p) => {
-          const pedOk = sanitizarPedido(p.pedido || p.lote);
-          const loteOk = sanitizarLote(p.lote, pedOk);
-          const itemOk = corrigirCodigoItem(p.item, p.produto);
-          stmt.run(
-            p.id,
-            pedOk,
-            loteOk,
-            itemOk,
-            String(p.cliente || '').toUpperCase(),
-            String(p.produto || '').toUpperCase(),
-            p.qtd_pecas_por_volume,
-            p.qtd_volumes_palete,
-            p.saldo_total_pecas,
-            p.volume_etiqueta || '',
-            p.data_hora
-          );
-        });
-        stmt.finalize(() => {
-          db.run(`COMMIT`, () => {
-            restaurandoBackupMutex = false;
-            notificarTelasInstantaneamente({ acao: 'backup_restaurado' });
-            res.json({ restaurado: true, quantidade: validos.length });
+      // Agrupa resumo por Item + Lote para o Romaneio de Expedição
+      const mapaResumo = new Map();
+      rows.forEach((r) => {
+        const ch = `${r.item}__${r.lote}`;
+        if (!mapaResumo.has(ch)) {
+          mapaResumo.set(ch, {
+            item: r.item,
+            lote: r.lote,
+            pedido: r.pedido,
+            cliente: r.cliente,
+            produto: r.produto,
+            cor_etiqueta: r.cor_etiqueta || 'BRANCA',
+            paletes: 0,
+            volumes: 0,
+            pecas: 0
           });
-        });
+        }
+        const g = mapaResumo.get(ch);
+        g.paletes += 1;
+        g.volumes += Number(r.qtd_volumes_palete);
+        g.pecas += Number(r.saldo_total_pecas);
+      });
+
+      const resumoArray = Array.from(mapaResumo.values());
+      const romaneioFinal =
+        String(codigo_romaneio || '').trim().toUpperCase() ||
+        `EXP-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}-${String(Date.now()).slice(-4)}`;
+
+      db.serialize(() => {
+        db.run(`BEGIN TRANSACTION`);
+        db.run(
+          `INSERT INTO expedicoes_caminhoes
+           (codigo_romaneio, placa_caminhao, motorista, cliente_destino, observacoes, total_paletes, total_volumes, total_pecas, itens_resumo, data_hora_saida)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          [
+            romaneioFinal,
+            placaLimpa,
+            motoristaLimpo,
+            clienteAuto,
+            obsLimpa,
+            totalPaletes,
+            totalVolumes,
+            totalPecas,
+            JSON.stringify(resumoArray),
+            dataSaidaISO
+          ],
+          function (errIns) {
+            if (errIns) {
+              db.run(`ROLLBACK`);
+              return res.status(500).json({ erro: errIns.message });
+            }
+
+            const expedicaoId = this.lastID;
+            const idsEfetivos = rows.map((r) => r.id);
+            const phEfetivos = idsEfetivos.map(() => '?').join(',');
+
+            db.run(
+              `UPDATE paletes_bipados
+               SET status = 'EXPEDIDO',
+                   expedicao_id = ?,
+                   placa_caminhao = ?,
+                   motorista = ?,
+                   data_hora_saida = ?
+               WHERE id IN (${phEfetivos})`,
+              [expedicaoId, placaLimpa, motoristaLimpo, dataSaidaISO, ...idsEfetivos],
+              (errUpd) => {
+                if (errUpd) {
+                  db.run(`ROLLBACK`);
+                  return res.status(500).json({ erro: errUpd.message });
+                }
+
+                db.run(`COMMIT`, () => {
+                  salvarSnapshotPersistente();
+                  notificarTelasInstantaneamente({
+                    acao: 'nova_expedicao',
+                    expedicao_id: expedicaoId,
+                    placa: placaLimpa,
+                    total_paletes: totalPaletes,
+                    total_pecas: totalPecas
+                  });
+                  res.json({
+                    sucesso: true,
+                    expedicao_id: expedicaoId,
+                    codigo_romaneio: romaneioFinal,
+                    placa_caminhao: placaLimpa,
+                    motorista: motoristaLimpo,
+                    data_hora_saida: dataSaidaISO,
+                    total_paletes: totalPaletes,
+                    total_volumes: totalVolumes,
+                    total_pecas: totalPecas
+                  });
+                });
+              }
+            );
+          }
+        );
+      });
+    }
+  );
+});
+
+// Estornar uma expedição (devolve os paletes do caminhão para o estoque disponível)
+app.post('/api/expedicoes/:id/estornar', (req, res) => {
+  const expId = Number(req.params.id);
+  if (!expId) return res.status(400).json({ erro: 'ID de expedição inválido.' });
+
+  db.serialize(() => {
+    db.run(`BEGIN TRANSACTION`);
+    db.run(
+      `UPDATE paletes_bipados
+       SET status = 'ESTOQUE', expedicao_id = NULL, placa_caminhao = '', motorista = '', data_hora_saida = NULL
+       WHERE expedicao_id = ?`,
+      [expId]
+    );
+    db.run(`DELETE FROM expedicoes_caminhoes WHERE id = ?`, [expId], function (err) {
+      if (err) {
+        db.run(`ROLLBACK`);
+        return res.status(500).json({ erro: err.message });
+      }
+      db.run(`COMMIT`, () => {
+        salvarSnapshotPersistente();
+        notificarTelasInstantaneamente({ acao: 'expedicao_estornada', expedicao_id: expId });
+        res.json({ sucesso: true });
       });
     });
   });
 });
 
 // ============================================================================
-// 7. DASHBOARD CONSOLIDADO + HISTÓRICO + CATÁLOGO + CLIENTES DINÂMICOS
+// 7. FERRAMENTA CORPORATIVA DE BACKUP (EXPORTAR / IMPORTAR / AUTO-RESTORE)
+// ============================================================================
+app.get('/api/backup/exportar', (req, res) => {
+  gerarPacoteBackupCompleto((err, pacote) => {
+    if (err) return res.status(500).json({ erro: 'Falha ao gerar backup.' });
+    const dataStr = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+    res.setHeader('Content-Type', 'application/json; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="FINART_WMS_BACKUP_${dataStr}.json"`);
+    res.send(JSON.stringify(pacote, null, 2));
+  });
+});
+
+app.post('/api/backup/importar', (req, res) => {
+  const pacote = req.body;
+  if (!pacote || (!Array.isArray(pacote.paletes) && !Array.isArray(pacote.catalogo) && !Array.isArray(pacote.historico))) {
+    return res.status(400).json({ erro: 'Arquivo de backup inválido ou corrompido.' });
+  }
+
+  restaurarPacoteCompletoNoBanco(pacote, (err, qtdRestaurada) => {
+    if (err) return res.status(500).json({ erro: err.message });
+    versaoExclusao = Date.now();
+    notificarTelasInstantaneamente({ acao: 'backup_importado', quantidade: qtdRestaurada });
+    res.json({
+      sucesso: true,
+      restaurado: true,
+      quantidade_paletes: qtdRestaurada
+    });
+  }, true);
+});
+
+app.post('/api/restaurar-backup', (req, res) => {
+  if (restaurandoBackupMutex) {
+    return res.json({ restaurado: false, motivo: 'Restauração já em andamento.' });
+  }
+
+  const { historico, expedidos, expedicoes, catalogo } = req.body;
+  restaurandoBackupMutex = true;
+
+  db.get(`SELECT COUNT(*) AS total FROM paletes_bipados`, [], (err, row) => {
+    if (err || (row && row.total > 0)) {
+      restaurandoBackupMutex = false;
+      return res.json({ restaurado: false });
+    }
+
+    const todosPaletes = [
+      ...(Array.isArray(historico) ? historico : []),
+      ...(Array.isArray(expedidos) ? expedidos : [])
+    ];
+
+    if (todosPaletes.length === 0 && (!Array.isArray(catalogo) || catalogo.length === 0)) {
+      restaurandoBackupMutex = false;
+      return res.json({ restaurado: false });
+    }
+
+    restaurarPacoteCompletoNoBanco(
+      {
+        catalogo: catalogo || [],
+        paletes: todosPaletes,
+        expedicoes: expedicoes || []
+      },
+      (errRest, qtd) => {
+        restaurandoBackupMutex = false;
+        if (errRest || !qtd) return res.json({ restaurado: false });
+        notificarTelasInstantaneamente({ acao: 'backup_restaurado' });
+        res.json({ restaurado: true, quantidade: qtd });
+      },
+      false
+    );
+  });
+});
+
+// ============================================================================
+// 8. DASHBOARD CORPORATIVO (ESTOQUE ATIVO + HISTÓRICO + EXPEDIÇÕES + CATÁLOGO)
 // ============================================================================
 app.get('/api/dashboard', (req, res) => {
   res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
@@ -1085,28 +1465,55 @@ app.get('/api/dashboard', (req, res) => {
       MAX(cliente) AS cliente,
       MAX(produto) AS produto,
       MAX(qtd_pecas_por_volume) AS qtd_pecas_por_volume,
+      MAX(COALESCE(cor_etiqueta, 'BRANCA')) AS cor_etiqueta,
       COUNT(id) AS total_paletes,
       SUM(qtd_volumes_palete) AS total_caixas_ou_sacaria,
       SUM(saldo_total_pecas) AS saldo_total_pecas,
+      MIN(data_hora) AS primeira_entrada,
       MAX(data_hora) AS ultima_atualizacao
     FROM paletes_bipados
+    WHERE COALESCE(status, 'ESTOQUE') = 'ESTOQUE'
     GROUP BY UPPER(TRIM(lote)), UPPER(TRIM(item))
     ORDER BY MAX(id) DESC
   `;
 
-  const queryHistorico = `SELECT * FROM paletes_bipados ORDER BY id DESC LIMIT 400`;
+  const queryHistoricoEstoque = `
+    SELECT * FROM paletes_bipados
+    WHERE COALESCE(status, 'ESTOQUE') = 'ESTOQUE'
+    ORDER BY id DESC LIMIT 500
+  `;
+
+  const queryExpedidos = `
+    SELECT * FROM paletes_bipados
+    WHERE status = 'EXPEDIDO'
+    ORDER BY data_hora_saida DESC, id DESC LIMIT 500
+  `;
+
+  const queryExpedicoes = `
+    SELECT * FROM expedicoes_caminhoes
+    ORDER BY id DESC LIMIT 200
+  `;
+
   const queryCatalogo = `SELECT * FROM catalogo_itens WHERE item != 'PT-7808' ORDER BY item ASC`;
 
   db.all(queryConsolidado, [], (err, consolidado) => {
     if (err) return res.status(500).json({ erro: err.message });
-    db.all(queryHistorico, [], (err2, historico) => {
+    db.all(queryHistoricoEstoque, [], (err2, historico) => {
       if (err2) return res.status(500).json({ erro: err2.message });
-      db.all(queryCatalogo, [], (err3, catalogo) => {
-        res.json({
-          consolidado: consolidado || [],
-          historico: historico || [],
-          catalogo: catalogo || [],
-          versaoExclusao
+      db.all(queryExpedidos, [], (err3, expedidos) => {
+        if (err3) return res.status(500).json({ erro: err3.message });
+        db.all(queryExpedicoes, [], (err4, expedicoes) => {
+          if (err4) return res.status(500).json({ erro: err4.message });
+          db.all(queryCatalogo, [], (err5, catalogo) => {
+            res.json({
+              consolidado: consolidado || [],
+              historico: historico || [],
+              expedidos: expedidos || [],
+              expedicoes: expedicoes || [],
+              catalogo: catalogo || [],
+              versaoExclusao
+            });
+          });
         });
       });
     });
@@ -1114,11 +1521,11 @@ app.get('/api/dashboard', (req, res) => {
 });
 
 // ============================================================================
-// 8. EDITAR PALETE E ATUALIZAR PADRÃO NA BASE FIEL / CATÁLOGO
+// 9. EDITAR E EXCLUIR PALETES
 // ============================================================================
 app.put('/api/paletes/:id', (req, res) => {
   const { id } = req.params;
-  const { lote, pedido, cliente, item, produto, qtd_pecas_por_volume, qtd_volumes_palete, volume_etiqueta } = req.body;
+  const { lote, pedido, cliente, item, produto, qtd_pecas_por_volume, qtd_volumes_palete, volume_etiqueta, cor_etiqueta } = req.body;
 
   const pecasUn = validarInteiroPaletizacao(qtd_pecas_por_volume, 1, 100000);
   const volumes = validarInteiroPaletizacao(qtd_volumes_palete, 1, 500);
@@ -1129,13 +1536,14 @@ app.put('/api/paletes/:id', (req, res) => {
   const itemLimpo = corrigirCodigoItem(item, produto);
   const clienteLimpo = String(cliente || '').trim().toUpperCase();
   const produtoLimpo = String(produto || '').trim().toUpperCase();
+  const corLimpa = sanitizarCorEtiqueta(cor_etiqueta);
   const novoSaldoTotal = pecasUn * volumes;
 
   db.serialize(() => {
     db.run(
       `UPDATE paletes_bipados 
        SET lote = ?, pedido = ?, cliente = ?, item = ?, produto = ?, 
-           qtd_pecas_por_volume = ?, qtd_volumes_palete = ?, saldo_total_pecas = ?, volume_etiqueta = ?
+           qtd_pecas_por_volume = ?, qtd_volumes_palete = ?, saldo_total_pecas = ?, volume_etiqueta = ?, cor_etiqueta = ?
        WHERE id = ?`,
       [
         loteLimpo,
@@ -1147,6 +1555,7 @@ app.put('/api/paletes/:id', (req, res) => {
         volumes,
         novoSaldoTotal,
         volume_etiqueta || '',
+        corLimpa,
         id
       ],
       function (err) {
@@ -1154,19 +1563,20 @@ app.put('/api/paletes/:id', (req, res) => {
 
         db.run(
           `UPDATE paletes_bipados 
-           SET cliente = ?, produto = ?, qtd_pecas_por_volume = ?, saldo_total_pecas = qtd_volumes_palete * ?
-           WHERE UPPER(TRIM(lote)) = ? AND UPPER(TRIM(item)) = ?`,
-          [clienteLimpo, produtoLimpo, pecasUn, pecasUn, loteLimpo, itemLimpo]
+           SET cliente = ?, produto = ?, qtd_pecas_por_volume = ?, saldo_total_pecas = qtd_volumes_palete * ?, cor_etiqueta = ?
+           WHERE UPPER(TRIM(lote)) = ? AND UPPER(TRIM(item)) = ? AND COALESCE(status, 'ESTOQUE') = 'ESTOQUE'`,
+          [clienteLimpo, produtoLimpo, pecasUn, pecasUn, corLimpa, loteLimpo, itemLimpo]
         );
 
         const padraoCorrigido = volumes >= 10 ? volumes : 15;
         const tipoEmb = padraoCorrigido === 22 ? 'SACARIA' : 'CAIXA';
 
         db.run(
-          `INSERT OR REPLACE INTO catalogo_itens (item, cliente, produto, padrao_volumes_palete, qtd_padrao_pecas, tipo_embalagem)
-           VALUES (?, ?, ?, ?, ?, ?)`,
-          [itemLimpo, clienteLimpo, produtoLimpo, padraoCorrigido, pecasUn, tipoEmb],
+          `INSERT OR REPLACE INTO catalogo_itens (item, cliente, produto, padrao_volumes_palete, qtd_padrao_pecas, tipo_embalagem, cor_padrao)
+           VALUES (?, ?, ?, ?, ?, ?, ?)`,
+          [itemLimpo, clienteLimpo, produtoLimpo, padraoCorrigido, pecasUn, tipoEmb, corLimpa],
           () => {
+            salvarSnapshotPersistente();
             notificarTelasInstantaneamente({ acao: 'palete_editado', id: Number(id), item: itemLimpo, lote: loteLimpo });
             res.json({ sucesso: true, saldo_recalculado: novoSaldoTotal });
           }
@@ -1176,9 +1586,6 @@ app.put('/api/paletes/:id', (req, res) => {
   });
 });
 
-// ============================================================================
-// 9. EXCLUSÃO INDIVIDUAL E EM LOTE
-// ============================================================================
 app.post('/api/paletes/excluir-multiplos', (req, res) => {
   const { ids, todos } = req.body;
   versaoExclusao = Date.now();
@@ -1190,8 +1597,9 @@ app.post('/api/paletes/excluir-multiplos', (req, res) => {
         (rows || []).forEach((r) => stmt.run(r.id));
         stmt.finalize();
 
-        db.run(`DELETE FROM paletes_bipados`, [], function (errDel) {
+        db.run(`DELETE FROM paletes_bipados WHERE COALESCE(status, 'ESTOQUE') = 'ESTOQUE'`, [], function (errDel) {
           if (errDel) return res.status(500).json({ erro: errDel.message });
+          salvarSnapshotPersistente();
           notificarTelasInstantaneamente({ acao: 'exclusao_massa' });
           res.json({ sucesso: true, excluidos: this.changes, versaoExclusao });
         });
@@ -1213,6 +1621,7 @@ app.post('/api/paletes/excluir-multiplos', (req, res) => {
     const placeholders = idsNum.map(() => '?').join(',');
     db.run(`DELETE FROM paletes_bipados WHERE id IN (${placeholders})`, idsNum, function (err) {
       if (err) return res.status(500).json({ erro: err.message });
+      salvarSnapshotPersistente();
       notificarTelasInstantaneamente({ acao: 'exclusao_multipla', excluidos: this.changes });
       res.json({ sucesso: true, excluidos: this.changes, versaoExclusao });
     });
@@ -1227,6 +1636,7 @@ app.delete('/api/paletes/:id', (req, res) => {
     db.run(`INSERT OR IGNORE INTO ids_excluidos (id) VALUES (?)`, [idNum]);
     db.run(`DELETE FROM paletes_bipados WHERE id = ?`, [idNum], function (err) {
       if (err) return res.status(500).json({ erro: err.message });
+      salvarSnapshotPersistente();
       notificarTelasInstantaneamente({ acao: 'exclusao_unica', id: idNum });
       res.json({ sucesso: true, versaoExclusao });
     });
@@ -1234,5 +1644,5 @@ app.delete('/api/paletes/:id', (req, res) => {
 });
 
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`🚀 Servidor FINART WMS rodando na porta ${PORT}`);
+  console.log(`Servidor FINART WMS Enterprise rodando na porta ${PORT}`);
 });
