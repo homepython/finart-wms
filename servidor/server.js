@@ -82,11 +82,27 @@ app.get('/api/stream', (req, res) => {
 // ============================================================================
 // 2. MOTOR DE SANITIZAÇÃO, TIPAGEM ESTRITA, CORES E FUZZY MATCHING (80%)
 // ============================================================================
-const CORES_ETIQUETA_VALIDAS = ['BRANCA', 'VERDE', 'AMARELA', 'ROSA', 'AZUL', 'LARANJA'];
+const MAPA_CORES_LEGADO_HEX = {
+  BRANCA: '#FFFFFF',
+  VERDE: '#10B981',
+  AMARELA: '#EAB308',
+  ROSA: '#EC4899',
+  AZUL: '#3B82F6',
+  LARANJA: '#F97316',
+  ROXA: '#8B5CF6',
+  VERMELHA: '#EF4444',
+  CIANO: '#06B6D4'
+};
 
 function sanitizarCorEtiqueta(cor = '') {
   const c = String(cor || '').trim().toUpperCase();
-  return CORES_ETIQUETA_VALIDAS.includes(c) ? c : 'BRANCA';
+  if (!c) return '#FFFFFF';
+  if (MAPA_CORES_LEGADO_HEX[c]) return MAPA_CORES_LEGADO_HEX[c];
+  if (/^#[0-9A-F]{6}$/.test(c)) return c;
+  if (/^#[0-9A-F]{3}$/.test(c)) {
+    return '#' + c[1] + c[1] + c[2] + c[2] + c[3] + c[3];
+  }
+  return '#FFFFFF';
 }
 
 function obterTimestampISO() {
@@ -1205,6 +1221,80 @@ app.patch('/api/paletes/cor', (req, res) => {
   }
 
   res.status(400).json({ erro: 'Informe id ou lote+item para alterar a cor da etiqueta.' });
+});
+
+// Edição rigorosa Master-Detail de um Lote inteiro no Modal de Controle Total
+app.put('/api/lotes/controle-total', (req, res) => {
+  const {
+    lote_original,
+    item_original,
+    cliente,
+    item,
+    produto,
+    pedido,
+    lote,
+    qtd_pecas_por_volume,
+    cor_etiqueta
+  } = req.body;
+
+  const loteOrig = String(lote_original || '').trim().toUpperCase();
+  const itemOrig = String(item_original || '').trim().toUpperCase();
+  const pecasUn = validarInteiroPaletizacao(qtd_pecas_por_volume, 1, 100000);
+
+  if (!loteOrig || !itemOrig || pecasUn <= 0) {
+    return res.status(400).json({ erro: 'Dados de lote/item ou quantidade de peças por volume inválidos.' });
+  }
+
+  const novoItem = corrigirCodigoItem(item || itemOrig, produto);
+  const novoPedido = sanitizarPedido(pedido || lote || loteOrig);
+  const novoLote = sanitizarLote(lote || loteOrig, novoPedido);
+  const novoCliente = String(cliente || '').trim().toUpperCase();
+  const novoProduto = String(produto || '').trim().toUpperCase();
+  const novaCor = sanitizarCorEtiqueta(cor_etiqueta);
+
+  if (!novoItem || !novoLote || !novoCliente || !novoProduto) {
+    return res.status(400).json({ erro: 'Preencha Cliente, Item, Produto e Lote válidos.' });
+  }
+
+  db.serialize(() => {
+    db.run(
+      `UPDATE paletes_bipados
+       SET cliente = ?,
+           item = ?,
+           produto = ?,
+           pedido = ?,
+           lote = ?,
+           qtd_pecas_por_volume = ?,
+           saldo_total_pecas = qtd_volumes_palete * ?,
+           cor_etiqueta = ?
+       WHERE UPPER(TRIM(lote)) = ? AND UPPER(TRIM(item)) = ? AND COALESCE(status, 'ESTOQUE') = 'ESTOQUE'`,
+      [novoCliente, novoItem, novoProduto, novoPedido, novoLote, pecasUn, pecasUn, novaCor, loteOrig, itemOrig],
+      function (err) {
+        if (err) return res.status(500).json({ erro: err.message });
+
+        db.run(
+          `INSERT OR REPLACE INTO catalogo_itens (item, cliente, produto, padrao_volumes_palete, qtd_padrao_pecas, tipo_embalagem, cor_padrao)
+           VALUES (?, ?, ?, COALESCE((SELECT padrao_volumes_palete FROM catalogo_itens WHERE UPPER(TRIM(item)) = ?), 15), ?, COALESCE((SELECT tipo_embalagem FROM catalogo_itens WHERE UPPER(TRIM(item)) = ?), 'CAIXA'), ?)`,
+          [novoItem, novoCliente, novoProduto, novoItem, pecasUn, novoItem, novaCor],
+          () => {
+            salvarSnapshotPersistente();
+            notificarTelasInstantaneamente({
+              acao: 'lote_controle_total_atualizado',
+              lote: novoLote,
+              item: novoItem,
+              cor_etiqueta: novaCor
+            });
+            res.json({
+              sucesso: true,
+              lote: novoLote,
+              item: novoItem,
+              cor_etiqueta: novaCor
+            });
+          }
+        );
+      }
+    );
+  });
 });
 
 // ============================================================================

@@ -1000,27 +1000,38 @@
         <div class="autocomplete-list" id="ac-produto"></div>
       </div>
 
-      <!-- SELETOR VISUAL DE COR DA ETIQUETA FÍSICA -->
+      <!-- SELETOR VISUAL DE COR DA ETIQUETA FÍSICA (PALETA ARCO-ÍRIS HEX + ATALHOS) -->
       <div>
-        <label>Cor da Etiqueta Física (Identificação Visual de Lote):</label>
-        <input type="hidden" id="conf-cor-etiqueta" value="BRANCA" />
+        <label>Cor da Etiqueta Física (Espectro Livre HEX ou Atalho):</label>
+        <input type="hidden" id="conf-cor-etiqueta" value="#FFFFFF" />
+        <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px; background:#f8fafc; border:1px solid var(--border-subtle); padding:6px 10px; border-radius:6px;">
+          <input
+            type="color"
+            id="picker-cor-coletor"
+            value="#FFFFFF"
+            oninput="selecionarCorEtiqueta(this.value)"
+            style="width:42px; height:32px; padding:0; border:1px solid #94a3b8; border-radius:4px; cursor:pointer; background:transparent;"
+          />
+          <span class="mono" id="label-hex-coletor" style="font-size:12px; font-weight:800; color:var(--primary);">#FFFFFF</span>
+          <span style="font-size:11px; color:var(--muted); margin-left:auto;">Toque na caixa para abrir o arco-íris</span>
+        </div>
         <div class="seletor-cores-grid">
-          <button type="button" class="btn-cor-swatch cor-BRANCA selecionada" data-cor="BRANCA" onclick="selecionarCorEtiqueta('BRANCA')">
+          <button type="button" class="btn-cor-swatch cor-BRANCA selecionada" data-cor="#FFFFFF" onclick="selecionarCorEtiqueta('#FFFFFF')">
             <span class="etiqueta-dot"></span><span>Branca</span>
           </button>
-          <button type="button" class="btn-cor-swatch cor-VERDE" data-cor="VERDE" onclick="selecionarCorEtiqueta('VERDE')">
+          <button type="button" class="btn-cor-swatch cor-VERDE" data-cor="#10B981" onclick="selecionarCorEtiqueta('#10B981')">
             <span class="etiqueta-dot"></span><span>Verde</span>
           </button>
-          <button type="button" class="btn-cor-swatch cor-AMARELA" data-cor="AMARELA" onclick="selecionarCorEtiqueta('AMARELA')">
+          <button type="button" class="btn-cor-swatch cor-AMARELA" data-cor="#EAB308" onclick="selecionarCorEtiqueta('#EAB308')">
             <span class="etiqueta-dot"></span><span>Amarela</span>
           </button>
-          <button type="button" class="btn-cor-swatch cor-ROSA" data-cor="ROSA" onclick="selecionarCorEtiqueta('ROSA')">
+          <button type="button" class="btn-cor-swatch cor-ROSA" data-cor="#EC4899" onclick="selecionarCorEtiqueta('#EC4899')">
             <span class="etiqueta-dot"></span><span>Rosa</span>
           </button>
-          <button type="button" class="btn-cor-swatch cor-AZUL" data-cor="AZUL" onclick="selecionarCorEtiqueta('AZUL')">
+          <button type="button" class="btn-cor-swatch cor-AZUL" data-cor="#3B82F6" onclick="selecionarCorEtiqueta('#3B82F6')">
             <span class="etiqueta-dot"></span><span>Azul</span>
           </button>
-          <button type="button" class="btn-cor-swatch cor-LARANJA" data-cor="LARANJA" onclick="selecionarCorEtiqueta('LARANJA')">
+          <button type="button" class="btn-cor-swatch cor-LARANJA" data-cor="#F97316" onclick="selecionarCorEtiqueta('#F97316')">
             <span class="etiqueta-dot"></span><span>Laranja</span>
           </button>
         </div>
@@ -1139,11 +1150,36 @@
       }, duracao);
     }
 
-    function selecionarCorEtiqueta(cor = 'BRANCA') {
-      const corFinal = String(cor || 'BRANCA').toUpperCase();
-      document.getElementById('conf-cor-etiqueta').value = corFinal;
+    const MAPA_HEX_COLETOR = {
+      BRANCA: '#FFFFFF',
+      VERDE: '#10B981',
+      AMARELA: '#EAB308',
+      ROSA: '#EC4899',
+      AZUL: '#3B82F6',
+      LARANJA: '#F97316'
+    };
+
+    function normalizarCorHexColetor(cor = '#FFFFFF') {
+      const c = String(cor || '#FFFFFF').trim().toUpperCase();
+      if (MAPA_HEX_COLETOR[c]) return MAPA_HEX_COLETOR[c];
+      if (/^#[0-9A-F]{6}$/.test(c)) return c;
+      return '#FFFFFF';
+    }
+
+    function renderizarMiniEtiquetaColetor(cor = '#FFFFFF') {
+      const hex = normalizarCorHexColetor(cor);
+      return `<span class="etiqueta-mini" style="background:#f8fafc; color:#0f172a; border-color:#cbd5e1;"><span class="etiqueta-dot" style="background:${hex}; border:1px solid #475569;"></span>${hex}</span>`;
+    }
+
+    function selecionarCorEtiqueta(cor = '#FFFFFF') {
+      const hexFinal = normalizarCorHexColetor(cor);
+      document.getElementById('conf-cor-etiqueta').value = hexFinal;
+      const picker = document.getElementById('picker-cor-coletor');
+      if (picker) picker.value = hexFinal;
+      const lbl = document.getElementById('label-hex-coletor');
+      if (lbl) lbl.innerText = hexFinal;
       document.querySelectorAll('.btn-cor-swatch').forEach(btn => {
-        btn.classList.toggle('selecionada', btn.dataset.cor === corFinal);
+        btn.classList.toggle('selecionada', btn.dataset.cor === hexFinal);
       });
     }
 
@@ -1363,7 +1399,7 @@
         <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin-bottom:4px;">
           <strong>${baseFielAtiva.cliente}</strong>
           <span class="badge-lote">Lote ${baseFielAtiva.lote}</span>
-          <span class="etiqueta-mini cor-${cor}"><span class="etiqueta-dot"></span>${cor}</span>
+          ${renderizarMiniEtiquetaColetor(cor)}
         </div>
         <div style="color:var(--text-secondary); font-weight:700;">${baseFielAtiva.item} — ${baseFielAtiva.produto}</div>
         <div style="display:flex; justify-content:space-between; align-items:center; margin-top:4px; flex-wrap:wrap; gap:6px;">
@@ -2284,7 +2320,7 @@
                 <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
                   <strong>${r.cliente}</strong>
                   <span class="badge-lote">Lote ${limparLoteEstrito(r.lote, r.pedido)}</span>
-                  <span class="etiqueta-mini cor-${cor}"><span class="etiqueta-dot"></span>${cor}</span>
+                  ${renderizarMiniEtiquetaColetor(cor)}
                 </div>
                 <div style="color:var(--text-secondary); font-size:11px; margin-top:2px;">
                   <strong class="mono">${r.item}</strong> — ${r.total_paletes} palete(s) (${r.total_caixas_ou_sacaria} vol)

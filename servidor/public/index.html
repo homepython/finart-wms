@@ -70,24 +70,24 @@
     }
 
     .topbar-inner {
-      max-width: 1640px;
+      max-width: 1680px;
       margin: 0 auto;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 16px;
+      gap: 14px;
       flex-wrap: wrap;
     }
 
     .brand-group {
       display: flex;
       align-items: center;
-      gap: 14px;
+      gap: 12px;
     }
 
     .brand-mark {
-      width: 38px;
-      height: 38px;
+      width: 36px;
+      height: 36px;
       border-radius: var(--radius-md);
       background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
       display: flex;
@@ -95,10 +95,10 @@
       justify-content: center;
       font-family: 'JetBrains Mono', monospace;
       font-weight: 800;
-      font-size: 15px;
-      letter-spacing: -0.5px;
+      font-size: 14px;
       color: #ffffff;
       border: 1px solid rgba(255, 255, 255, 0.15);
+      flex-shrink: 0;
     }
 
     .brand-title {
@@ -133,12 +133,12 @@
       display: inline-flex;
       align-items: center;
       gap: 7px;
-      padding: 5px 10px;
+      padding: 4px 10px;
       border-radius: 999px;
       background: rgba(16, 185, 129, 0.12);
       border: 1px solid rgba(16, 185, 129, 0.3);
       color: #34d399;
-      font-size: 11px;
+      font-size: 10.5px;
       font-weight: 700;
       letter-spacing: 0.3px;
       text-transform: uppercase;
@@ -159,13 +159,50 @@
       flex-wrap: wrap;
     }
 
+    /* TOGGLE VISÃO MOBILE vs DESKTOP NO CABEÇALHO */
+    .view-mode-toggle {
+      display: inline-flex;
+      align-items: center;
+      background: #020617;
+      border: 1px solid #334155;
+      border-radius: var(--radius-sm);
+      padding: 2px;
+      gap: 2px;
+    }
+
+    .view-mode-btn {
+      background: transparent;
+      border: none;
+      color: #94a3b8;
+      font-family: 'Inter', sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 5px 9px;
+      border-radius: 4px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.15s ease;
+    }
+
+    .view-mode-btn svg {
+      width: 13px;
+      height: 13px;
+    }
+
+    .view-mode-btn.active {
+      background: var(--brand-primary);
+      color: #ffffff;
+    }
+
     /* BOTÕES CORPORATIVOS */
     .btn {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: 7px;
-      padding: 8px 13px;
+      gap: 6px;
+      padding: 8px 12px;
       font-family: 'Inter', sans-serif;
       font-size: 12px;
       font-weight: 600;
@@ -178,8 +215,8 @@
     }
 
     .btn svg {
-      width: 15px;
-      height: 15px;
+      width: 14px;
+      height: 14px;
       flex-shrink: 0;
     }
 
@@ -247,9 +284,10 @@
 
     /* CONTAINER PRINCIPAL */
     .main-container {
-      max-width: 1640px;
+      max-width: 1680px;
       margin: 0 auto;
-      padding: 20px 24px 48px;
+      padding: 18px 24px 48px;
+      transition: max-width 0.2s ease;
     }
 
     /* FAIXA DE KPIs */
@@ -257,14 +295,14 @@
       display: grid;
       grid-template-columns: repeat(4, 1fr);
       gap: 14px;
-      margin-bottom: 18px;
+      margin-bottom: 16px;
     }
 
     .kpi-card {
       background: var(--bg-surface);
       border: 1px solid var(--border-light);
       border-radius: var(--radius-md);
-      padding: 16px 18px;
+      padding: 14px 16px;
       box-shadow: var(--shadow-sm);
       display: flex;
       flex-direction: column;
@@ -272,17 +310,9 @@
       border-left: 4px solid var(--brand-primary);
     }
 
-    .kpi-card.kpi-emerald {
-      border-left-color: #059669;
-    }
-
-    .kpi-card.kpi-amber {
-      border-left-color: #d97706;
-    }
-
-    .kpi-card.kpi-slate {
-      border-left-color: #475569;
-    }
+    .kpi-card.kpi-emerald { border-left-color: #059669; }
+    .kpi-card.kpi-amber { border-left-color: #d97706; }
+    .kpi-card.kpi-slate { border-left-color: #475569; }
 
     .kpi-header {
       display: flex;
@@ -291,14 +321,14 @@
       font-size: 11px;
       font-weight: 700;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
+      letter-spacing: 0.4px;
       color: var(--text-muted);
-      margin-bottom: 8px;
+      margin-bottom: 6px;
     }
 
     .kpi-value {
       font-family: 'JetBrains Mono', monospace;
-      font-size: 26px;
+      font-size: 24px;
       font-weight: 800;
       color: var(--text-primary);
       letter-spacing: -0.5px;
@@ -307,8 +337,11 @@
     .kpi-foot {
       font-size: 11px;
       color: var(--text-muted);
-      margin-top: 6px;
+      margin-top: 4px;
       font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     /* BARRA DE NAVEGAÇÃO POR ABAS CORPORATIVAS */
@@ -321,7 +354,7 @@
       border: 1px solid var(--border-light);
       border-radius: var(--radius-md);
       padding: 6px;
-      margin-bottom: 16px;
+      margin-bottom: 14px;
       box-shadow: var(--shadow-sm);
       flex-wrap: wrap;
     }
@@ -336,8 +369,8 @@
     .tab-btn {
       display: inline-flex;
       align-items: center;
-      gap: 8px;
-      padding: 9px 16px;
+      gap: 7px;
+      padding: 8px 14px;
       border-radius: var(--radius-sm);
       border: 1px solid transparent;
       background: transparent;
@@ -384,12 +417,12 @@
       background: var(--bg-surface);
       border: 1px solid var(--border-light);
       border-radius: var(--radius-md);
-      padding: 14px 16px;
-      margin-bottom: 16px;
+      padding: 12px 16px;
+      margin-bottom: 14px;
       box-shadow: var(--shadow-sm);
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 10px;
     }
 
     .toolbar-row {
@@ -403,7 +436,7 @@
     .search-box {
       position: relative;
       flex: 1;
-      min-width: 280px;
+      min-width: 240px;
     }
 
     .search-box svg {
@@ -411,22 +444,21 @@
       left: 12px;
       top: 50%;
       transform: translateY(-50%);
-      width: 16px;
-      height: 16px;
+      width: 15px;
+      height: 15px;
       color: var(--text-muted);
     }
 
     .search-input {
       width: 100%;
-      padding: 9px 12px 9px 36px;
+      padding: 8px 12px 8px 34px;
       font-family: 'Inter', sans-serif;
-      font-size: 13px;
+      font-size: 12.5px;
       border: 1px solid var(--border-strong);
       border-radius: var(--radius-sm);
       background: var(--bg-subtle);
       color: var(--text-primary);
       outline: none;
-      transition: border-color 0.15s ease, background 0.15s ease;
     }
 
     .search-input:focus {
@@ -443,7 +475,7 @@
     }
 
     .chip-btn {
-      padding: 5px 11px;
+      padding: 4px 10px;
       border-radius: 999px;
       border: 1px solid var(--border-strong);
       background: #ffffff;
@@ -466,102 +498,47 @@
       color: #ffffff;
     }
 
-    /* MINI-ETIQUETAS COLORIDAS (RASTREABILIDADE VISUAL) */
+    /* MINI-ETIQUETA COLORIDA (SOMENTE LEITURA NA GRADE - POKA-YOKE) */
     .etiqueta-badge {
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      padding: 3px 9px;
+      padding: 3px 8px;
       border-radius: 4px;
       font-family: 'JetBrains Mono', monospace;
       font-size: 10.5px;
       font-weight: 700;
-      letter-spacing: 0.3px;
+      letter-spacing: 0.2px;
       text-transform: uppercase;
-      cursor: pointer;
       user-select: none;
-      border: 1px solid transparent;
-      transition: transform 0.1s ease;
-    }
-
-    .etiqueta-badge:hover {
-      transform: translateY(-1px);
+      background: #f8fafc;
+      color: #0f172a;
+      border: 1px solid #cbd5e1;
+      white-space: nowrap;
     }
 
     .etiqueta-dot {
-      width: 8px;
-      height: 8px;
+      width: 10px;
+      height: 10px;
       border-radius: 2px;
       flex-shrink: 0;
+      border: 1px solid rgba(15, 23, 42, 0.35);
     }
 
-    .etiqueta-BRANCA {
-      background: #f8fafc;
-      color: #334155;
-      border-color: #94a3b8;
-    }
-    .etiqueta-BRANCA .etiqueta-dot {
-      background: #ffffff;
-      border: 1px solid #475569;
-    }
-
-    .etiqueta-VERDE {
-      background: #ecfdf5;
-      color: #065f46;
-      border-color: #6ee7b7;
-    }
-    .etiqueta-VERDE .etiqueta-dot {
-      background: #10b981;
-    }
-
-    .etiqueta-AMARELA {
-      background: #fefce8;
-      color: #854d0e;
-      border-color: #fde047;
-    }
-    .etiqueta-AMARELA .etiqueta-dot {
-      background: #eab308;
-    }
-
-    .etiqueta-ROSA {
-      background: #fdf2f8;
-      color: #9d174d;
-      border-color: #f9a8d4;
-    }
-    .etiqueta-ROSA .etiqueta-dot {
-      background: #ec4899;
-    }
-
-    .etiqueta-AZUL {
-      background: #eff6ff;
-      color: #1e40af;
-      border-color: #93c5fd;
-    }
-    .etiqueta-AZUL .etiqueta-dot {
-      background: #3b82f6;
-    }
-
-    .etiqueta-LARANJA {
-      background: #fff7ed;
-      color: #9a3412;
-      border-color: #fdba74;
-    }
-    .etiqueta-LARANJA .etiqueta-dot {
-      background: #f97316;
-    }
-
-    /* DATAGRID CORPORATIVO */
+    /* ===================================================================== */
+    /* EXIGÊNCIA 4: TIPOGRAFIA NO PC (SINGLE-LINE TEXT + ELLIPSIS + TOOLTIP) */
+    /* ===================================================================== */
     .datagrid-card {
       background: var(--bg-surface);
       border: 1px solid var(--border-light);
       border-radius: var(--radius-md);
       box-shadow: var(--shadow-sm);
       overflow: hidden;
-      margin-bottom: 20px;
+      margin-bottom: 18px;
     }
 
     .datagrid-header {
-      padding: 13px 18px;
+      padding: 12px 16px;
       background: var(--bg-subtle);
       border-bottom: 1px solid var(--border-light);
       display: flex;
@@ -572,7 +549,7 @@
     }
 
     .datagrid-title {
-      font-size: 13px;
+      font-size: 12.5px;
       font-weight: 700;
       color: var(--text-primary);
       text-transform: uppercase;
@@ -580,6 +557,16 @@
       display: flex;
       align-items: center;
       gap: 8px;
+    }
+
+    .poka-yoke-hint {
+      font-size: 11.5px;
+      color: var(--brand-primary);
+      background: var(--brand-soft);
+      border: 1px solid #bfdbfe;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-weight: 600;
     }
 
     .table-responsive {
@@ -591,34 +578,52 @@
       width: 100%;
       border-collapse: collapse;
       text-align: left;
+      table-layout: fixed;
     }
 
     table.datagrid th {
       background: #f8fafc;
       color: #475569;
-      font-size: 11px;
+      font-size: 10.5px;
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.4px;
-      padding: 11px 14px;
+      padding: 10px 12px;
       border-bottom: 1px solid var(--border-strong);
       white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     table.datagrid td {
-      padding: 11px 14px;
+      padding: 0 12px;
+      height: 44px;
+      max-height: 44px;
       border-bottom: 1px solid var(--border-light);
       vertical-align: middle;
       font-size: 12.5px;
       color: var(--text-secondary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
-    table.datagrid tbody tr:hover {
-      background-color: #f8fafc;
+    /* Linhas clicáveis Master-Detail */
+    table.datagrid tbody tr.master-row {
+      cursor: pointer;
+      transition: background-color 0.12s ease;
     }
 
-    table.datagrid tbody tr.row-expanded {
+    table.datagrid tbody tr.master-row:hover {
       background-color: #eff6ff;
+    }
+
+    .cell-truncate {
+      display: block;
+      width: 100%;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .cell-client {
@@ -637,8 +642,8 @@
     .cell-lote {
       font-family: 'JetBrains Mono', monospace;
       font-weight: 700;
-      font-size: 12px;
-      padding: 3px 7px;
+      font-size: 11.5px;
+      padding: 2px 6px;
       border-radius: 4px;
       background: #f1f5f9;
       color: #0f172a;
@@ -649,7 +654,7 @@
     .cell-saldo {
       font-family: 'JetBrains Mono', monospace;
       font-weight: 800;
-      font-size: 13.5px;
+      font-size: 13px;
       color: var(--emerald-primary);
     }
 
@@ -657,47 +662,85 @@
       font-family: 'JetBrains Mono', monospace;
       font-size: 11px;
       color: var(--text-muted);
-      white-space: nowrap;
     }
 
-    /* SUB-TABELA DE PALETES EXPANDIDOS DO LOTE */
-    .subgrid-row td {
-      background: #f8fafc;
-      padding: 14px 20px;
-      border-bottom: 2px solid #cbd5e1;
+    /* Larguras das colunas no Desktop para Single-Line perfeito */
+    .col-etiqueta { width: 105px; }
+    .col-cliente { width: 16%; }
+    .col-item { width: 110px; }
+    .col-produto { width: 25%; }
+    .col-pedido { width: 85px; }
+    .col-lote { width: 98px; }
+    .col-paletes { width: 82px; }
+    .col-volumes { width: 86px; }
+    .col-pecas-vol { width: 78px; }
+    .col-saldo { width: 125px; }
+    .col-data { width: 145px; }
+
+    /* ===================================================================== */
+    /* EXIGÊNCIA 1: MODO MOBILE DEDICADO E INTELIGENTE (.view-mobile)        */
+    /* ===================================================================== */
+    body.view-mobile .main-container {
+      max-width: 540px;
+      padding: 10px 10px 40px;
     }
 
-    .subgrid-box {
-      background: #ffffff;
-      border: 1px solid #cbd5e1;
-      border-radius: var(--radius-sm);
-      overflow: hidden;
+    body.view-mobile .topbar {
+      padding: 10px 12px;
     }
 
-    .subgrid-header {
-      padding: 9px 14px;
-      background: #0f172a;
-      color: #ffffff;
+    body.view-mobile .brand-subtitle,
+    body.view-mobile .status-live,
+    body.view-mobile .hide-on-mobile {
+      display: none !important;
+    }
+
+    body.view-mobile .kpi-grid {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    body.view-mobile .kpi-card {
+      padding: 10px 12px;
+    }
+
+    body.view-mobile .kpi-value {
+      font-size: 18px;
+    }
+
+    body.view-mobile .kpi-foot {
+      display: none;
+    }
+
+    /* No Modo Mobile, oculta colunas secundárias para zero poluição visual */
+    body.view-mobile .col-secondary-mobile {
+      display: none !important;
+    }
+
+    body.view-mobile table.datagrid {
+      table-layout: auto;
+    }
+
+    body.view-mobile table.datagrid th,
+    body.view-mobile table.datagrid td {
+      padding: 8px 8px;
       font-size: 11.5px;
-      font-weight: 700;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-      flex-wrap: wrap;
     }
 
-    /* MODAIS CORPORATIVOS */
+    /* ===================================================================== */
+    /* EXIGÊNCIA 2 & 3: MODAL DE CONTROLE TOTAL + COLOR PICKER ARCO-ÍRIS     */
+    /* ===================================================================== */
     .modal-backdrop {
       position: fixed;
       inset: 0;
-      background: rgba(15, 23, 42, 0.65);
+      background: rgba(15, 23, 42, 0.68);
       backdrop-filter: blur(2px);
       display: none;
       align-items: center;
       justify-content: center;
       z-index: 200;
-      padding: 16px;
+      padding: 14px;
     }
 
     .modal-backdrop.open {
@@ -709,31 +752,32 @@
       border-radius: var(--radius-lg);
       border: 1px solid var(--border-strong);
       width: 100%;
-      max-width: 720px;
+      max-width: 760px;
       max-height: 92vh;
       display: flex;
       flex-direction: column;
-      box-shadow: 0 20px 25px -5px rgba(15, 23, 42, 0.25);
+      box-shadow: 0 20px 25px -5px rgba(15, 23, 42, 0.3);
       overflow: hidden;
     }
 
     .modal-dialog.modal-lg {
-      max-width: 980px;
+      max-width: 960px;
     }
 
     .modal-header {
-      padding: 16px 20px;
+      padding: 14px 20px;
       background: #0f172a;
       color: #ffffff;
       display: flex;
       align-items: center;
       justify-content: space-between;
+      gap: 12px;
     }
 
     .modal-title {
-      font-size: 14px;
-      font-weight: 700;
-      letter-spacing: 0.2px;
+      font-size: 13.5px;
+      font-weight: 800;
+      letter-spacing: 0.3px;
       text-transform: uppercase;
     }
 
@@ -743,42 +787,167 @@
       color: #94a3b8;
       cursor: pointer;
       padding: 4px;
+      display: inline-flex;
     }
     .modal-close:hover {
       color: #ffffff;
     }
 
     .modal-body {
-      padding: 20px;
+      padding: 18px 20px;
       overflow-y: auto;
     }
 
     .modal-footer {
-      padding: 14px 20px;
+      padding: 12px 20px;
       background: var(--bg-subtle);
       border-top: 1px solid var(--border-light);
       display: flex;
       align-items: center;
-      justify-content: flex-end;
+      justify-content: space-between;
       gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    /* Abas internas do Modal de Controle Total */
+    .ct-summary-banner {
+      background: #f8fafc;
+      border: 1px solid var(--border-strong);
+      border-left: 4px solid var(--brand-primary);
+      border-radius: var(--radius-sm);
+      padding: 12px 14px;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .ct-tabs {
+      display: flex;
+      gap: 6px;
+      border-bottom: 1px solid var(--border-strong);
+      padding-bottom: 10px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+
+    .ct-tab-btn {
+      padding: 8px 14px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-strong);
+      background: #ffffff;
+      color: var(--text-secondary);
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .ct-tab-btn.active {
+      background: var(--brand-primary);
+      border-color: var(--brand-primary);
+      color: #ffffff;
+    }
+
+    .ct-section {
+      display: none;
+    }
+    .ct-section.active {
+      display: block;
+    }
+
+    /* Color Picker Arco-Íris */
+    .rainbow-picker-box {
+      background: #f8fafc;
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius-md);
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .rainbow-bar-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .native-color-input {
+      width: 56px;
+      height: 42px;
+      padding: 2px;
+      border: 2px solid #0f172a;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      background: #ffffff;
+    }
+
+    .rainbow-spectrum-strip {
+      flex: 1;
+      min-width: 180px;
+      height: 28px;
+      border-radius: 6px;
+      background: linear-gradient(
+        90deg,
+        #ff0000 0%,
+        #ff8800 15%,
+        #ffff00 30%,
+        #00cc44 48%,
+        #00bfff 65%,
+        #3b82f6 78%,
+        #9333ea 90%,
+        #ec4899 100%
+      );
+      border: 1px solid #94a3b8;
+      cursor: crosshair;
+      position: relative;
+    }
+
+    .preset-swatches-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .swatch-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 10px;
+      border-radius: 999px;
+      border: 1px solid #cbd5e1;
+      background: #ffffff;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .swatch-pill:hover {
+      border-color: #0f172a;
     }
 
     .form-grid {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
-      gap: 14px;
+      gap: 12px;
     }
 
     .form-grid-3 {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 14px;
+      gap: 12px;
     }
 
     .form-group {
       display: flex;
       flex-direction: column;
-      gap: 5px;
+      gap: 4px;
     }
 
     .form-group.full {
@@ -794,11 +963,11 @@
     }
 
     .form-control {
-      padding: 9px 11px;
+      padding: 8px 10px;
       border: 1px solid var(--border-strong);
       border-radius: var(--radius-sm);
       font-family: 'Inter', sans-serif;
-      font-size: 13px;
+      font-size: 12.5px;
       color: var(--text-primary);
       outline: none;
     }
@@ -808,49 +977,43 @@
       box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.1);
     }
 
-    /* SELETOR DE CORES DE ETIQUETA */
-    .color-picker-grid {
-      display: grid;
-      grid-template-columns: repeat(6, 1fr);
+    /* CAIXA DE OPÇÃO RÁPIDA DE PDF NO TOPO */
+    .pdf-export-group {
+      display: inline-flex;
+      align-items: center;
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: var(--radius-sm);
+      padding: 2px 8px 2px 2px;
       gap: 8px;
     }
 
-    .color-option {
-      padding: 7px 6px;
-      border-radius: var(--radius-sm);
-      border: 2px solid var(--border-light);
-      text-align: center;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 10.5px;
-      font-weight: 700;
-      cursor: pointer;
-      display: flex;
+    .pdf-filter-label {
+      display: inline-flex;
       align-items: center;
-      justify-content: center;
       gap: 5px;
-    }
-
-    .color-option.selected {
-      border-color: #0f172a;
-      box-shadow: 0 0 0 2px rgba(15, 23, 42, 0.15);
+      font-size: 11px;
+      font-weight: 600;
+      color: #cbd5e1;
+      cursor: pointer;
+      user-select: none;
+      white-space: nowrap;
     }
 
     .tab-pane {
       display: none;
     }
-
     .tab-pane.active {
       display: block;
     }
 
     .empty-state {
-      padding: 36px 20px;
+      padding: 32px 20px;
       text-align: center;
       color: var(--text-muted);
       font-size: 13px;
     }
 
-    /* TOAST DE NOTIFICAÇÃO CORPORATIVO */
     .toast-container {
       position: fixed;
       bottom: 20px;
@@ -870,43 +1033,19 @@
       font-size: 12.5px;
       font-weight: 600;
       box-shadow: var(--shadow-md);
-      min-width: 280px;
+      min-width: 260px;
     }
+    .toast-item.sucesso { border-left-color: #10b981; }
+    .toast-item.erro { border-left-color: #ef4444; }
 
-    .toast-item.sucesso {
-      border-left-color: #10b981;
-    }
-
-    .toast-item.erro {
-      border-left-color: #ef4444;
-    }
-
-    @media (max-width: 1024px) {
-      .kpi-grid {
-        grid-template-columns: repeat(2, 1fr);
-      }
+    @media (max-width: 860px) {
       .form-grid, .form-grid-3 {
         grid-template-columns: 1fr;
-      }
-      .color-picker-grid {
-        grid-template-columns: repeat(3, 1fr);
-      }
-    }
-
-    @media (max-width: 640px) {
-      .kpi-grid {
-        grid-template-columns: 1fr;
-      }
-      .topbar {
-        padding: 12px 14px;
-      }
-      .main-container {
-        padding: 14px;
       }
     }
   </style>
 </head>
-<body>
+<body class="view-desktop">
 
   <!-- TOPBAR CORPORATIVO -->
   <header class="topbar">
@@ -915,64 +1054,74 @@
         <div class="brand-mark">FW</div>
         <div>
           <div class="brand-title">
-            FINART WMS ENTERPRISE
-            <span class="badge-version">v3.0 SQL + SNAPSHOT</span>
+            FINART WMS
+            <span class="badge-version">v3.5 MASTER-DETAIL</span>
           </div>
-          <div class="brand-subtitle">Sistema Corporativo de Controle de Estoque, Paletização e Expedição Rodoviária</div>
+          <div class="brand-subtitle">Controle de Estoque, Rastreabilidade e Expedição</div>
         </div>
         <div class="status-live" id="statusConexaoBadge">
           <span class="status-dot" id="statusConexaoDot"></span>
-          <span id="statusConexaoTexto">TEMPO REAL ATIVO</span>
+          <span id="statusConexaoTexto">ONLINE</span>
         </div>
       </div>
 
       <div class="topbar-actions">
-        <button type="button" class="btn btn-dark-outline" onclick="exportarRelatorioPDF()" title="Gerar Relatório Corporativo em PDF para Impressão ou Arquivo">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-            <polyline points="14 2 14 8 20 8"></polyline>
-            <line x1="16" y1="13" x2="8" y2="13"></line>
-            <line x1="16" y1="17" x2="8" y2="17"></line>
-          </svg>
-          Exportar PDF
+        <!-- EXIGÊNCIA 1: TOGGLE MANUAL VISÃO MOBILE vs DESKTOP -->
+        <div class="view-mode-toggle" title="Alternar entre Visão Desktop e Visão Mobile Simplificada">
+          <button type="button" class="view-mode-btn active" id="btnModoDesktop" onclick="definirModoVisualizacao('desktop', true)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+              <line x1="8" y1="21" x2="16" y2="21"></line>
+              <line x1="12" y1="17" x2="12" y2="21"></line>
+            </svg>
+            Desktop
+          </button>
+          <button type="button" class="view-mode-btn" id="btnModoMobile" onclick="definirModoVisualizacao('mobile', true)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
+              <line x1="12" y1="18" x2="12.01" y2="18"></line>
+            </svg>
+            Mobile
+          </button>
+        </div>
+
+        <!-- EXIGÊNCIA 5: EXPORTAÇÃO DE PDF COM FILTRO INTELIGENTE -->
+        <div class="pdf-export-group">
+          <button type="button" class="btn btn-dark-outline" style="border:none;" onclick="exportarRelatorioPDF()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+            </svg>
+            Exportar PDF
+          </button>
+          <label class="pdf-filter-label hide-on-mobile" title="Quando marcado, o PDF exporta exclusivamente o saldo físico em estoque, omitindo o histórico de expedições">
+            <input type="checkbox" id="checkPdfApenasEstoque" checked />
+            Apenas Saldo em Estoque
+          </label>
+        </div>
+
+        <button type="button" class="btn btn-dark-outline hide-on-mobile" onclick="exportarPlanilhaCSV()" title="Exportar Planilha CSV">
+          CSV
         </button>
 
-        <button type="button" class="btn btn-dark-outline" onclick="exportarPlanilhaCSV()" title="Exportar Saldos e Auditoria em CSV (Excel)">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-            <polyline points="7 10 12 15 17 10"></polyline>
-            <line x1="12" y1="15" x2="12" y2="3"></line>
-          </svg>
-          Exportar CSV
-        </button>
-
-        <button type="button" class="btn btn-dark-outline" onclick="exportarBackupCompleto()" title="Baixar Arquivo de Backup Completo (Banco + Expedições + Catálogo)">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
-            <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path>
-            <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
-          </svg>
+        <button type="button" class="btn btn-dark-outline hide-on-mobile" onclick="exportarBackupCompleto()" title="Baixar Backup Completo JSON">
           Exportar Backup
         </button>
 
-        <button type="button" class="btn btn-dark-outline" onclick="document.getElementById('inputImportarBackup').click()" title="Restaurar Banco de Dados a partir de um Arquivo de Backup JSON">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-            <polyline points="17 8 12 3 7 8"></polyline>
-            <line x1="12" y1="3" x2="12" y2="15"></line>
-          </svg>
+        <button type="button" class="btn btn-dark-outline hide-on-mobile" onclick="document.getElementById('inputImportarBackup').click()" title="Importar Backup JSON">
           Importar Backup
         </button>
         <input type="file" id="inputImportarBackup" accept=".json,application/json" style="display:none" onchange="importarBackupCompleto(event)" />
 
-        <button type="button" class="btn btn-amber" onclick="abrirModalExpedicao()">
+        <!-- EXIGÊNCIA 6: RENOMEAÇÃO DE UI PARA "EXPEDIÇÃO" -->
+        <button type="button" class="btn btn-amber" onclick="abrirModalExpedicaoGeral()">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <rect x="1" y="3" width="15" height="13"></rect>
             <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon>
             <circle cx="5.5" cy="18.5" r="2.5"></circle>
             <circle cx="18.5" cy="18.5" r="2.5"></circle>
           </svg>
-          Carregar Caminhão
+          Expedição
         </button>
 
         <button type="button" class="btn btn-emerald" onclick="abrirModalLancamentoManual()">
@@ -980,15 +1129,11 @@
             <line x1="12" y1="5" x2="12" y2="19"></line>
             <line x1="5" y1="12" x2="19" y2="12"></line>
           </svg>
-          Novo Lançamento
+          Novo Lote
         </button>
 
         <a href="/coletor.html" class="btn btn-primary">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
-            <line x1="12" y1="18" x2="12.01" y2="18"></line>
-          </svg>
-          Abrir Coletor
+          Coletor
         </a>
       </div>
     </div>
@@ -1001,38 +1146,38 @@
     <section class="kpi-grid">
       <div class="kpi-card">
         <div class="kpi-header">
-          <span>Lotes Ativos em Estoque</span>
-          <span>CONSOLIDADO</span>
+          <span>Lotes em Estoque</span>
+          <span class="hide-on-mobile">ATIVOS</span>
         </div>
         <div class="kpi-value" id="kpiTotalLotes">0</div>
-        <div class="kpi-foot" id="kpiResumoClientes">0 clientes ativos no armazém</div>
+        <div class="kpi-foot" id="kpiResumoClientes">0 clientes ativos</div>
       </div>
 
       <div class="kpi-card kpi-slate">
         <div class="kpi-header">
-          <span>Paletes Disponíveis</span>
-          <span>FÍSICO EM PÁTIO</span>
+          <span>Paletes em Pátio</span>
+          <span class="hide-on-mobile">FÍSICO</span>
         </div>
         <div class="kpi-value" id="kpiTotalPaletes">0</div>
-        <div class="kpi-foot" id="kpiTotalVolumes">0 volumes (caixas / sacarias)</div>
+        <div class="kpi-foot" id="kpiTotalVolumes">0 volumes totais</div>
       </div>
 
       <div class="kpi-card kpi-emerald">
         <div class="kpi-header">
-          <span>Saldo Disponível (Peças)</span>
-          <span>PRONTA ENTREGA</span>
+          <span>Saldo em Estoque</span>
+          <span class="hide-on-mobile">PEÇAS</span>
         </div>
         <div class="kpi-value" id="kpiSaldoPecas">0</div>
-        <div class="kpi-foot">Peças líquidas disponíveis para expedição</div>
+        <div class="kpi-foot">Disponível no galpão</div>
       </div>
 
       <div class="kpi-card kpi-amber">
         <div class="kpi-header">
-          <span>Expedições / Caminhões</span>
-          <span>CARGAS SAÍDAS</span>
+          <span>Expedição</span>
+          <span class="hide-on-mobile">SAÍDAS</span>
         </div>
         <div class="kpi-value" id="kpiTotalExpedidos">0</div>
-        <div class="kpi-foot" id="kpiDetalheExpedidos">0 romaneios | 0 peças expedidas</div>
+        <div class="kpi-foot" id="kpiDetalheExpedidos">0 romaneios</div>
       </div>
     </section>
 
@@ -1040,39 +1185,22 @@
     <nav class="tabs-bar">
       <div class="tabs-list">
         <button type="button" class="tab-btn active" id="tabBtnEstoque" onclick="alternarAba('estoque')">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
-          </svg>
-          Saldos em Estoque (Lotes)
+          Saldos em Estoque
           <span class="tab-counter" id="countTabEstoque">0</span>
         </button>
 
         <button type="button" class="tab-btn" id="tabBtnExpedicao" onclick="alternarAba('expedicao')">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <rect x="1" y="3" width="15" height="13"></rect>
-            <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon>
-            <circle cx="5.5" cy="18.5" r="2.5"></circle>
-            <circle cx="18.5" cy="18.5" r="2.5"></circle>
-          </svg>
-          Expedição / Caminhões (Saídas)
+          Expedição
           <span class="tab-counter" id="countTabExpedicao">0</span>
         </button>
 
         <button type="button" class="tab-btn" id="tabBtnAuditoria" onclick="alternarAba('auditoria')">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <line x1="8" y1="6" x2="21" y2="6"></line>
-            <line x1="8" y1="12" x2="21" y2="12"></line>
-            <line x1="8" y1="18" x2="21" y2="18"></line>
-            <line x1="3" y1="6" x2="3.01" y2="6"></line>
-            <line x1="3" y1="12" x2="3.01" y2="12"></line>
-            <line x1="3" y1="18" x2="3.01" y2="18"></line>
-          </svg>
-          Auditoria de Paletes (Entradas)
+          Auditoria de Paletes
           <span class="tab-counter" id="countTabAuditoria">0</span>
         </button>
       </div>
 
-      <div style="font-size:11.5px; color:var(--text-muted); font-weight:600; padding-right:8px;" id="labelUltimaSincronizacao">
+      <div class="hide-on-mobile" style="font-size:11.5px; color:var(--text-muted); font-weight:600; padding-right:8px;" id="labelUltimaSincronizacao">
         Sincronizado agora
       </div>
     </nav>
@@ -1089,22 +1217,9 @@
             type="text"
             id="inputBuscaGlobal"
             class="search-input"
-            placeholder="Pesquisar por Cliente, Código do Item, Lote, Pedido, Produto ou Placa do Caminhão..."
+            placeholder="Filtrar por Cliente, Item, Lote, Pedido, Produto ou Placa..."
             oninput="renderizarTudo()"
           />
-        </div>
-
-        <div style="display:flex; align-items:center; gap:8px;">
-          <span style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Cor da Etiqueta:</span>
-          <select id="selectFiltroCor" class="form-control" style="padding:6px 10px; font-size:12px;" onchange="renderizarTudo()">
-            <option value="TODAS">TODAS AS CORES</option>
-            <option value="BRANCA">ETIQUETA BRANCA</option>
-            <option value="VERDE">ETIQUETA VERDE</option>
-            <option value="AMARELA">ETIQUETA AMARELA</option>
-            <option value="ROSA">ETIQUETA ROSA</option>
-            <option value="AZUL">ETIQUETA AZUL</option>
-            <option value="LARANJA">ETIQUETA LARANJA</option>
-          </select>
         </div>
       </div>
 
@@ -1116,40 +1231,39 @@
     </section>
 
     <!-- =================================================================== -->
-    <!-- ABA 1: SALDOS EM ESTOQUE (CONSOLIDADO POR LOTE E ITEM)              -->
+    <!-- ABA 1: SALDOS EM ESTOQUE (VISÃO MESTRE SOMENTE-LEITURA / POKA-YOKE) -->
     <!-- =================================================================== -->
     <div class="tab-pane active" id="paneEstoque">
       <div class="datagrid-card">
         <div class="datagrid-header">
           <div class="datagrid-title">
-            <span>Saldos Consolidados por Lote e Item (Estoque Disponível)</span>
+            <span>Saldos Consolidados em Estoque (Visão Mestre)</span>
           </div>
-          <div style="font-size:11.5px; color:var(--text-muted);">
-            Clique na mini-etiqueta colorida para alterar a cor de identificação do lote ou em "Ver Paletes" para inspecionar cada palete.
-          </div>
+          <span class="poka-yoke-hint">
+            Toque ou clique em qualquer linha para abrir o Modal de Controle Total (Edição, Cor da Etiqueta e Expedição)
+          </span>
         </div>
 
         <div class="table-responsive">
           <table class="datagrid">
             <thead>
               <tr>
-                <th>Etiqueta Física</th>
-                <th>Cliente</th>
-                <th>Item</th>
-                <th>Descrição Técnica do Produto</th>
-                <th>Pedido</th>
-                <th>Lote</th>
-                <th>Paletes</th>
-                <th>Volumes</th>
-                <th>Pçs/Vol</th>
-                <th>Saldo Disponível</th>
-                <th>Última Entrada (Data/Hora)</th>
-                <th style="text-align:right;">Operações</th>
+                <th class="col-etiqueta">Etiqueta</th>
+                <th class="col-cliente">Cliente</th>
+                <th class="col-item">Item</th>
+                <th class="col-produto col-secondary-mobile">Descrição Técnica do Produto</th>
+                <th class="col-pedido col-secondary-mobile">Pedido</th>
+                <th class="col-lote">Lote</th>
+                <th class="col-paletes">Paletes</th>
+                <th class="col-volumes col-secondary-mobile">Volumes</th>
+                <th class="col-pecas-vol col-secondary-mobile">Pçs/Vol</th>
+                <th class="col-saldo">Saldo Estoque</th>
+                <th class="col-data col-secondary-mobile">Última Entrada</th>
               </tr>
             </thead>
             <tbody id="tbodyConsolidado">
               <tr>
-                <td colspan="12" class="empty-state">Carregando saldos de estoque...</td>
+                <td colspan="11" class="empty-state">Carregando saldos de estoque...</td>
               </tr>
             </tbody>
           </table>
@@ -1158,17 +1272,17 @@
     </div>
 
     <!-- =================================================================== -->
-    <!-- ABA 2: EXPEDIÇÃO / CAMINHÕES (CARREGAMENTO E ROMANEIOS DE SAÍDA)    -->
+    <!-- ABA 2: EXPEDIÇÃO (ROMANEIOS E HISTÓRICO DE SAÍDAS)                  -->
     <!-- =================================================================== -->
     <div class="tab-pane" id="paneExpedicao">
       <div class="datagrid-card">
         <div class="datagrid-header">
           <div class="datagrid-title">
-            <span>Romaneios de Carregamento de Caminhão (Saídas Registradas)</span>
+            <span>Romaneios de Expedição Registrados</span>
           </div>
           <div>
-            <button type="button" class="btn btn-amber btn-xs" onclick="abrirModalExpedicao()">
-              + Novo Carregamento de Caminhão
+            <button type="button" class="btn btn-amber btn-xs" onclick="abrirModalExpedicaoGeral()">
+              + Nova Expedição
             </button>
           </div>
         </div>
@@ -1177,32 +1291,30 @@
           <table class="datagrid">
             <thead>
               <tr>
-                <th>Romaneio</th>
-                <th>Data / Hora da Saída</th>
-                <th>Placa do Caminhão</th>
-                <th>Motorista</th>
-                <th>Cliente / Destino</th>
-                <th>Itens e Lotes Carregados</th>
-                <th>Paletes</th>
-                <th>Volumes</th>
-                <th>Total Peças Expedidas</th>
-                <th style="text-align:right;">Ações</th>
+                <th style="width:130px;">Romaneio</th>
+                <th style="width:145px;" class="col-secondary-mobile">Data/Hora Saída</th>
+                <th style="width:105px;">Placa</th>
+                <th style="width:140px;" class="col-secondary-mobile">Motorista</th>
+                <th style="width:18%;">Cliente / Destino</th>
+                <th class="col-secondary-mobile">Lotes e Itens Carregados</th>
+                <th style="width:85px;">Paletes</th>
+                <th style="width:120px;">Total Peças</th>
+                <th style="width:155px; text-align:right;">Operações</th>
               </tr>
             </thead>
             <tbody id="tbodyExpedicoes">
               <tr>
-                <td colspan="10" class="empty-state">Nenhuma expedição de caminhão registrada até o momento.</td>
+                <td colspan="9" class="empty-state">Nenhuma expedição registrada até o momento.</td>
               </tr>
             </tbody>
           </table>
         </div>
       </div>
 
-      <!-- TABELA DETALHADA DE PALETES EXPEDIDOS COM TIMESTAMPS DE ENTRADA E SAÍDA -->
       <div class="datagrid-card">
         <div class="datagrid-header">
           <div class="datagrid-title">
-            <span>Rastreabilidade Individual de Paletes Expedidos (Entrada vs. Saída)</span>
+            <span>Rastreabilidade de Paletes Expedidos (Timestamp Entrada vs. Saída)</span>
           </div>
         </div>
 
@@ -1210,16 +1322,16 @@
           <table class="datagrid">
             <thead>
               <tr>
-                <th>ID Palete</th>
-                <th>Etiqueta</th>
-                <th>Placa Caminhão</th>
-                <th>Cliente</th>
-                <th>Item</th>
-                <th>Lote</th>
-                <th>Volumes</th>
-                <th>Peças Expedidas</th>
-                <th>Data/Hora Entrada</th>
-                <th>Data/Hora Saída (Caminhão)</th>
+                <th style="width:75px;">ID</th>
+                <th style="width:105px;">Etiqueta</th>
+                <th style="width:105px;">Placa</th>
+                <th style="width:18%;">Cliente</th>
+                <th style="width:110px;">Item</th>
+                <th style="width:98px;">Lote</th>
+                <th style="width:85px;" class="col-secondary-mobile">Volumes</th>
+                <th style="width:120px;">Peças</th>
+                <th style="width:145px;" class="col-secondary-mobile">Entrada</th>
+                <th style="width:145px;">Saída</th>
               </tr>
             </thead>
             <tbody id="tbodyPaletesExpedidos">
@@ -1233,48 +1345,39 @@
     </div>
 
     <!-- =================================================================== -->
-    <!-- ABA 3: AUDITORIA DE PALETES (HISTÓRICO INDIVIDUAL EM ESTOQUE)       -->
+    <!-- ABA 3: AUDITORIA DE PALETES (CLIQUE ABRE MODAL DE CONTROLE TOTAL)   -->
     <!-- =================================================================== -->
     <div class="tab-pane" id="paneAuditoria">
       <div class="datagrid-card">
         <div class="datagrid-header">
           <div class="datagrid-title">
-            <span>Auditoria Individual de Paletes em Estoque (Bipagens e Lançamentos)</span>
+            <span>Auditoria Individual de Paletes em Estoque</span>
           </div>
-          <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-            <button type="button" class="btn btn-amber btn-xs" id="btnExpedirSelecionados" onclick="expedirPaletesSelecionados()" style="display:none;">
-              Carregar Selecionados no Caminhão (<span id="countSelExpedir">0</span>)
-            </button>
-            <button type="button" class="btn btn-danger-outline btn-xs" id="btnExcluirSelecionados" onclick="excluirPaletesSelecionados()" style="display:none;">
-              Excluir Selecionados (<span id="countSelExcluir">0</span>)
-            </button>
-          </div>
+          <span class="poka-yoke-hint">
+            Clique em qualquer palete para abrir o Modal de Controle Total
+          </span>
         </div>
 
         <div class="table-responsive">
           <table class="datagrid">
             <thead>
               <tr>
-                <th style="width:36px;">
-                  <input type="checkbox" id="checkTodosAuditoria" onchange="alternarSelecaoTodosAuditoria(this.checked)" />
-                </th>
-                <th>ID</th>
-                <th>Etiqueta Física</th>
-                <th>Data/Hora Entrada</th>
-                <th>Cliente</th>
-                <th>Item</th>
-                <th>Produto</th>
-                <th>Pedido</th>
-                <th>Lote</th>
-                <th>Volumes</th>
-                <th>Pçs/Vol</th>
-                <th>Total Peças</th>
-                <th style="text-align:right;">Ações</th>
+                <th style="width:75px;">ID</th>
+                <th class="col-etiqueta">Etiqueta</th>
+                <th class="col-data col-secondary-mobile">Data/Hora Entrada</th>
+                <th class="col-cliente">Cliente</th>
+                <th class="col-item">Item</th>
+                <th class="col-produto col-secondary-mobile">Produto</th>
+                <th class="col-pedido col-secondary-mobile">Pedido</th>
+                <th class="col-lote">Lote</th>
+                <th class="col-volumes col-secondary-mobile">Volumes</th>
+                <th class="col-pecas-vol col-secondary-mobile">Pçs/Vol</th>
+                <th class="col-saldo">Saldo Palete</th>
               </tr>
             </thead>
             <tbody id="tbodyAuditoria">
               <tr>
-                <td colspan="13" class="empty-state">Nenhum palete registrado no estoque ativo.</td>
+                <td colspan="11" class="empty-state">Nenhum palete registrado no estoque ativo.</td>
               </tr>
             </tbody>
           </table>
@@ -1285,106 +1388,332 @@
   </main>
 
   <!-- ===================================================================== -->
-  <!-- MODAL 1: CARREGAMENTO DE CAMINHÃO / EXPEDIÇÃO                         -->
+  <!-- EXIGÊNCIA 2 & 3: MODAL DE CONTROLE TOTAL (MASTER-DETAIL + POKA-YOKE)  -->
+  <!-- ===================================================================== -->
+  <div class="modal-backdrop" id="modalControleTotal">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-header">
+        <div class="modal-title" id="ctTituloHeader">Modal de Controle Total — Lote / Palete</div>
+        <button type="button" class="modal-close" onclick="fecharModalControleTotal()" aria-label="Fechar">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <!-- Resumo Completo Sem Truncamento -->
+        <div class="ct-summary-banner">
+          <div style="flex:1; min-width:240px;">
+            <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:4px;">
+              <span id="ctBadgeEtiquetaAtual"></span>
+              <span class="mono" style="font-size:14px; font-weight:800; color:var(--brand-primary);" id="ctResumoItem"></span>
+              <span class="cell-lote" id="ctResumoLote"></span>
+              <span style="font-size:12px; font-weight:700; color:var(--text-primary);" id="ctResumoCliente"></span>
+            </div>
+            <div style="font-size:12px; color:var(--text-secondary); font-weight:600; white-space:normal;" id="ctResumoProdutoCompleto"></div>
+          </div>
+          <div style="text-align:right;">
+            <div class="mono" style="font-size:18px; font-weight:800; color:var(--emerald-primary);" id="ctResumoSaldoTotal">0 pçs</div>
+            <div class="mono" style="font-size:11px; color:var(--text-muted);" id="ctResumoPaletesVolumes">0 paletes | 0 volumes</div>
+          </div>
+        </div>
+
+        <!-- Navegação Interna do Modal de Controle Total -->
+        <div class="ct-tabs">
+          <button type="button" class="ct-tab-btn active" id="ctTabBtnEdicao" onclick="alternarAbaControleTotal('edicao')">
+            1. Edição de Dados e Color Picker (Etiqueta)
+          </button>
+          <button type="button" class="ct-tab-btn" id="ctTabBtnExpedicao" onclick="alternarAbaControleTotal('expedicao')">
+            2. Expedir / Lançar para o Caminhão
+          </button>
+          <button type="button" class="ct-tab-btn" id="ctTabBtnPaletes" onclick="alternarAbaControleTotal('paletes')">
+            3. Paletes Individuais do Lote (<span id="ctCountPaletesAba">0</span>)
+          </button>
+        </div>
+
+        <!-- SEÇÃO 1: EDIÇÃO RIGOROSA + COLOR PICKER ARCO-ÍRIS -->
+        <div class="ct-section active" id="ctSecaoEdicao">
+          <input type="hidden" id="ctModoAlvo" value="LOTE" />
+          <input type="hidden" id="ctPaleteIdAlvo" value="" />
+          <input type="hidden" id="ctLoteOriginal" value="" />
+          <input type="hidden" id="ctItemOriginal" value="" />
+
+          <!-- EXIGÊNCIA 3: COLOR PICKER LIVRE (PALETA ARCO-ÍRIS HEX) -->
+          <div class="rainbow-picker-box" style="margin-bottom:16px;">
+            <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px;">
+              <label class="form-label" style="margin:0;">Cor da Mini-Etiqueta Física (Color Picker Espectro Arco-Íris — Salva HEX no Banco)</label>
+              <span class="mono" style="font-size:12px; font-weight:800; padding:2px 8px; border-radius:4px; background:#ffffff; border:1px solid #cbd5e1;" id="ctHexDisplay">#FFFFFF</span>
+            </div>
+
+            <div class="rainbow-bar-wrapper">
+              <input
+                type="color"
+                id="ctInputColorPicker"
+                class="native-color-input"
+                value="#FFFFFF"
+                oninput="atualizarCorControleTotal(this.value)"
+                title="Abrir seletor nativo de espectro completo"
+              />
+              <div
+                class="rainbow-spectrum-strip"
+                id="ctRainbowStrip"
+                onclick="selecionarCorNaBarraArcoIris(event)"
+                title="Clique em qualquer ponto do arco-íris para capturar o tom exato"
+              ></div>
+              <input
+                type="text"
+                id="ctInputHexManual"
+                class="form-control mono"
+                style="width:110px; font-weight:700; text-transform:uppercase;"
+                maxlength="7"
+                value="#FFFFFF"
+                oninput="aoDigitarHexManual(this.value)"
+                placeholder="#RRGGBB"
+              />
+            </div>
+
+            <div class="preset-swatches-row">
+              <span style="font-size:11px; color:var(--text-muted); font-weight:600;">Tons Rápidos:</span>
+              <button type="button" class="swatch-pill" onclick="atualizarCorControleTotal('#FFFFFF')">
+                <span class="etiqueta-dot" style="background:#FFFFFF;"></span> #FFFFFF
+              </button>
+              <button type="button" class="swatch-pill" onclick="atualizarCorControleTotal('#10B981')">
+                <span class="etiqueta-dot" style="background:#10B981;"></span> #10B981
+              </button>
+              <button type="button" class="swatch-pill" onclick="atualizarCorControleTotal('#EAB308')">
+                <span class="etiqueta-dot" style="background:#EAB308;"></span> #EAB308
+              </button>
+              <button type="button" class="swatch-pill" onclick="atualizarCorControleTotal('#EC4899')">
+                <span class="etiqueta-dot" style="background:#EC4899;"></span> #EC4899
+              </button>
+              <button type="button" class="swatch-pill" onclick="atualizarCorControleTotal('#3B82F6')">
+                <span class="etiqueta-dot" style="background:#3B82F6;"></span> #3B82F6
+              </button>
+              <button type="button" class="swatch-pill" onclick="atualizarCorControleTotal('#F97316')">
+                <span class="etiqueta-dot" style="background:#F97316;"></span> #F97316
+              </button>
+              <button type="button" class="swatch-pill" onclick="atualizarCorControleTotal('#8B5CF6')">
+                <span class="etiqueta-dot" style="background:#8B5CF6;"></span> #8B5CF6
+              </button>
+              <button type="button" class="swatch-pill" onclick="atualizarCorControleTotal('#EF4444')">
+                <span class="etiqueta-dot" style="background:#EF4444;"></span> #EF4444
+              </button>
+            </div>
+          </div>
+
+          <!-- FORMULÁRIO DE EDIÇÃO RIGOROSA DOS DADOS DO PRODUTO -->
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label">Cliente *</label>
+              <input type="text" id="ctInputCliente" class="form-control" style="text-transform:uppercase;" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Código do Item *</label>
+              <input type="text" id="ctInputItem" class="form-control mono" style="text-transform:uppercase;" />
+            </div>
+            <div class="form-group full">
+              <label class="form-label">Descrição Técnica Completa do Produto *</label>
+              <input type="text" id="ctInputProduto" class="form-control" style="text-transform:uppercase;" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Nº do Pedido</label>
+              <input type="text" id="ctInputPedido" class="form-control mono" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Nº do Lote *</label>
+              <input type="text" id="ctInputLote" class="form-control mono" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Peças por Volume *</label>
+              <input type="number" id="ctInputPecasPorVolume" class="form-control mono" min="1" max="100000" />
+            </div>
+            <div class="form-group" id="ctGrupoVolumesIndividual" style="display:none;">
+              <label class="form-label">Volumes deste Palete *</label>
+              <input type="number" id="ctInputVolumesPalete" class="form-control mono" min="1" max="500" />
+            </div>
+          </div>
+
+          <div style="margin-top:16px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;">
+            <button type="button" class="btn btn-danger-outline" id="ctBtnExcluirRegistro" onclick="excluirRegistroViaControleTotal()">
+              Excluir Registro do Estoque
+            </button>
+            <button type="button" class="btn btn-emerald" onclick="salvarEdicaoControleTotal()">
+              Salvar Alterações e Cor HEX
+            </button>
+          </div>
+        </div>
+
+        <!-- SEÇÃO 2: EXPEDIR / LANÇAR PARA O CAMINHÃO -->
+        <div class="ct-section" id="ctSecaoExpedicao">
+          <div style="background:var(--amber-soft); border:1px solid var(--amber-border); padding:12px 14px; border-radius:var(--radius-sm); margin-bottom:14px;">
+            <div style="font-size:12px; font-weight:800; color:var(--amber-primary); text-transform:uppercase;">
+              Expedição Direta e Segura deste Lote
+            </div>
+            <div style="font-size:11.5px; color:var(--text-secondary); margin-top:2px;">
+              Defina quantos paletes deste lote serão carregados no caminhão. O saldo será deduzido imediatamente do estoque ativo.
+            </div>
+          </div>
+
+          <div class="form-grid-3">
+            <div class="form-group">
+              <label class="form-label">Qtd. Paletes a Carregar *</label>
+              <input type="number" id="ctExpQtdPaletes" class="form-control mono" min="1" value="1" oninput="recalcularPreviewExpedicaoCT()" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Placa do Caminhão *</label>
+              <input type="text" id="ctExpPlaca" class="form-control mono" placeholder="EX: ABC-1D23" style="text-transform:uppercase;" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Motorista / Transportadora</label>
+              <input type="text" id="ctExpMotorista" class="form-control" placeholder="EX: JOÃO SILVA" style="text-transform:uppercase;" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Cliente / Destino</label>
+              <input type="text" id="ctExpDestino" class="form-control" style="text-transform:uppercase;" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Nº Romaneio / NF (Opcional)</label>
+              <input type="text" id="ctExpRomaneio" class="form-control mono" placeholder="Automático se vazio" style="text-transform:uppercase;" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Observações</label>
+              <input type="text" id="ctExpObs" class="form-control" placeholder="Doca / Conferente" />
+            </div>
+          </div>
+
+          <div style="margin-top:16px; padding:12px 14px; background:#f8fafc; border:1px solid var(--border-strong); border-radius:var(--radius-sm); display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;">
+            <div class="mono" style="font-size:13px; font-weight:800; color:var(--text-primary);" id="ctExpPreviewTexto">
+              Total a Expedir: 0 paletes | 0 peças
+            </div>
+            <button type="button" class="btn btn-amber" onclick="confirmarExpedicaoViaControleTotal()">
+              Confirmar Expedição para o Caminhão
+            </button>
+          </div>
+        </div>
+
+        <!-- SEÇÃO 3: LISTA DE PALETES INDIVIDUAIS DO LOTE -->
+        <div class="ct-section" id="ctSecaoPaletes">
+          <div class="table-responsive" style="max-height:320px; border:1px solid var(--border-light); border-radius:var(--radius-sm);">
+            <table class="datagrid" style="table-layout:auto;">
+              <thead>
+                <tr>
+                  <th>ID Palete</th>
+                  <th>Etiqueta</th>
+                  <th>Data/Hora Entrada</th>
+                  <th>Volumes</th>
+                  <th>Pçs/Vol</th>
+                  <th>Saldo Palete</th>
+                  <th style="text-align:right;">Ação Individual</th>
+                </tr>
+              </thead>
+              <tbody id="ctTbodyPaletesDoLote">
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <span style="font-size:11px; color:var(--text-muted);">
+          Proteção Poka-Yoke ativa: nenhuma ação crítica ocorre fora desta janela de confirmação.
+        </span>
+        <button type="button" class="btn btn-outline" onclick="fecharModalControleTotal()">Fechar Painel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- MODAL DE EXPEDIÇÃO MULTILOTE (BOTÃO "EXPEDIÇÃO" DO CABEÇALHO)         -->
   <!-- ===================================================================== -->
   <div class="modal-backdrop" id="modalExpedicao">
     <div class="modal-dialog modal-lg">
       <div class="modal-header">
-        <div class="modal-title">Carregamento de Caminhão — Lançar Expedição e Deduzir do Estoque</div>
-      <button type="button" class="modal-close" onclick="fecharModalExpedicao()" aria-label="Fechar">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <line x1="18" y1="6" x2="6" y2="18"></line>
-          <line x1="6" y1="6" x2="18" y2="18"></line>
-        </svg>
-      </button>
+        <div class="modal-title">Expedição — Montar Romaneio de Caminhão e Deduzir do Estoque</div>
+        <button type="button" class="modal-close" onclick="fecharModalExpedicao()" aria-label="Fechar">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
       </div>
       <div class="modal-body">
-        <div class="form-grid-3" style="margin-bottom:16px;">
+        <div class="form-grid-3" style="margin-bottom:14px;">
           <div class="form-group">
-            <label class="form-label">Placa do Caminhão / Veículo *</label>
+            <label class="form-label">Placa do Caminhão *</label>
             <input type="text" id="expPlaca" class="form-control mono" placeholder="EX: ABC-1D23" style="text-transform:uppercase;" />
           </div>
           <div class="form-group">
-            <label class="form-label">Nome do Motorista / Transportadora</label>
-            <input type="text" id="expMotorista" class="form-control" placeholder="EX: JOÃO SILVA / TRANSP. RÁPIDA" style="text-transform:uppercase;" />
+            <label class="form-label">Motorista / Transportadora</label>
+            <input type="text" id="expMotorista" class="form-control" placeholder="EX: JOÃO SILVA" style="text-transform:uppercase;" />
           </div>
           <div class="form-group">
-            <label class="form-label">Cliente / Destino da Carga</label>
-            <input type="text" id="expClienteDestino" class="form-control" placeholder="Preenchido automaticamente ou digite" style="text-transform:uppercase;" />
+            <label class="form-label">Cliente / Destino</label>
+            <input type="text" id="expClienteDestino" class="form-control" style="text-transform:uppercase;" />
           </div>
           <div class="form-group">
-            <label class="form-label">Nº Romaneio / Nota Fiscal (Opcional)</label>
-            <input type="text" id="expRomaneio" class="form-control mono" placeholder="Gerado automaticamente se vazio" style="text-transform:uppercase;" />
+            <label class="form-label">Nº Romaneio (Opcional)</label>
+            <input type="text" id="expRomaneio" class="form-control mono" placeholder="Automático se vazio" style="text-transform:uppercase;" />
           </div>
           <div class="form-group" style="grid-column: span 2;">
-            <label class="form-label">Observações da Expedição</label>
-            <input type="text" id="expObservacoes" class="form-control" placeholder="Ex: Carga paletizada com filme stretch, conferida na doca 02" />
+            <label class="form-label">Observações</label>
+            <input type="text" id="expObservacoes" class="form-control" placeholder="Conferência de doca" />
           </div>
         </div>
 
-        <div style="background:#f8fafc; border:1px solid var(--border-strong); border-radius:var(--radius-sm); padding:12px 14px; margin-bottom:12px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;">
-          <div>
-            <div style="font-size:12px; font-weight:700; color:var(--text-primary); text-transform:uppercase;">
-              Selecione a Quantidade de Paletes de Cada Lote para Carregar no Caminhão
-            </div>
-            <div style="font-size:11.5px; color:var(--text-muted);">
-              Os paletes selecionados sairão imediatamente do saldo disponível em estoque e receberão carimbo de data/hora de saída.
-            </div>
-          </div>
-          <div style="display:flex; align-items:center; gap:14px;">
-            <div class="mono" style="font-size:12.5px; font-weight:700; color:var(--brand-primary);">
-              Selecionados: <span id="resumoExpPaletes">0</span> paletes | <span id="resumoExpPecas">0</span> peças
-            </div>
-          </div>
+        <div style="background:#f8fafc; border:1px solid var(--border-strong); border-radius:var(--radius-sm); padding:10px 14px; margin-bottom:10px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px;">
+          <span style="font-size:11.5px; font-weight:700; text-transform:uppercase;">Selecione os Paletes por Lote:</span>
+          <span class="mono" style="font-size:12.5px; font-weight:800; color:var(--brand-primary);">
+            Selecionados: <span id="resumoExpPaletes">0</span> paletes | <span id="resumoExpPecas">0</span> peças
+          </span>
         </div>
 
-        <div class="table-responsive" style="max-height:340px; border:1px solid var(--border-light); border-radius:var(--radius-sm);">
-          <table class="datagrid">
+        <div class="table-responsive" style="max-height:300px; border:1px solid var(--border-light); border-radius:var(--radius-sm);">
+          <table class="datagrid" style="table-layout:auto;">
             <thead>
               <tr>
                 <th>Etiqueta</th>
                 <th>Cliente</th>
                 <th>Item</th>
                 <th>Lote</th>
-                <th>Disponível em Estoque</th>
-                <th>Saldo Disponível</th>
-                <th style="width:190px;">Qtd. Paletes a Carregar</th>
+                <th>Disponível</th>
+                <th>Saldo</th>
+                <th style="width:180px;">Paletes a Expedir</th>
               </tr>
             </thead>
-            <tbody id="tbodySelecaoLotesExpedicao">
-            </tbody>
+            <tbody id="tbodySelecaoLotesExpedicao"></tbody>
           </table>
         </div>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-outline" onclick="fecharModalExpedicao()">Cancelar</button>
         <button type="button" class="btn btn-amber" onclick="confirmarCarregamentoCaminhao()">
-          Confirmar Carregamento e Baixar do Estoque
+          Confirmar Expedição
         </button>
       </div>
     </div>
   </div>
 
   <!-- ===================================================================== -->
-  <!-- MODAL 2: NOVO LANÇAMENTO MANUAL / EDIÇÃO DE PALETE                    -->
+  <!-- MODAL DE NOVO LANÇAMENTO MANUAL                                       -->
   <!-- ===================================================================== -->
   <div class="modal-backdrop" id="modalPalete">
     <div class="modal-dialog">
       <div class="modal-header">
-        <div class="modal-title" id="tituloModalPalete">Novo Lançamento de Palete em Estoque</div>
-      <button type="button" class="modal-close" onclick="fecharModalPalete()" aria-label="Fechar">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <line x1="18" y1="6" x2="6" y2="18"></line>
-          <line x1="6" y1="6" x2="18" y2="18"></line>
-        </svg>
-      </button>
+        <div class="modal-title">Novo Lançamento de Palete em Estoque</div>
+        <button type="button" class="modal-close" onclick="fecharModalPalete()" aria-label="Fechar">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
       </div>
       <div class="modal-body">
-        <input type="hidden" id="formPaleteId" value="" />
         <div class="form-grid">
           <div class="form-group">
             <label class="form-label">Código do Item *</label>
-            <input type="text" id="formItem" class="form-control mono" placeholder="EX: PT-7908 ou 719935" oninput="autoPreencherPorItemModal(this.value)" style="text-transform:uppercase;" />
+            <input type="text" id="formItem" class="form-control mono" placeholder="EX: PT-7908" oninput="autoPreencherPorItemModal(this.value)" style="text-transform:uppercase;" />
           </div>
           <div class="form-group">
             <label class="form-label">Cliente *</label>
@@ -1392,62 +1721,40 @@
           </div>
           <div class="form-group full">
             <label class="form-label">Descrição Técnica do Produto *</label>
-            <input type="text" id="formProduto" class="form-control" placeholder="Descrição completa do item" style="text-transform:uppercase;" />
+            <input type="text" id="formProduto" class="form-control" style="text-transform:uppercase;" />
           </div>
           <div class="form-group">
-            <label class="form-label">Nº do Pedido (6 dígitos)</label>
-            <input type="text" id="formPedido" class="form-control mono" placeholder="EX: 003706" oninput="sincronizarLotePeloPedidoModal()" />
+            <label class="form-label">Nº do Pedido</label>
+            <input type="text" id="formPedido" class="form-control mono" oninput="sincronizarLotePeloPedidoModal()" />
           </div>
           <div class="form-group">
             <label class="form-label">Nº do Lote *</label>
-            <input type="text" id="formLote" class="form-control mono" placeholder="EX: 003706.1" />
+            <input type="text" id="formLote" class="form-control mono" />
           </div>
           <div class="form-group">
-            <label class="form-label">Volumes no Palete (Caixas/Sacarias) *</label>
+            <label class="form-label">Volumes no Palete *</label>
             <input type="number" id="formVolumes" class="form-control mono" min="1" max="500" value="15" oninput="recalcularPreviewModal()" />
           </div>
           <div class="form-group">
             <label class="form-label">Peças por Volume *</label>
-            <input type="number" id="formPecasPorVolume" class="form-control mono" min="1" max="100000" placeholder="EX: 220" oninput="recalcularPreviewModal()" />
+            <input type="number" id="formPecasPorVolume" class="form-control mono" min="1" max="100000" oninput="recalcularPreviewModal()" />
           </div>
-
           <div class="form-group full">
-            <label class="form-label">Cor da Etiqueta Física do Palete / Lote</label>
-            <div class="color-picker-grid" id="seletorCoresModal">
-              <div class="color-option etiqueta-BRANCA selected" data-cor="BRANCA" onclick="selecionarCorModal('BRANCA')">
-                <span class="etiqueta-dot"></span> BRANCA
-              </div>
-              <div class="color-option etiqueta-VERDE" data-cor="VERDE" onclick="selecionarCorModal('VERDE')">
-                <span class="etiqueta-dot"></span> VERDE
-              </div>
-              <div class="color-option etiqueta-AMARELA" data-cor="AMARELA" onclick="selecionarCorModal('AMARELA')">
-                <span class="etiqueta-dot"></span> AMARELA
-              </div>
-              <div class="color-option etiqueta-ROSA" data-cor="ROSA" onclick="selecionarCorModal('ROSA')">
-                <span class="etiqueta-dot"></span> ROSA
-              </div>
-              <div class="color-option etiqueta-AZUL" data-cor="AZUL" onclick="selecionarCorModal('AZUL')">
-                <span class="etiqueta-dot"></span> AZUL
-              </div>
-              <div class="color-option etiqueta-LARANJA" data-cor="LARANJA" onclick="selecionarCorModal('LARANJA')">
-                <span class="etiqueta-dot"></span> LARANJA
-              </div>
+            <label class="form-label">Cor da Etiqueta Física (Color Picker HEX)</label>
+            <div style="display:flex; align-items:center; gap:10px;">
+              <input type="color" id="formColorPicker" class="native-color-input" value="#FFFFFF" oninput="document.getElementById('formHexLabel').textContent = this.value.toUpperCase()" />
+              <span class="mono" id="formHexLabel" style="font-weight:700;">#FFFFFF</span>
             </div>
           </div>
-
-          <div class="form-group full" style="background:var(--emerald-soft); border:1px solid var(--emerald-border); padding:12px 14px; border-radius:var(--radius-sm); display:flex; flex-direction:row; align-items:center; justify-content:space-between;">
-            <span style="font-size:12px; font-weight:700; color:var(--emerald-primary); text-transform:uppercase;">
-              Total Calculado do Palete:
-            </span>
-            <span class="mono" style="font-size:18px; font-weight:800; color:var(--emerald-primary);" id="previewTotalModal">
-              0 peças
-            </span>
+          <div class="form-group full" style="background:var(--emerald-soft); border:1px solid var(--emerald-border); padding:10px 14px; border-radius:var(--radius-sm); display:flex; flex-direction:row; align-items:center; justify-content:space-between;">
+            <span style="font-size:12px; font-weight:700; color:var(--emerald-primary);">Total Calculado:</span>
+            <span class="mono" style="font-size:16px; font-weight:800; color:var(--emerald-primary);" id="previewTotalModal">0 peças</span>
           </div>
         </div>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-outline" onclick="fecharModalPalete()">Cancelar</button>
-        <button type="button" class="btn btn-emerald" onclick="salvarPaleteModal()">Salvar Registro no Estoque</button>
+        <button type="button" class="btn btn-emerald" onclick="salvarPaleteModal()">Salvar no Estoque</button>
       </div>
     </div>
   </div>
@@ -1460,7 +1767,18 @@
     // ESTADO GLOBAL CORPORATIVO
     // =========================================================================
     const CHAVE_STORAGE_ESPELHO = 'finart_backup_enterprise_v3';
-    const CORES_CICLO = ['BRANCA', 'VERDE', 'AMARELA', 'ROSA', 'AZUL', 'LARANJA'];
+    const CHAVE_PREF_MODO_VISAO = 'finart_view_mode_override';
+
+    const MAPA_NOMES_LEGADO_HEX = {
+      BRANCA: '#FFFFFF',
+      VERDE: '#10B981',
+      AMARELA: '#EAB308',
+      ROSA: '#EC4899',
+      AZUL: '#3B82F6',
+      LARANJA: '#F97316',
+      ROXA: '#8B5CF6',
+      VERMELHA: '#EF4444'
+    };
 
     let estado = {
       consolidado: [],
@@ -1470,15 +1788,87 @@
       catalogo: [],
       abaAtiva: 'estoque',
       filtroCliente: 'TODOS',
-      lotesExpandidos: new Set(),
-      selecionadosAuditoria: new Set(),
-      corModalSelecionada: 'BRANCA',
+      modoVisaoManual: false,
+      modoVisaoAtual: 'desktop',
+      controleTotalAlvo: null,
+      corControleTotalHex: '#FFFFFF',
       quantidadesExpedicaoPorLote: {}
     };
 
     // =========================================================================
-    // UTILITÁRIOS DE FORMATAÇÃO E TIMESTAMPS
+    // EXIGÊNCIA 1: DETECÇÃO AUTOMÁTICA E TOGGLE DE MODO MOBILE vs DESKTOP
     // =========================================================================
+    function detectarDispositivoMobile() {
+      const uaMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+        navigator.userAgent || ''
+      );
+      const telaEstreita = window.innerWidth <= 860;
+      return uaMobile || telaEstreita;
+    }
+
+    function definirModoVisualizacao(modo, forcarManual = false) {
+      if (forcarManual) {
+        estado.modoVisaoManual = true;
+        try {
+          sessionStorage.setItem(CHAVE_PREF_MODO_VISAO, modo);
+        } catch (e) {}
+      }
+
+      estado.modoVisaoAtual = modo === 'mobile' ? 'mobile' : 'desktop';
+      document.body.classList.toggle('view-mobile', estado.modoVisaoAtual === 'mobile');
+      document.body.classList.toggle('view-desktop', estado.modoVisaoAtual === 'desktop');
+
+      const btnDesktop = document.getElementById('btnModoDesktop');
+      const btnMobile = document.getElementById('btnModoMobile');
+      if (btnDesktop && btnMobile) {
+        btnDesktop.classList.toggle('active', estado.modoVisaoAtual === 'desktop');
+        btnMobile.classList.toggle('active', estado.modoVisaoAtual === 'mobile');
+      }
+    }
+
+    function inicializarResponsividadeInteligente() {
+      let salvo = null;
+      try {
+        salvo = sessionStorage.getItem(CHAVE_PREF_MODO_VISAO);
+      } catch (e) {}
+
+      if (salvo === 'mobile' || salvo === 'desktop') {
+        estado.modoVisaoManual = true;
+        definirModoVisualizacao(salvo, false);
+      } else {
+        definirModoVisualizacao(detectarDispositivoMobile() ? 'mobile' : 'desktop', false);
+      }
+
+      window.addEventListener('resize', () => {
+        if (!estado.modoVisaoManual) {
+          definirModoVisualizacao(detectarDispositivoMobile() ? 'mobile' : 'desktop', false);
+        }
+      });
+    }
+
+    // =========================================================================
+    // UTILITÁRIOS DE CORES HEX, TIMESTAMPS E ESCAPE
+    // =========================================================================
+    function normalizarCorHex(cor = '#FFFFFF') {
+      const c = String(cor || '#FFFFFF').trim().toUpperCase();
+      if (MAPA_NOMES_LEGADO_HEX[c]) return MAPA_NOMES_LEGADO_HEX[c];
+      if (/^#[0-9A-F]{6}$/.test(c)) return c;
+      if (/^#[0-9A-F]{3}$/.test(c)) {
+        return '#' + c[1] + c[1] + c[2] + c[2] + c[3] + c[3];
+      }
+      return '#FFFFFF';
+    }
+
+    function renderizarBadgeEtiqueta(cor = '#FFFFFF') {
+      const hex = normalizarCorHex(cor);
+      return `
+        <span class="etiqueta-badge" title="Cor da Etiqueta Física: ${hex}">
+          <span class="etiqueta-dot" style="background-color: ${hex};"></span>
+          <span>${hex}</span>
+        </span>
+      `;
+    }
+
     function formatarNumero(num) {
       return Number(num || 0).toLocaleString('pt-BR');
     }
@@ -1516,20 +1906,7 @@
       div.className = `toast-item ${tipo}`;
       div.textContent = mensagem;
       container.appendChild(div);
-      setTimeout(() => {
-        div.remove();
-      }, 4200);
-    }
-
-    function renderizarBadgeEtiqueta(cor = 'BRANCA', acaoOnClick = '') {
-      const c = CORES_CICLO.includes(String(cor).toUpperCase()) ? String(cor).toUpperCase() : 'BRANCA';
-      const attrClick = acaoOnClick ? `onclick="${acaoOnClick}" title="Clique para alternar a cor da mini-etiqueta"` : '';
-      return `
-        <span class="etiqueta-badge etiqueta-${c}" ${attrClick}>
-          <span class="etiqueta-dot"></span>
-          ${c}
-        </span>
-      `;
+      setTimeout(() => div.remove(), 4000);
     }
 
     // =========================================================================
@@ -1537,15 +1914,16 @@
     // =========================================================================
     function salvarEspelhoLocal(dados) {
       try {
-        const payload = {
-          atualizadoEm: Date.now(),
-          versaoExclusao: dados.versaoExclusao || 0,
-          historico: dados.historico || [],
-          expedidos: dados.expedidos || [],
-          expedicoes: dados.expedicoes || [],
-          catalogo: dados.catalogo || []
-        };
-        localStorage.setItem(CHAVE_STORAGE_ESPELHO, JSON.stringify(payload));
+        localStorage.setItem(
+          CHAVE_STORAGE_ESPELHO,
+          JSON.stringify({
+            atualizadoEm: Date.now(),
+            historico: dados.historico || [],
+            expedidos: dados.expedidos || [],
+            expedicoes: dados.expedicoes || [],
+            catalogo: dados.catalogo || []
+          })
+        );
       } catch (e) {}
     }
 
@@ -1553,16 +1931,12 @@
       try {
         const totalServidor = (dadosServidor.historico || []).length + (dadosServidor.expedidos || []).length;
         if (totalServidor > 0) return false;
-
         const bruto = localStorage.getItem(CHAVE_STORAGE_ESPELHO);
         if (!bruto) return false;
         const cache = JSON.parse(bruto);
-        const temDadosCache =
-          (Array.isArray(cache.historico) && cache.historico.length > 0) ||
-          (Array.isArray(cache.expedidos) && cache.expedidos.length > 0);
-
-        if (!temDadosCache) return false;
-
+        if ((!cache.historico || !cache.historico.length) && (!cache.expedidos || !cache.expedidos.length)) {
+          return false;
+        }
         const resp = await fetch('/api/restaurar-backup', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -1583,13 +1957,11 @@
     async function carregarDashboard() {
       try {
         const resp = await fetch('/api/dashboard?t=' + Date.now(), { cache: 'no-store' });
-        if (!resp.ok) throw new Error('Falha ao consultar servidor');
+        if (!resp.ok) return;
         const dados = await resp.json();
 
         const restaurou = await tentarAutoRestaurarSeBancoVazio(dados);
-        if (restaurou) {
-          return carregarDashboard();
-        }
+        if (restaurou) return carregarDashboard();
 
         estado.consolidado = dados.consolidado || [];
         estado.historico = dados.historico || [];
@@ -1601,40 +1973,36 @@
           salvarEspelhoLocal(dados);
         }
 
-        document.getElementById('labelUltimaSincronizacao').textContent =
-          'Atualizado às ' + new Date().toLocaleTimeString('pt-BR');
+        const lblSync = document.getElementById('labelUltimaSincronizacao');
+        if (lblSync) lblSync.textContent = 'Sincronizado às ' + new Date().toLocaleTimeString('pt-BR');
 
         renderizarChipsClientes();
         renderizarTudo();
-      } catch (e) {
-        console.error(e);
-      }
+      } catch (e) {}
     }
 
     function iniciarStreamTempoReal() {
       try {
         const ev = new EventSource('/api/stream');
         ev.onopen = () => {
-          document.getElementById('statusConexaoTexto').textContent = 'TEMPO REAL ATIVO';
+          document.getElementById('statusConexaoTexto').textContent = 'ONLINE';
           document.getElementById('statusConexaoDot').style.background = '#10b981';
         };
         ev.onmessage = (msg) => {
           try {
             const data = JSON.parse(msg.data);
-            if (data.atualizar) {
-              carregarDashboard();
-            }
+            if (data.atualizar) carregarDashboard();
           } catch (e) {}
         };
         ev.onerror = () => {
-          document.getElementById('statusConexaoTexto').textContent = 'RECONECTANDO...';
+          document.getElementById('statusConexaoTexto').textContent = 'RECONECTANDO';
           document.getElementById('statusConexaoDot').style.background = '#f59e0b';
         };
       } catch (e) {}
     }
 
     // =========================================================================
-    // FILTROS E RENDERIZAÇÃO DE INTERFACE
+    // FILTROS E RENDERIZAÇÃO MASTER-DETAIL (SINGLE-LINE NO PC + MOBILE LIMPO)
     // =========================================================================
     function renderizarChipsClientes() {
       const clientesSet = new Set();
@@ -1648,7 +2016,7 @@
       const clientes = Array.from(clientesSet).sort();
       const container = document.getElementById('containerChipsClientes');
 
-      let html = `<button type="button" class="chip-btn ${estado.filtroCliente === 'TODOS' ? 'active' : ''}" onclick="selecionarFiltroCliente('TODOS')">TODOS OS CLIENTES (${clientes.length})</button>`;
+      let html = `<button type="button" class="chip-btn ${estado.filtroCliente === 'TODOS' ? 'active' : ''}" onclick="selecionarFiltroCliente('TODOS')">TODOS (${clientes.length})</button>`;
       clientes.forEach((cli) => {
         const ativo = estado.filtroCliente === cli ? 'active' : '';
         html += `<button type="button" class="chip-btn ${ativo}" onclick="selecionarFiltroCliente('${escaparHTML(cli)}')">${escaparHTML(cli)}</button>`;
@@ -1675,20 +2043,11 @@
 
     function passaFiltroGlobal(registro) {
       const termo = (document.getElementById('inputBuscaGlobal').value || '').trim().toUpperCase();
-      const corFiltro = document.getElementById('selectFiltroCor').value || 'TODAS';
-
       if (estado.filtroCliente !== 'TODOS') {
         const cliReg = String(registro.cliente || registro.cliente_destino || '').toUpperCase().trim();
         if (cliReg !== estado.filtroCliente) return false;
       }
-
-      if (corFiltro !== 'TODAS') {
-        const corReg = String(registro.cor_etiqueta || 'BRANCA').toUpperCase().trim();
-        if (corReg !== corFiltro) return false;
-      }
-
       if (!termo) return true;
-
       const campos = [
         registro.cliente,
         registro.cliente_destino,
@@ -1703,7 +2062,6 @@
         .filter(Boolean)
         .join(' ')
         .toUpperCase();
-
       return campos.includes(termo);
     }
 
@@ -1712,7 +2070,6 @@
       const historicoFiltrado = estado.historico.filter(passaFiltroGlobal);
       const expedidosFiltrados = estado.expedidos.filter(passaFiltroGlobal);
 
-      // Atualiza KPIs
       const totalLotes = lotesFiltrados.length;
       const totalPaletes = lotesFiltrados.reduce((acc, l) => acc + Number(l.total_paletes || 0), 0);
       const totalVolumes = lotesFiltrados.reduce((acc, l) => acc + Number(l.total_caixas_ou_sacaria || 0), 0);
@@ -1723,14 +2080,13 @@
       const totalPecasExpedidas = estado.expedidos.reduce((acc, p) => acc + Number(p.saldo_total_pecas || 0), 0);
 
       document.getElementById('kpiTotalLotes').textContent = formatarNumero(totalLotes);
-      document.getElementById('kpiResumoClientes').textContent = `${clientesUnicos} cliente(s) com saldo ativo`;
+      document.getElementById('kpiResumoClientes').textContent = `${clientesUnicos} cliente(s) ativo(s)`;
       document.getElementById('kpiTotalPaletes').textContent = formatarNumero(totalPaletes);
-      document.getElementById('kpiTotalVolumes').textContent = `${formatarNumero(totalVolumes)} volumes (caixas / sacarias)`;
+      document.getElementById('kpiTotalVolumes').textContent = `${formatarNumero(totalVolumes)} volumes`;
       document.getElementById('kpiSaldoPecas').textContent = formatarNumero(totalPecasEstoque);
       document.getElementById('kpiTotalExpedidos').textContent = formatarNumero(totalPaletesExpedidos);
-      document.getElementById('kpiDetalheExpedidos').textContent = `${formatarNumero(estado.expedicoes.length)} romaneio(s) | ${formatarNumero(totalPecasExpedidas)} peças expedidas`;
+      document.getElementById('kpiDetalheExpedidos').textContent = `${formatarNumero(estado.expedicoes.length)} romaneio(s) | ${formatarNumero(totalPecasExpedidas)} pçs`;
 
-      // Contadores das Abas
       document.getElementById('countTabEstoque').textContent = totalLotes;
       document.getElementById('countTabExpedicao').textContent = estado.expedicoes.length;
       document.getElementById('countTabAuditoria').textContent = historicoFiltrado.length;
@@ -1740,166 +2096,87 @@
       renderizarTabelaAuditoria(historicoFiltrado);
     }
 
+    // EXIGÊNCIA 2 & 4: GRADE SOMENTE-LEITURA COM SINGLE-LINE TEXT + CLIQUE PARA MODAL DE CONTROLE TOTAL
     function renderizarTabelaConsolidado(lotes) {
       const tbody = document.getElementById('tbodyConsolidado');
       if (!lotes.length) {
-        tbody.innerHTML = `<tr><td colspan="12" class="empty-state">Nenhum lote em estoque encontrado para os filtros selecionados.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="11" class="empty-state">Nenhum lote em estoque encontrado.</td></tr>`;
         return;
       }
 
-      let html = '';
-      lotes.forEach((l) => {
-        const chaveLote = `${l.lote}__${l.item}`;
-        const expandido = estado.lotesExpandidos.has(chaveLote);
-        const corAtual = l.cor_etiqueta || 'BRANCA';
-
-        html += `
-          <tr class="${expandido ? 'row-expanded' : ''}">
-            <td>
-              ${renderizarBadgeEtiqueta(
-                corAtual,
-                `alternarCorLoteRapido('${escaparHTML(l.lote)}', '${escaparHTML(l.item)}', '${escaparHTML(corAtual)}')`
-              )}
-            </td>
-            <td class="cell-client">${escaparHTML(l.cliente)}</td>
-            <td class="cell-item">${escaparHTML(l.item)}</td>
-            <td style="max-width:310px; font-weight:500;">${escaparHTML(l.produto)}</td>
-            <td class="mono">${escaparHTML(l.pedido || '—')}</td>
-            <td><span class="cell-lote">${escaparHTML(l.lote)}</span></td>
-            <td class="mono" style="font-weight:700;">${formatarNumero(l.total_paletes)} PLT</td>
-            <td class="mono">${formatarNumero(l.total_caixas_ou_sacaria)} VOL</td>
-            <td class="mono">${formatarNumero(l.qtd_pecas_por_volume)}</td>
-            <td class="cell-saldo">${formatarNumero(l.saldo_total_pecas)} pçs</td>
-            <td class="cell-timestamp">${formatarDataHora(l.ultima_atualizacao)}</td>
-            <td style="text-align:right; white-space:nowrap;">
-              <button type="button" class="btn btn-amber btn-xs" onclick="abrirModalExpedicaoComLote('${escaparHTML(l.lote)}', '${escaparHTML(l.item)}')">
-                Expedir Caminhão
-              </button>
-              <button type="button" class="btn btn-outline btn-xs" onclick="alternarExpansaoLote('${escaparHTML(chaveLote)}')">
-                ${expandido ? 'Ocultar Paletes' : `Ver Paletes (${l.total_paletes})`}
-              </button>
-            </td>
-          </tr>
-        `;
-
-        if (expandido) {
-          const paletesDoLote = estado.historico.filter(
-            (p) =>
-              String(p.lote).toUpperCase().trim() === String(l.lote).toUpperCase().trim() &&
-              String(p.item).toUpperCase().trim() === String(l.item).toUpperCase().trim()
-          );
-
-          html += `
-            <tr class="subgrid-row">
-              <td colspan="12">
-                <div class="subgrid-box">
-                  <div class="subgrid-header">
-                    <span>PALETES INDIVIDUAIS DO LOTE ${escaparHTML(l.lote)} — ITEM ${escaparHTML(l.item)} (${paletesDoLote.length} paletes ativos)</span>
-                    <button type="button" class="btn btn-amber btn-xs" onclick="abrirModalExpedicaoComLote('${escaparHTML(l.lote)}', '${escaparHTML(l.item)}')">
-                      Carregar Lote no Caminhão
-                    </button>
-                  </div>
-                  <table class="datagrid">
-                    <thead>
-                      <tr>
-                        <th>ID Palete</th>
-                        <th>Etiqueta Física</th>
-                        <th>Timestamp de Entrada</th>
-                        <th>Volumes no Palete</th>
-                        <th>Peças / Volume</th>
-                        <th>Saldo do Palete</th>
-                        <th style="text-align:right;">Ações no Palete</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      ${paletesDoLote
-                        .map(
-                          (p, idx) => `
-                        <tr>
-                          <td class="mono">#${p.id} (Palete ${paletesDoLote.length - idx})</td>
-                          <td>
-                            ${renderizarBadgeEtiqueta(
-                              p.cor_etiqueta || corAtual,
-                              `alternarCorPaleteIndividual(${p.id}, '${escaparHTML(p.cor_etiqueta || corAtual)}')`
-                            )}
-                          </td>
-                          <td class="cell-timestamp">${formatarDataHora(p.data_hora)}</td>
-                          <td class="mono">${formatarNumero(p.qtd_volumes_palete)} VOL</td>
-                          <td class="mono">${formatarNumero(p.qtd_pecas_por_volume)} pçs</td>
-                          <td class="cell-saldo">${formatarNumero(p.saldo_total_pecas)} pçs</td>
-                          <td style="text-align:right;">
-                            <button type="button" class="btn btn-outline btn-xs" onclick="abrirModalEditarPalete(${p.id})">Editar</button>
-                            <button type="button" class="btn btn-danger-outline btn-xs" onclick="excluirPaleteUnico(${p.id})">Excluir</button>
-                          </td>
-                        </tr>
-                      `
-                        )
-                        .join('')}
-                    </tbody>
-                  </table>
-                </div>
+      tbody.innerHTML = lotes
+        .map((l, idx) => {
+          const corHex = normalizarCorHex(l.cor_etiqueta);
+          return `
+            <tr
+              class="master-row"
+              onclick="abrirModalControleTotalLote('${escaparHTML(l.lote)}', '${escaparHTML(l.item)}')"
+              title="Clique para abrir o Modal de Controle Total do Lote ${escaparHTML(l.lote)} (${escaparHTML(l.produto)})"
+            >
+              <td>${renderizarBadgeEtiqueta(corHex)}</td>
+              <td class="cell-client" title="${escaparHTML(l.cliente)}">
+                <span class="cell-truncate">${escaparHTML(l.cliente)}</span>
               </td>
+              <td class="cell-item" title="${escaparHTML(l.item)}">${escaparHTML(l.item)}</td>
+              <td class="col-secondary-mobile" title="${escaparHTML(l.produto)}">
+                <span class="cell-truncate">${escaparHTML(l.produto)}</span>
+              </td>
+              <td class="mono col-secondary-mobile">${escaparHTML(l.pedido || '—')}</td>
+              <td><span class="cell-lote">${escaparHTML(l.lote)}</span></td>
+              <td class="mono" style="font-weight:700;">${formatarNumero(l.total_paletes)} PLT</td>
+              <td class="mono col-secondary-mobile">${formatarNumero(l.total_caixas_ou_sacaria)} VOL</td>
+              <td class="mono col-secondary-mobile">${formatarNumero(l.qtd_pecas_por_volume)}</td>
+              <td class="cell-saldo">${formatarNumero(l.saldo_total_pecas)} pçs</td>
+              <td class="cell-timestamp col-secondary-mobile">${formatarDataHora(l.ultima_atualizacao)}</td>
             </tr>
           `;
-        }
-      });
-
-      tbody.innerHTML = html;
+        })
+        .join('');
     }
 
-    function alternarExpansaoLote(chave) {
-      if (estado.lotesExpandidos.has(chave)) {
-        estado.lotesExpandidos.delete(chave);
-      } else {
-        estado.lotesExpandidos.add(chave);
+    function renderizarTabelaAuditoria(historico) {
+      const tbody = document.getElementById('tbodyAuditoria');
+      if (!historico.length) {
+        tbody.innerHTML = `<tr><td colspan="11" class="empty-state">Nenhum palete encontrado.</td></tr>`;
+        return;
       }
-      renderizarTudo();
+
+      tbody.innerHTML = historico
+        .map((p) => {
+          const corHex = normalizarCorHex(p.cor_etiqueta);
+          return `
+            <tr
+              class="master-row"
+              onclick="abrirModalControleTotalPalete(${p.id})"
+              title="Clique para abrir o Modal de Controle Total do Palete #${p.id}"
+            >
+              <td class="mono">#${p.id}</td>
+              <td>${renderizarBadgeEtiqueta(corHex)}</td>
+              <td class="cell-timestamp col-secondary-mobile">${formatarDataHora(p.data_hora)}</td>
+              <td class="cell-client" title="${escaparHTML(p.cliente)}">
+                <span class="cell-truncate">${escaparHTML(p.cliente)}</span>
+              </td>
+              <td class="cell-item">${escaparHTML(p.item)}</td>
+              <td class="col-secondary-mobile" title="${escaparHTML(p.produto)}">
+                <span class="cell-truncate">${escaparHTML(p.produto)}</span>
+              </td>
+              <td class="mono col-secondary-mobile">${escaparHTML(p.pedido || '—')}</td>
+              <td><span class="cell-lote">${escaparHTML(p.lote)}</span></td>
+              <td class="mono col-secondary-mobile">${formatarNumero(p.qtd_volumes_palete)}</td>
+              <td class="mono col-secondary-mobile">${formatarNumero(p.qtd_pecas_por_volume)}</td>
+              <td class="cell-saldo">${formatarNumero(p.saldo_total_pecas)} pçs</td>
+            </tr>
+          `;
+        })
+        .join('');
     }
 
-    // =========================================================================
-    // ALTERAÇÃO RÁPIDA DE COR DA MINI-ETIQUETA (LOTE OU PALETE)
-    // =========================================================================
-    async function alternarCorLoteRapido(lote, item, corAtual) {
-      const idx = CORES_CICLO.indexOf(String(corAtual || 'BRANCA').toUpperCase());
-      const proximaCor = CORES_CICLO[(idx + 1) % CORES_CICLO.length];
-      try {
-        const resp = await fetch('/api/paletes/cor', {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ lote, item, cor_etiqueta: proximaCor })
-        });
-        if (resp.ok) {
-          exibirToast(`Etiqueta do Lote ${lote} alterada para ${proximaCor}`, 'sucesso');
-          carregarDashboard();
-        }
-      } catch (e) {}
-    }
-
-    async function alternarCorPaleteIndividual(id, corAtual) {
-      const idx = CORES_CICLO.indexOf(String(corAtual || 'BRANCA').toUpperCase());
-      const proximaCor = CORES_CICLO[(idx + 1) % CORES_CICLO.length];
-      try {
-        const resp = await fetch('/api/paletes/cor', {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ id, cor_etiqueta: proximaCor })
-        });
-        if (resp.ok) {
-          exibirToast(`Etiqueta do Palete #${id} alterada para ${proximaCor}`, 'sucesso');
-          carregarDashboard();
-        }
-      } catch (e) {}
-    }
-
-    // =========================================================================
-    // RENDERIZAÇÃO DA ABA DE EXPEDIÇÕES E CAMINHÕES
-    // =========================================================================
     function renderizarTabelaExpedicoes(expedidosFiltrados) {
       const tbodyExp = document.getElementById('tbodyExpedicoes');
       const expedicoesFiltradas = estado.expedicoes.filter(passaFiltroGlobal);
 
       if (!expedicoesFiltradas.length) {
-        tbodyExp.innerHTML = `<tr><td colspan="10" class="empty-state">Nenhum romaneio de caminhão registrado. Clique em "Carregar Caminhão" para iniciar uma expedição.</td></tr>`;
+        tbodyExp.innerHTML = `<tr><td colspan="9" class="empty-state">Nenhuma expedição registrada.</td></tr>`;
       } else {
         tbodyExp.innerHTML = expedicoesFiltradas
           .map((ex) => {
@@ -1908,31 +2185,28 @@
               itensLista = typeof ex.itens_resumo === 'string' ? JSON.parse(ex.itens_resumo) : ex.itens_resumo || [];
             } catch (e) {}
 
-            const resumoHtml = itensLista
-              .map(
-                (it) =>
-                  `<div style="margin-bottom:4px; display:flex; align-items:center; gap:6px;">
-                    ${renderizarBadgeEtiqueta(it.cor_etiqueta || 'BRANCA')}
-                    <span class="mono" style="font-weight:700;">${escaparHTML(it.item)}</span>
-                    <span>Lote ${escaparHTML(it.lote)}</span>
-                    <span class="mono" style="color:var(--text-muted);">(${it.paletes} PLT / ${formatarNumero(it.pecas)} pçs)</span>
-                  </div>`
-              )
-              .join('');
+            const resumoTexto = itensLista
+              .map((it) => `${it.item} (Lote ${it.lote}: ${it.paletes} PLT)`)
+              .join(' | ');
 
             return `
               <tr>
                 <td class="mono" style="font-weight:700; color:var(--brand-primary);">${escaparHTML(ex.codigo_romaneio)}</td>
-                <td class="cell-timestamp">${formatarDataHora(ex.data_hora_saida)}</td>
+                <td class="cell-timestamp col-secondary-mobile">${formatarDataHora(ex.data_hora_saida)}</td>
                 <td><span class="cell-lote">${escaparHTML(ex.placa_caminhao)}</span></td>
-                <td style="font-weight:600;">${escaparHTML(ex.motorista || '—')}</td>
-                <td class="cell-client">${escaparHTML(ex.cliente_destino || '—')}</td>
-                <td>${resumoHtml || '—'}</td>
+                <td class="col-secondary-mobile" title="${escaparHTML(ex.motorista || '—')}">
+                  <span class="cell-truncate">${escaparHTML(ex.motorista || '—')}</span>
+                </td>
+                <td class="cell-client" title="${escaparHTML(ex.cliente_destino || '—')}">
+                  <span class="cell-truncate">${escaparHTML(ex.cliente_destino || '—')}</span>
+                </td>
+                <td class="col-secondary-mobile" title="${escaparHTML(resumoTexto)}">
+                  <span class="cell-truncate">${escaparHTML(resumoTexto || '—')}</span>
+                </td>
                 <td class="mono" style="font-weight:700;">${formatarNumero(ex.total_paletes)} PLT</td>
-                <td class="mono">${formatarNumero(ex.total_volumes)} VOL</td>
                 <td class="cell-saldo">${formatarNumero(ex.total_pecas)} pçs</td>
-                <td style="text-align:right; white-space:nowrap;">
-                  <button type="button" class="btn btn-outline btn-xs" onclick="imprimirRomaneioIndividual(${ex.id})">PDF Romaneio</button>
+                <td style="text-align:right;">
+                  <button type="button" class="btn btn-outline btn-xs" onclick="imprimirRomaneioIndividual(${ex.id})">PDF</button>
                   <button type="button" class="btn btn-danger-outline btn-xs" onclick="estornarExpedicao(${ex.id}, '${escaparHTML(ex.codigo_romaneio)}')">Estornar</button>
                 </td>
               </tr>
@@ -1943,21 +2217,21 @@
 
       const tbodyPalExp = document.getElementById('tbodyPaletesExpedidos');
       if (!expedidosFiltrados.length) {
-        tbodyPalExp.innerHTML = `<tr><td colspan="10" class="empty-state">Nenhum palete expedido até o momento.</td></tr>`;
+        tbodyPalExp.innerHTML = `<tr><td colspan="10" class="empty-state">Nenhum palete expedido.</td></tr>`;
       } else {
         tbodyPalExp.innerHTML = expedidosFiltrados
           .map(
             (p) => `
           <tr>
             <td class="mono">#${p.id}</td>
-            <td>${renderizarBadgeEtiqueta(p.cor_etiqueta || 'BRANCA')}</td>
+            <td>${renderizarBadgeEtiqueta(p.cor_etiqueta)}</td>
             <td><span class="cell-lote">${escaparHTML(p.placa_caminhao || '—')}</span></td>
-            <td class="cell-client">${escaparHTML(p.cliente)}</td>
+            <td class="cell-client" title="${escaparHTML(p.cliente)}"><span class="cell-truncate">${escaparHTML(p.cliente)}</span></td>
             <td class="cell-item">${escaparHTML(p.item)}</td>
             <td><span class="cell-lote">${escaparHTML(p.lote)}</span></td>
-            <td class="mono">${formatarNumero(p.qtd_volumes_palete)} VOL</td>
+            <td class="mono col-secondary-mobile">${formatarNumero(p.qtd_volumes_palete)} VOL</td>
             <td class="cell-saldo">${formatarNumero(p.saldo_total_pecas)} pçs</td>
-            <td class="cell-timestamp">${formatarDataHora(p.data_hora)}</td>
+            <td class="cell-timestamp col-secondary-mobile">${formatarDataHora(p.data_hora)}</td>
             <td class="cell-timestamp" style="color:var(--amber-primary); font-weight:700;">${formatarDataHora(p.data_hora_saida)}</td>
           </tr>
         `
@@ -1967,101 +2241,379 @@
     }
 
     // =========================================================================
-    // RENDERIZAÇÃO DA ABA DE AUDITORIA DE PALETES (ENTRADAS)
+    // EXIGÊNCIA 2 & 3: ARQUITETURA DO MODAL DE CONTROLE TOTAL + COLOR PICKER
     // =========================================================================
-    function renderizarTabelaAuditoria(historico) {
-      const tbody = document.getElementById('tbodyAuditoria');
-      atualizarBotoesSelecaoAuditoria();
+    function abrirModalControleTotalLote(lote, item) {
+      const loteObj = estado.consolidado.find(
+        (l) =>
+          String(l.lote).toUpperCase().trim() === String(lote).toUpperCase().trim() &&
+          String(l.item).toUpperCase().trim() === String(item).toUpperCase().trim()
+      );
+      if (!loteObj) return;
 
-      if (!historico.length) {
-        tbody.innerHTML = `<tr><td colspan="13" class="empty-state">Nenhum palete encontrado.</td></tr>`;
+      const paletesDoLote = estado.historico.filter(
+        (p) =>
+          String(p.lote).toUpperCase().trim() === String(lote).toUpperCase().trim() &&
+          String(p.item).toUpperCase().trim() === String(item).toUpperCase().trim()
+      );
+
+      estado.controleTotalAlvo = {
+        modo: 'LOTE',
+        loteObj,
+        paletesDoLote
+      };
+
+      document.getElementById('ctModoAlvo').value = 'LOTE';
+      document.getElementById('ctPaleteIdAlvo').value = '';
+      document.getElementById('ctLoteOriginal').value = loteObj.lote;
+      document.getElementById('ctItemOriginal').value = loteObj.item;
+
+      document.getElementById('ctTituloHeader').textContent =
+        `Modal de Controle Total — Lote ${loteObj.lote} (Item ${loteObj.item})`;
+
+      const hexAtual = normalizarCorHex(loteObj.cor_etiqueta);
+      atualizarCorControleTotal(hexAtual);
+
+      document.getElementById('ctResumoItem').textContent = loteObj.item;
+      document.getElementById('ctResumoLote').textContent = `LOTE ${loteObj.lote}`;
+      document.getElementById('ctResumoCliente').textContent = loteObj.cliente;
+      document.getElementById('ctResumoProdutoCompleto').textContent = loteObj.produto;
+      document.getElementById('ctResumoSaldoTotal').textContent = `${formatarNumero(loteObj.saldo_total_pecas)} pçs`;
+      document.getElementById('ctResumoPaletesVolumes').textContent =
+        `${formatarNumero(loteObj.total_paletes)} palete(s) | ${formatarNumero(loteObj.total_caixas_ou_sacaria)} volumes`;
+
+      document.getElementById('ctInputCliente').value = loteObj.cliente || '';
+      document.getElementById('ctInputItem').value = loteObj.item || '';
+      document.getElementById('ctInputProduto').value = loteObj.produto || '';
+      document.getElementById('ctInputPedido').value = loteObj.pedido || '';
+      document.getElementById('ctInputLote').value = loteObj.lote || '';
+      document.getElementById('ctInputPecasPorVolume').value = loteObj.qtd_pecas_por_volume || 0;
+      document.getElementById('ctGrupoVolumesIndividual').style.display = 'none';
+      document.getElementById('ctBtnExcluirRegistro').textContent = `Excluir Todos os ${paletesDoLote.length} Palete(s) deste Lote`;
+
+      // Preenche aba de expedição do lote
+      const inputQtdExp = document.getElementById('ctExpQtdPaletes');
+      inputQtdExp.max = paletesDoLote.length;
+      inputQtdExp.value = paletesDoLote.length;
+      document.getElementById('ctExpDestino').value = loteObj.cliente || '';
+      recalcularPreviewExpedicaoCT();
+
+      // Preenche lista de paletes individuais do lote
+      document.getElementById('ctCountPaletesAba').textContent = paletesDoLote.length;
+      renderizarPaletesInternosControleTotal(paletesDoLote);
+
+      alternarAbaControleTotal('edicao');
+      document.getElementById('modalControleTotal').classList.add('open');
+    }
+
+    function abrirModalControleTotalPalete(idPalete) {
+      const p = estado.historico.find((x) => Number(x.id) === Number(idPalete));
+      if (!p) return;
+
+      estado.controleTotalAlvo = {
+        modo: 'PALETE',
+        paleteObj: p,
+        paletesDoLote: [p]
+      };
+
+      document.getElementById('ctModoAlvo').value = 'PALETE';
+      document.getElementById('ctPaleteIdAlvo').value = p.id;
+      document.getElementById('ctLoteOriginal').value = p.lote;
+      document.getElementById('ctItemOriginal').value = p.item;
+
+      document.getElementById('ctTituloHeader').textContent =
+        `Modal de Controle Total — Palete Individual #${p.id} (Lote ${p.lote})`;
+
+      const hexAtual = normalizarCorHex(p.cor_etiqueta);
+      atualizarCorControleTotal(hexAtual);
+
+      document.getElementById('ctResumoItem').textContent = p.item;
+      document.getElementById('ctResumoLote').textContent = `LOTE ${p.lote}`;
+      document.getElementById('ctResumoCliente').textContent = p.cliente;
+      document.getElementById('ctResumoProdutoCompleto').textContent = p.produto;
+      document.getElementById('ctResumoSaldoTotal').textContent = `${formatarNumero(p.saldo_total_pecas)} pçs`;
+      document.getElementById('ctResumoPaletesVolumes').textContent = `1 palete (#${p.id}) | ${formatarNumero(p.qtd_volumes_palete)} volumes`;
+
+      document.getElementById('ctInputCliente').value = p.cliente || '';
+      document.getElementById('ctInputItem').value = p.item || '';
+      document.getElementById('ctInputProduto').value = p.produto || '';
+      document.getElementById('ctInputPedido').value = p.pedido || '';
+      document.getElementById('ctInputLote').value = p.lote || '';
+      document.getElementById('ctInputPecasPorVolume').value = p.qtd_pecas_por_volume || 0;
+      document.getElementById('ctInputVolumesPalete').value = p.qtd_volumes_palete || 15;
+      document.getElementById('ctGrupoVolumesIndividual').style.display = 'flex';
+      document.getElementById('ctBtnExcluirRegistro').textContent = `Excluir Palete #${p.id}`;
+
+      const inputQtdExp = document.getElementById('ctExpQtdPaletes');
+      inputQtdExp.max = 1;
+      inputQtdExp.value = 1;
+      document.getElementById('ctExpDestino').value = p.cliente || '';
+      recalcularPreviewExpedicaoCT();
+
+      document.getElementById('ctCountPaletesAba').textContent = 1;
+      renderizarPaletesInternosControleTotal([p]);
+
+      alternarAbaControleTotal('edicao');
+      document.getElementById('modalControleTotal').classList.add('open');
+    }
+
+    function fecharModalControleTotal() {
+      document.getElementById('modalControleTotal').classList.remove('open');
+    }
+
+    function alternarAbaControleTotal(secao) {
+      document.getElementById('ctTabBtnEdicao').classList.toggle('active', secao === 'edicao');
+      document.getElementById('ctTabBtnExpedicao').classList.toggle('active', secao === 'expedicao');
+      document.getElementById('ctTabBtnPaletes').classList.toggle('active', secao === 'paletes');
+
+      document.getElementById('ctSecaoEdicao').classList.toggle('active', secao === 'edicao');
+      document.getElementById('ctSecaoExpedicao').classList.toggle('active', secao === 'expedicao');
+      document.getElementById('ctSecaoPaletes').classList.toggle('active', secao === 'paletes');
+    }
+
+    // Color Picker Arco-Íris Interativo
+    function atualizarCorControleTotal(corInput) {
+      const hex = normalizarCorHex(corInput);
+      estado.corControleTotalHex = hex;
+      document.getElementById('ctInputColorPicker').value = hex;
+      document.getElementById('ctInputHexManual').value = hex;
+      document.getElementById('ctHexDisplay').textContent = hex;
+      document.getElementById('ctBadgeEtiquetaAtual').innerHTML = renderizarBadgeEtiqueta(hex);
+    }
+
+    function aoDigitarHexManual(valor) {
+      const v = String(valor || '').trim().toUpperCase();
+      if (/^#[0-9A-F]{6}$/.test(v)) {
+        atualizarCorControleTotal(v);
+      }
+    }
+
+    function selecionarCorNaBarraArcoIris(event) {
+      const barra = document.getElementById('ctRainbowStrip');
+      const rect = barra.getBoundingClientRect();
+      const ratio = Math.max(0, Math.min(1, (event.clientX - rect.left) / rect.width));
+      const hue = Math.round(ratio * 340);
+      const hex = hslParaHex(hue, 85, 50);
+      atualizarCorControleTotal(hex);
+    }
+
+    function hslParaHex(h, s, l) {
+      s /= 100;
+      l /= 100;
+      const k = (n) => (n + h / 30) % 12;
+      const a = s * Math.min(l, 1 - l);
+      const f = (n) => l - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1)));
+      const toHex = (x) =>
+        Math.round(255 * x)
+          .toString(16)
+          .padStart(2, '0')
+          .toUpperCase();
+      return `#${toHex(f(0))}${toHex(f(8))}${toHex(f(4))}`;
+    }
+
+    async function salvarEdicaoControleTotal() {
+      const modo = document.getElementById('ctModoAlvo').value;
+      const cliente = (document.getElementById('ctInputCliente').value || '').trim().toUpperCase();
+      const item = (document.getElementById('ctInputItem').value || '').trim().toUpperCase();
+      const produto = (document.getElementById('ctInputProduto').value || '').trim().toUpperCase();
+      const pedido = (document.getElementById('ctInputPedido').value || '').trim();
+      const lote = (document.getElementById('ctInputLote').value || '').trim();
+      const qtd_pecas_por_volume = parseInt(document.getElementById('ctInputPecasPorVolume').value, 10) || 0;
+      const cor_etiqueta = estado.corControleTotalHex;
+
+      if (!cliente || !item || !produto || !lote || qtd_pecas_por_volume <= 0) {
+        exibirToast('Preencha Cliente, Item, Produto, Lote e Peças/Volume válidos.', 'erro');
         return;
       }
 
-      tbody.innerHTML = historico
-        .map((p) => {
-          const marcado = estado.selecionadosAuditoria.has(p.id) ? 'checked' : '';
-          return `
-            <tr>
-              <td>
-                <input type="checkbox" ${marcado} onchange="alternarSelecaoPaleteAuditoria(${p.id}, this.checked)" />
-              </td>
-              <td class="mono">#${p.id}</td>
-              <td>
-                ${renderizarBadgeEtiqueta(
-                  p.cor_etiqueta || 'BRANCA',
-                  `alternarCorPaleteIndividual(${p.id}, '${escaparHTML(p.cor_etiqueta || 'BRANCA')}')`
-                )}
-              </td>
-              <td class="cell-timestamp">${formatarDataHora(p.data_hora)}</td>
-              <td class="cell-client">${escaparHTML(p.cliente)}</td>
-              <td class="cell-item">${escaparHTML(p.item)}</td>
-              <td style="max-width:260px;">${escaparHTML(p.produto)}</td>
-              <td class="mono">${escaparHTML(p.pedido || '—')}</td>
-              <td><span class="cell-lote">${escaparHTML(p.lote)}</span></td>
-              <td class="mono">${formatarNumero(p.qtd_volumes_palete)}</td>
-              <td class="mono">${formatarNumero(p.qtd_pecas_por_volume)}</td>
-              <td class="cell-saldo">${formatarNumero(p.saldo_total_pecas)} pçs</td>
-              <td style="text-align:right; white-space:nowrap;">
-                <button type="button" class="btn btn-outline btn-xs" onclick="abrirModalEditarPalete(${p.id})">Editar</button>
-                <button type="button" class="btn btn-danger-outline btn-xs" onclick="excluirPaleteUnico(${p.id})">Excluir</button>
-              </td>
-            </tr>
-          `;
-        })
+      try {
+        if (modo === 'PALETE') {
+          const idPal = document.getElementById('ctPaleteIdAlvo').value;
+          const qtd_volumes_palete = parseInt(document.getElementById('ctInputVolumesPalete').value, 10) || 15;
+          const resp = await fetch(`/api/paletes/${idPal}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              cliente,
+              item,
+              produto,
+              pedido,
+              lote,
+              qtd_pecas_por_volume,
+              qtd_volumes_palete,
+              cor_etiqueta
+            })
+          });
+          const dados = await resp.json();
+          if (!resp.ok) {
+            exibirToast(dados.erro || 'Erro ao atualizar palete.', 'erro');
+            return;
+          }
+          exibirToast(`Palete #${idPal} e etiqueta ${cor_etiqueta} atualizados com sucesso.`, 'sucesso');
+        } else {
+          const lote_original = document.getElementById('ctLoteOriginal').value;
+          const item_original = document.getElementById('ctItemOriginal').value;
+          const resp = await fetch('/api/lotes/controle-total', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              lote_original,
+              item_original,
+              cliente,
+              item,
+              produto,
+              pedido,
+              lote,
+              qtd_pecas_por_volume,
+              cor_etiqueta
+            })
+          });
+          const dados = await resp.json();
+          if (!resp.ok) {
+            exibirToast(dados.erro || 'Erro ao atualizar lote.', 'erro');
+            return;
+          }
+          exibirToast(`Lote ${dados.lote} e cor HEX ${dados.cor_etiqueta} salvos no banco de dados.`, 'sucesso');
+        }
+
+        fecharModalControleTotal();
+        carregarDashboard();
+      } catch (e) {
+        exibirToast('Erro de comunicação ao salvar alterações.', 'erro');
+      }
+    }
+
+    function recalcularPreviewExpedicaoCT() {
+      if (!estado.controleTotalAlvo) return;
+      const lista = estado.controleTotalAlvo.paletesDoLote || [];
+      let qtd = parseInt(document.getElementById('ctExpQtdPaletes').value, 10) || 0;
+      if (qtd < 1) qtd = 1;
+      if (qtd > lista.length) qtd = lista.length;
+
+      const selecionados = lista.slice(0, qtd);
+      const totalPecas = selecionados.reduce((acc, p) => acc + Number(p.saldo_total_pecas || 0), 0);
+      document.getElementById('ctExpPreviewTexto').textContent =
+        `Total a Expedir: ${selecionados.length} palete(s) | ${formatarNumero(totalPecas)} peças`;
+    }
+
+    async function confirmarExpedicaoViaControleTotal() {
+      if (!estado.controleTotalAlvo) return;
+      const lista = estado.controleTotalAlvo.paletesDoLote || [];
+      let qtd = parseInt(document.getElementById('ctExpQtdPaletes').value, 10) || 0;
+      if (qtd < 1 || qtd > lista.length) {
+        exibirToast(`Informe uma quantidade entre 1 e ${lista.length} paletes.`, 'erro');
+        return;
+      }
+
+      const placa_caminhao = (document.getElementById('ctExpPlaca').value || '').trim().toUpperCase();
+      const motorista = (document.getElementById('ctExpMotorista').value || '').trim().toUpperCase();
+      const cliente_destino = (document.getElementById('ctExpDestino').value || '').trim().toUpperCase();
+      const codigo_romaneio = (document.getElementById('ctExpRomaneio').value || '').trim().toUpperCase();
+      const observacoes = (document.getElementById('ctExpObs').value || '').trim();
+
+      if (!placa_caminhao) {
+        exibirToast('Informe a Placa do Caminhão para confirmar a expedição.', 'erro');
+        return;
+      }
+
+      const ids_paletes = lista.slice(0, qtd).map((p) => p.id);
+
+      try {
+        const resp = await fetch('/api/expedicoes/carregar', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            ids_paletes,
+            placa_caminhao,
+            motorista,
+            cliente_destino,
+            codigo_romaneio,
+            observacoes
+          })
+        });
+        const dados = await resp.json();
+        if (!resp.ok) {
+          exibirToast(dados.erro || 'Erro ao expedir lote.', 'erro');
+          return;
+        }
+
+        fecharModalControleTotal();
+        document.getElementById('ctExpPlaca').value = '';
+        document.getElementById('ctExpMotorista').value = '';
+        document.getElementById('ctExpRomaneio').value = '';
+        document.getElementById('ctExpObs').value = '';
+
+        exibirToast(
+          `Expedição ${dados.codigo_romaneio} registrada: ${dados.total_paletes} palete(s) carregados no caminhão ${dados.placa_caminhao}.`,
+          'sucesso'
+        );
+        carregarDashboard();
+      } catch (e) {
+        exibirToast('Falha ao registrar expedição.', 'erro');
+      }
+    }
+
+    function renderizarPaletesInternosControleTotal(paletes) {
+      const tbody = document.getElementById('ctTbodyPaletesDoLote');
+      if (!paletes.length) {
+        tbody.innerHTML = `<tr><td colspan="7" class="empty-state">Nenhum palete ativo neste lote.</td></tr>`;
+        return;
+      }
+      tbody.innerHTML = paletes
+        .map(
+          (p) => `
+        <tr>
+          <td class="mono">#${p.id}</td>
+          <td>${renderizarBadgeEtiqueta(p.cor_etiqueta)}</td>
+          <td class="cell-timestamp">${formatarDataHora(p.data_hora)}</td>
+          <td class="mono">${formatarNumero(p.qtd_volumes_palete)} VOL</td>
+          <td class="mono">${formatarNumero(p.qtd_pecas_por_volume)}</td>
+          <td class="cell-saldo">${formatarNumero(p.saldo_total_pecas)} pçs</td>
+          <td style="text-align:right;">
+            <button type="button" class="btn btn-outline btn-xs" onclick="abrirModalControleTotalPalete(${p.id})">Focar Palete</button>
+          </td>
+        </tr>
+      `
+        )
         .join('');
     }
 
-    function alternarSelecaoPaleteAuditoria(id, checked) {
-      if (checked) estado.selecionadosAuditoria.add(id);
-      else estado.selecionadosAuditoria.delete(id);
-      atualizarBotoesSelecaoAuditoria();
-    }
+    async function excluirRegistroViaControleTotal() {
+      if (!estado.controleTotalAlvo) return;
+      const lista = estado.controleTotalAlvo.paletesDoLote || [];
+      if (!lista.length) return;
 
-    function alternarSelecaoTodosAuditoria(checked) {
-      const filtrados = estado.historico.filter(passaFiltroGlobal);
-      filtrados.forEach((p) => {
-        if (checked) estado.selecionadosAuditoria.add(p.id);
-        else estado.selecionadosAuditoria.delete(p.id);
-      });
-      renderizarTudo();
-    }
+      const msg =
+        estado.controleTotalAlvo.modo === 'PALETE'
+          ? `Confirmar a exclusão definitiva do Palete #${lista[0].id}?`
+          : `Confirmar a exclusão definitiva de todos os ${lista.length} palete(s) do Lote ${estado.controleTotalAlvo.loteObj.lote}?`;
 
-    function atualizarBotoesSelecaoAuditoria() {
-      const qtd = estado.selecionadosAuditoria.size;
-      const btnExp = document.getElementById('btnExpedirSelecionados');
-      const btnExc = document.getElementById('btnExcluirSelecionados');
-      document.getElementById('countSelExpedir').textContent = qtd;
-      document.getElementById('countSelExcluir').textContent = qtd;
-      btnExp.style.display = qtd > 0 ? 'inline-flex' : 'none';
-      btnExc.style.display = qtd > 0 ? 'inline-flex' : 'none';
-    }
+      if (!confirm(msg)) return;
 
-    // =========================================================================
-    // FLUXO DE CARREGAMENTO DE CAMINHÃO (MODAL DE EXPEDIÇÃO)
-    // =========================================================================
-    function abrirModalExpedicao(lotePreSelecionado = '', itemPreSelecionado = '') {
-      estado.quantidadesExpedicaoPorLote = {};
-
-      if (lotePreSelecionado && itemPreSelecionado) {
-        const chave = `${lotePreSelecionado}__${itemPreSelecionado}`;
-        const loteObj = estado.consolidado.find(
-          (l) =>
-            String(l.lote).toUpperCase() === String(lotePreSelecionado).toUpperCase() &&
-            String(l.item).toUpperCase() === String(itemPreSelecionado).toUpperCase()
-        );
-        if (loteObj) {
-          estado.quantidadesExpedicaoPorLote[chave] = Number(loteObj.total_paletes);
-          document.getElementById('expClienteDestino').value = loteObj.cliente || '';
+      try {
+        const ids = lista.map((p) => p.id);
+        const resp = await fetch('/api/paletes/excluir-multiplos', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ids })
+        });
+        if (resp.ok) {
+          fecharModalControleTotal();
+          exibirToast(`${ids.length} palete(s) excluído(s) do estoque.`, 'sucesso');
+          carregarDashboard();
         }
+      } catch (e) {
+        exibirToast('Erro ao excluir registro.', 'erro');
       }
+    }
 
+    // =========================================================================
+    // MODAL DE EXPEDIÇÃO MULTILOTE (BOTÃO "EXPEDIÇÃO" DO TOPO)
+    // =========================================================================
+    function abrirModalExpedicaoGeral() {
+      estado.quantidadesExpedicaoPorLote = {};
       renderizarLinhasModalExpedicao();
       document.getElementById('modalExpedicao').classList.add('open');
-    }
-
-    function abrirModalExpedicaoComLote(lote, item) {
-      abrirModalExpedicao(lote, item);
     }
 
     function fecharModalExpedicao() {
@@ -2071,7 +2623,7 @@
     function renderizarLinhasModalExpedicao() {
       const tbody = document.getElementById('tbodySelecaoLotesExpedicao');
       if (!estado.consolidado.length) {
-        tbody.innerHTML = `<tr><td colspan="7" class="empty-state">Não há lotes disponíveis em estoque para carregar.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="7" class="empty-state">Não há lotes disponíveis em estoque.</td></tr>`;
         atualizarResumoModalExpedicao();
         return;
       }
@@ -2082,25 +2634,25 @@
           const qtdSel = Number(estado.quantidadesExpedicaoPorLote[chave] || 0);
           return `
             <tr>
-              <td>${renderizarBadgeEtiqueta(l.cor_etiqueta || 'BRANCA')}</td>
+              <td>${renderizarBadgeEtiqueta(l.cor_etiqueta)}</td>
               <td class="cell-client">${escaparHTML(l.cliente)}</td>
               <td class="cell-item">${escaparHTML(l.item)}</td>
               <td><span class="cell-lote">${escaparHTML(l.lote)}</span></td>
-              <td class="mono" style="font-weight:700;">${formatarNumero(l.total_paletes)} paletes (${formatarNumero(l.total_caixas_ou_sacaria)} vol)</td>
+              <td class="mono">${formatarNumero(l.total_paletes)} PLT</td>
               <td class="cell-saldo">${formatarNumero(l.saldo_total_pecas)} pçs</td>
               <td>
                 <div style="display:flex; align-items:center; gap:6px;">
                   <input
                     type="number"
                     class="form-control mono"
-                    style="width:85px; padding:5px 8px;"
+                    style="width:76px; padding:4px 8px;"
                     min="0"
                     max="${l.total_paletes}"
                     value="${qtdSel}"
                     oninput="definirQtdLoteExpedicao('${escaparHTML(chave)}', this.value, ${l.total_paletes}, '${escaparHTML(l.cliente)}')"
                   />
                   <button type="button" class="btn btn-outline btn-xs" onclick="definirQtdLoteExpedicao('${escaparHTML(chave)}', ${l.total_paletes}, ${l.total_paletes}, '${escaparHTML(l.cliente)}'); renderizarLinhasModalExpedicao();">
-                    Tudo (${l.total_paletes})
+                    Tudo
                   </button>
                 </div>
               </td>
@@ -2154,7 +2706,7 @@
       const observacoes = (document.getElementById('expObservacoes').value || '').trim();
 
       if (!placa) {
-        exibirToast('Informe a Placa do Caminhão para registrar a expedição.', 'erro');
+        exibirToast('Informe a Placa do Caminhão.', 'erro');
         return;
       }
 
@@ -2170,8 +2722,8 @@
         paletesDisp.slice(0, qtd).forEach((p) => idsParaCarregar.push(p.id));
       });
 
-      if (idsParaCarregar.length === 0) {
-        exibirToast('Selecione ao menos 1 palete para carregar no caminhão.', 'erro');
+      if (!idsParaCarregar.length) {
+        exibirToast('Selecione ao menos 1 palete para expedir.', 'erro');
         return;
       }
 
@@ -2190,85 +2742,33 @@
         });
         const dados = await resp.json();
         if (!resp.ok) {
-          exibirToast(dados.erro || 'Erro ao registrar carregamento.', 'erro');
+          exibirToast(dados.erro || 'Erro na expedição.', 'erro');
           return;
         }
-
         fecharModalExpedicao();
-        document.getElementById('expPlaca').value = '';
-        document.getElementById('expMotorista').value = '';
-        document.getElementById('expRomaneio').value = '';
-        document.getElementById('expObservacoes').value = '';
-
-        exibirToast(
-          `Romaneio ${dados.codigo_romaneio} concluído: ${dados.total_paletes} paletes (${formatarNumero(dados.total_pecas)} pçs) carregados no caminhão ${dados.placa_caminhao}.`,
-          'sucesso'
-        );
+        exibirToast(`Expedição ${dados.codigo_romaneio} concluída (${dados.total_paletes} paletes).`, 'sucesso');
         alternarAba('expedicao');
         carregarDashboard();
       } catch (e) {
-        exibirToast('Erro de comunicação ao registrar expedição.', 'erro');
-      }
-    }
-
-    async function expedirPaletesSelecionados() {
-      if (estado.selecionadosAuditoria.size === 0) return;
-      const placa = prompt('Informe a PLACA DO CAMINHÃO para expedir os paletes selecionados:', '');
-      if (!placa || !placa.trim()) return;
-      const motorista = prompt('Informe o NOME DO MOTORISTA / TRANSPORTADORA (opcional):', '') || '';
-
-      try {
-        const resp = await fetch('/api/expedicoes/carregar', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            ids_paletes: Array.from(estado.selecionadosAuditoria),
-            placa_caminhao: placa.trim().toUpperCase(),
-            motorista: motorista.trim().toUpperCase()
-          })
-        });
-        const dados = await resp.json();
-        if (!resp.ok) {
-          exibirToast(dados.erro || 'Erro ao expedir selecionados.', 'erro');
-          return;
-        }
-        estado.selecionadosAuditoria.clear();
-        exibirToast(`Carga expedida no caminhão ${dados.placa_caminhao} (${dados.total_paletes} paletes).`, 'sucesso');
-        alternarAba('expedicao');
-        carregarDashboard();
-      } catch (e) {
-        exibirToast('Falha ao expedir paletes selecionados.', 'erro');
+        exibirToast('Erro de comunicação na expedição.', 'erro');
       }
     }
 
     async function estornarExpedicao(id, romaneio) {
-      if (!confirm(`Deseja estornar o Romaneio ${romaneio}? Os paletes retornarão imediatamente para o estoque disponível.`)) {
-        return;
-      }
+      if (!confirm(`Deseja estornar o Romaneio ${romaneio}? Os paletes retornarão ao estoque disponível.`)) return;
       try {
         const resp = await fetch(`/api/expedicoes/${id}/estornar`, { method: 'POST' });
         if (resp.ok) {
-          exibirToast(`Romaneio ${romaneio} estornado. Paletes devolvidos ao estoque.`, 'sucesso');
+          exibirToast(`Romaneio ${romaneio} estornado com sucesso.`, 'sucesso');
           carregarDashboard();
         }
-      } catch (e) {
-        exibirToast('Erro ao estornar expedição.', 'erro');
-      }
+      } catch (e) {}
     }
 
     // =========================================================================
-    // MODAL DE LANÇAMENTO MANUAL E EDIÇÃO DE PALETE
+    // NOVO LANÇAMENTO MANUAL
     // =========================================================================
-    function selecionarCorModal(cor) {
-      estado.corModalSelecionada = cor;
-      document.querySelectorAll('#seletorCoresModal .color-option').forEach((el) => {
-        el.classList.toggle('selected', el.getAttribute('data-cor') === cor);
-      });
-    }
-
     function abrirModalLancamentoManual() {
-      document.getElementById('tituloModalPalete').textContent = 'Novo Lançamento de Palete em Estoque';
-      document.getElementById('formPaleteId').value = '';
       document.getElementById('formItem').value = '';
       document.getElementById('formCliente').value = '';
       document.getElementById('formProduto').value = '';
@@ -2276,25 +2776,8 @@
       document.getElementById('formLote').value = '';
       document.getElementById('formVolumes').value = '15';
       document.getElementById('formPecasPorVolume').value = '';
-      selecionarCorModal('BRANCA');
-      recalcularPreviewModal();
-      document.getElementById('modalPalete').classList.add('open');
-    }
-
-    function abrirModalEditarPalete(id) {
-      const p = estado.historico.find((x) => Number(x.id) === Number(id));
-      if (!p) return;
-
-      document.getElementById('tituloModalPalete').textContent = `Editar Palete #${p.id} — Lote ${p.lote}`;
-      document.getElementById('formPaleteId').value = p.id;
-      document.getElementById('formItem').value = p.item || '';
-      document.getElementById('formCliente').value = p.cliente || '';
-      document.getElementById('formProduto').value = p.produto || '';
-      document.getElementById('formPedido').value = p.pedido || '';
-      document.getElementById('formLote').value = p.lote || '';
-      document.getElementById('formVolumes').value = p.qtd_volumes_palete || 15;
-      document.getElementById('formPecasPorVolume').value = p.qtd_pecas_por_volume || 0;
-      selecionarCorModal(p.cor_etiqueta || 'BRANCA');
+      document.getElementById('formColorPicker').value = '#FFFFFF';
+      document.getElementById('formHexLabel').textContent = '#FFFFFF';
       recalcularPreviewModal();
       document.getElementById('modalPalete').classList.add('open');
     }
@@ -2306,19 +2789,17 @@
     function autoPreencherPorItemModal(codigoDigitado) {
       const cod = String(codigoDigitado || '').trim().toUpperCase();
       if (!cod) return;
-
       const ultimoHist = estado.historico.find((h) => String(h.item).toUpperCase() === cod);
       const itemCat = estado.catalogo.find((c) => String(c.item).toUpperCase() === cod);
       const ref = ultimoHist || itemCat;
-
       if (ref) {
         document.getElementById('formCliente').value = ref.cliente || '';
         document.getElementById('formProduto').value = ref.produto || '';
-        document.getElementById('formVolumes').value =
-          ref.qtd_volumes_palete || ref.padrao_volumes_palete || 15;
-        document.getElementById('formPecasPorVolume').value =
-          ref.qtd_pecas_por_volume || ref.qtd_padrao_pecas || '';
-        selecionarCorModal(ref.cor_etiqueta || ref.cor_padrao || 'BRANCA');
+        document.getElementById('formVolumes').value = ref.qtd_volumes_palete || ref.padrao_volumes_palete || 15;
+        document.getElementById('formPecasPorVolume').value = ref.qtd_pecas_por_volume || ref.qtd_padrao_pecas || '';
+        const hex = normalizarCorHex(ref.cor_etiqueta || ref.cor_padrao || '#FFFFFF');
+        document.getElementById('formColorPicker').value = hex;
+        document.getElementById('formHexLabel').textContent = hex;
         recalcularPreviewModal();
       }
     }
@@ -2338,7 +2819,6 @@
     }
 
     async function salvarPaleteModal() {
-      const id = document.getElementById('formPaleteId').value;
       const payload = {
         item: (document.getElementById('formItem').value || '').trim().toUpperCase(),
         cliente: (document.getElementById('formCliente').value || '').trim().toUpperCase(),
@@ -2347,15 +2827,12 @@
         lote: (document.getElementById('formLote').value || '').trim(),
         qtd_volumes_palete: parseInt(document.getElementById('formVolumes').value, 10) || 0,
         qtd_pecas_por_volume: parseInt(document.getElementById('formPecasPorVolume').value, 10) || 0,
-        cor_etiqueta: estado.corModalSelecionada
+        cor_etiqueta: document.getElementById('formColorPicker').value.toUpperCase()
       };
 
-      const url = id ? `/api/paletes/${id}` : '/api/paletes';
-      const metodo = id ? 'PUT' : 'POST';
-
       try {
-        const resp = await fetch(url, {
-          method: metodo,
+        const resp = await fetch('/api/paletes', {
+          method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         });
@@ -2365,46 +2842,15 @@
           return;
         }
         fecharModalPalete();
-        exibirToast(id ? `Palete #${id} atualizado com sucesso.` : 'Novo palete lançado no estoque.', 'sucesso');
+        exibirToast('Novo palete lançado no estoque.', 'sucesso');
         carregarDashboard();
       } catch (e) {
         exibirToast('Erro ao salvar registro.', 'erro');
       }
     }
 
-    async function excluirPaleteUnico(id) {
-      if (!confirm(`Confirmar a exclusão definitiva do Palete #${id} do estoque?`)) return;
-      try {
-        const resp = await fetch(`/api/paletes/${id}`, { method: 'DELETE' });
-        if (resp.ok) {
-          estado.selecionadosAuditoria.delete(id);
-          exibirToast(`Palete #${id} removido do estoque.`, 'sucesso');
-          carregarDashboard();
-        }
-      } catch (e) {}
-    }
-
-    async function excluirPaletesSelecionados() {
-      const ids = Array.from(estado.selecionadosAuditoria);
-      if (!ids.length) return;
-      if (!confirm(`Confirmar exclusão de ${ids.length} palete(s) selecionado(s)?`)) return;
-
-      try {
-        const resp = await fetch('/api/paletes/excluir-multiplos', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ids })
-        });
-        if (resp.ok) {
-          estado.selecionadosAuditoria.clear();
-          exibirToast(`${ids.length} palete(s) excluído(s).`, 'sucesso');
-          carregarDashboard();
-        }
-      } catch (e) {}
-    }
-
     // =========================================================================
-    // FERRAMENTAS CORPORATIVAS DE BACKUP (EXPORTAR / IMPORTAR JSON) E CSV
+    // BACKUP (EXPORTAR / IMPORTAR JSON) E CSV
     // =========================================================================
     function exportarBackupCompleto() {
       window.location.href = '/api/backup/exportar';
@@ -2414,16 +2860,13 @@
     async function importarBackupCompleto(event) {
       const arquivo = event.target.files && event.target.files[0];
       if (!arquivo) return;
-
       try {
         const texto = await arquivo.text();
         const pacote = JSON.parse(texto);
-
-        if (!confirm('Deseja restaurar este arquivo de backup no servidor? Todos os saldos, históricos, expedições e catálogo do backup serão carregados.')) {
+        if (!confirm('Deseja restaurar este arquivo de backup no servidor?')) {
           event.target.value = '';
           return;
         }
-
         const resp = await fetch('/api/backup/importar', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -2431,13 +2874,11 @@
         });
         const dados = await resp.json();
         event.target.value = '';
-
         if (!resp.ok) {
-          exibirToast(dados.erro || 'Arquivo de backup inválido.', 'erro');
+          exibirToast(dados.erro || 'Arquivo inválido.', 'erro');
           return;
         }
-
-        exibirToast(`Backup restaurado com sucesso (${dados.quantidade_paletes} paletes sincronizados).`, 'sucesso');
+        exibirToast(`Backup restaurado (${dados.quantidade_paletes} paletes).`, 'sucesso');
         carregarDashboard();
       } catch (e) {
         event.target.value = '';
@@ -2447,13 +2888,12 @@
 
     function exportarPlanilhaCSV() {
       const linhas = [
-        ['STATUS', 'ETIQUETA', 'CLIENTE', 'ITEM', 'PRODUTO', 'PEDIDO', 'LOTE', 'PALETES', 'VOLUMES', 'PECAS_POR_VOL', 'SALDO_PECAS', 'ULTIMA_ATUALIZACAO']
+        ['STATUS', 'COR_HEX', 'CLIENTE', 'ITEM', 'PRODUTO', 'PEDIDO', 'LOTE', 'PALETES', 'VOLUMES', 'PECAS_POR_VOL', 'SALDO_PECAS', 'ULTIMA_ATUALIZACAO']
       ];
-
       estado.consolidado.forEach((l) => {
         linhas.push([
           'EM_ESTOQUE',
-          l.cor_etiqueta || 'BRANCA',
+          normalizarCorHex(l.cor_etiqueta),
           `"${String(l.cliente || '').replace(/"/g, '""')}"`,
           l.item,
           `"${String(l.produto || '').replace(/"/g, '""')}"`,
@@ -2466,7 +2906,6 @@
           formatarDataHora(l.ultima_atualizacao)
         ]);
       });
-
       const csvContent = '\uFEFF' + linhas.map((e) => e.join(';')).join('\n');
       const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
@@ -2478,11 +2917,14 @@
     }
 
     // =========================================================================
-    // GERADOR DE RELATÓRIO CORPORATIVO EM PDF (SALDOS + EXPEDIÇÕES)
+    // EXIGÊNCIA 5: EXPORTAÇÃO DE PDF COM FILTRO INTELIGENTE (APENAS ESTOQUE)
     // =========================================================================
     function exportarRelatorioPDF() {
+      const checkEl = document.getElementById('checkPdfApenasEstoque');
+      const apenasSaldoEmEstoque = checkEl ? checkEl.checked : true;
+
       const lotes = estado.consolidado.filter(passaFiltroGlobal);
-      const expedicoes = estado.expedicoes.filter(passaFiltroGlobal);
+      const expedicoes = apenasSaldoEmEstoque ? [] : estado.expedicoes.filter(passaFiltroGlobal);
       const dataEmissao = new Date().toLocaleString('pt-BR');
 
       const totalPaletes = lotes.reduce((acc, l) => acc + Number(l.total_paletes || 0), 0);
@@ -2491,65 +2933,92 @@
 
       const janelaPDF = window.open('', '_blank', 'width=1120,height=820');
       if (!janelaPDF) {
-        exibirToast('Permita pop-ups no navegador para gerar o PDF corporativo.', 'erro');
+        exibirToast('Permita pop-ups no navegador para gerar o PDF.', 'erro');
         return;
       }
 
       const linhasEstoqueHTML = lotes
-        .map(
-          (l) => `
-        <tr>
-          <td class="mono">${escaparHTML(l.cor_etiqueta || 'BRANCA')}</td>
-          <td><strong>${escaparHTML(l.cliente)}</strong></td>
-          <td class="mono"><strong>${escaparHTML(l.item)}</strong></td>
-          <td>${escaparHTML(l.produto)}</td>
-          <td class="mono">${escaparHTML(l.pedido || '—')}</td>
-          <td class="mono"><strong>${escaparHTML(l.lote)}</strong></td>
-          <td class="mono" style="text-align:right;">${formatarNumero(l.total_paletes)}</td>
-          <td class="mono" style="text-align:right;">${formatarNumero(l.total_caixas_ou_sacaria)}</td>
-          <td class="mono" style="text-align:right;">${formatarNumero(l.qtd_pecas_por_volume)}</td>
-          <td class="mono" style="text-align:right;"><strong>${formatarNumero(l.saldo_total_pecas)}</strong></td>
-          <td class="mono">${formatarDataHora(l.ultima_atualizacao)}</td>
-        </tr>
-      `
-        )
+        .map((l) => {
+          const hex = normalizarCorHex(l.cor_etiqueta);
+          return `
+            <tr>
+              <td class="mono">
+                <span style="display:inline-block;width:10px;height:10px;background:${hex};border:1px solid #334155;vertical-align:middle;margin-right:4px;"></span>
+                ${escaparHTML(hex)}
+              </td>
+              <td><strong>${escaparHTML(l.cliente)}</strong></td>
+              <td class="mono"><strong>${escaparHTML(l.item)}</strong></td>
+              <td>${escaparHTML(l.produto)}</td>
+              <td class="mono">${escaparHTML(l.pedido || '—')}</td>
+              <td class="mono"><strong>${escaparHTML(l.lote)}</strong></td>
+              <td class="mono" style="text-align:right;">${formatarNumero(l.total_paletes)}</td>
+              <td class="mono" style="text-align:right;">${formatarNumero(l.total_caixas_ou_sacaria)}</td>
+              <td class="mono" style="text-align:right;">${formatarNumero(l.qtd_pecas_por_volume)}</td>
+              <td class="mono" style="text-align:right;"><strong>${formatarNumero(l.saldo_total_pecas)}</strong></td>
+              <td class="mono">${formatarDataHora(l.ultima_atualizacao)}</td>
+            </tr>
+          `;
+        })
         .join('');
 
-      const linhasExpedicoesHTML = expedicoes
-        .map(
-          (ex) => `
-        <tr>
-          <td class="mono"><strong>${escaparHTML(ex.codigo_romaneio)}</strong></td>
-          <td class="mono">${formatarDataHora(ex.data_hora_saida)}</td>
-          <td class="mono"><strong>${escaparHTML(ex.placa_caminhao)}</strong></td>
-          <td>${escaparHTML(ex.motorista || '—')}</td>
-          <td>${escaparHTML(ex.cliente_destino || '—')}</td>
-          <td class="mono" style="text-align:right;">${formatarNumero(ex.total_paletes)}</td>
-          <td class="mono" style="text-align:right;">${formatarNumero(ex.total_volumes)}</td>
-          <td class="mono" style="text-align:right;"><strong>${formatarNumero(ex.total_pecas)}</strong></td>
-        </tr>
-      `
-        )
-        .join('');
+      const secaoExpedicoesHTML = apenasSaldoEmEstoque
+        ? ''
+        : `
+          <h2>2. Histórico de Expedições Rodoviárias</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>Romaneio</th>
+                <th>Data/Hora Saída</th>
+                <th>Placa</th>
+                <th>Motorista</th>
+                <th>Cliente / Destino</th>
+                <th style="text-align:right;">Paletes</th>
+                <th style="text-align:right;">Volumes</th>
+                <th style="text-align:right;">Peças Expedidas</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${
+                expedicoes
+                  .map(
+                    (ex) => `
+                  <tr>
+                    <td class="mono"><strong>${escaparHTML(ex.codigo_romaneio)}</strong></td>
+                    <td class="mono">${formatarDataHora(ex.data_hora_saida)}</td>
+                    <td class="mono"><strong>${escaparHTML(ex.placa_caminhao)}</strong></td>
+                    <td>${escaparHTML(ex.motorista || '—')}</td>
+                    <td>${escaparHTML(ex.cliente_destino || '—')}</td>
+                    <td class="mono" style="text-align:right;">${formatarNumero(ex.total_paletes)}</td>
+                    <td class="mono" style="text-align:right;">${formatarNumero(ex.total_volumes)}</td>
+                    <td class="mono" style="text-align:right;"><strong>${formatarNumero(ex.total_pecas)}</strong></td>
+                  </tr>
+                `
+                  )
+                  .join('') || '<tr><td colspan="8">Nenhuma expedição registrada.</td></tr>'
+              }
+            </tbody>
+          </table>
+        `;
 
       janelaPDF.document.write(`
         <!DOCTYPE html>
         <html lang="pt-BR">
         <head>
           <meta charset="UTF-8" />
-          <title>Relatório Oficial FINART WMS — ${dataEmissao}</title>
+          <title>Relatório Oficial de Estoque FINART WMS — ${dataEmissao}</title>
           <style>
             @page { size: A4 landscape; margin: 12mm; }
             body { font-family: 'Inter', Arial, sans-serif; color: #0f172a; font-size: 11px; margin: 0; }
             .mono { font-family: 'Courier New', monospace; }
             .header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #0f172a; padding-bottom: 10px; margin-bottom: 14px; }
-            .title { font-size: 18px; font-weight: 800; letter-spacing: -0.3px; }
+            .title { font-size: 17px; font-weight: 800; }
             .subtitle { font-size: 11px; color: #475569; margin-top: 3px; }
             .kpi-strip { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 16px; }
             .kpi-box { border: 1px solid #cbd5e1; padding: 8px 12px; border-radius: 4px; background: #f8fafc; }
             .kpi-box span { display: block; font-size: 9.5px; text-transform: uppercase; color: #64748b; font-weight: 700; }
             .kpi-box strong { font-size: 16px; font-family: 'Courier New', monospace; color: #0f172a; }
-            h2 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.4px; margin: 16px 0 8px; color: #0f172a; border-left: 4px solid #1d4ed8; padding-left: 8px; }
+            h2 { font-size: 12px; text-transform: uppercase; margin: 14px 0 8px; color: #0f172a; border-left: 4px solid #1d4ed8; padding-left: 8px; }
             table { width: 100%; border-collapse: collapse; margin-bottom: 16px; }
             th { background: #0f172a; color: #ffffff; font-size: 9.5px; text-transform: uppercase; padding: 6px 8px; text-align: left; }
             td { padding: 6px 8px; border-bottom: 1px solid #cbd5e1; font-size: 10px; }
@@ -2559,18 +3028,19 @@
         <body>
           <div class="header">
             <div>
-              <div class="title">FINART WMS ENTERPRISE — RELATÓRIO DE SALDOS E EXPEDIÇÕES</div>
-              <div class="subtitle">Controle Físico de Paletização, Rastreabilidade por Lote e Movimentação de Caminhões</div>
+              <div class="title">FINART WMS ENTERPRISE — ${apenasSaldoEmEstoque ? 'POSIÇÃO FÍSICA DE SALDO EM ESTOQUE' : 'RELATÓRIO COMPLETO DE ESTOQUE E EXPEDIÇÃO'}</div>
+              <div class="subtitle">Auditoria de Lotes, Paletização e Saldo Físico Disponível no Galpão</div>
             </div>
             <div style="text-align:right; font-size:10.5px;">
               <div><strong>EMISSÃO:</strong> ${dataEmissao}</div>
-              <div><strong>FILTRO CLIENTE:</strong> ${escaparHTML(estado.filtroCliente)}</div>
+              <div><strong>ESCOPO:</strong> ${apenasSaldoEmEstoque ? 'APENAS SALDO FÍSICO EM ESTOQUE' : 'ESTOQUE + HISTÓRICO DE EXPEDIÇÕES'}</div>
+              <div><strong>CLIENTE:</strong> ${escaparHTML(estado.filtroCliente)}</div>
             </div>
           </div>
 
           <div class="kpi-strip">
             <div class="kpi-box">
-              <span>Lotes Ativos em Estoque</span>
+              <span>Lotes Fisicamente no Galpão</span>
               <strong>${formatarNumero(lotes.length)}</strong>
             </div>
             <div class="kpi-box">
@@ -2582,16 +3052,16 @@
               <strong>${formatarNumero(totalVolumes)} VOL</strong>
             </div>
             <div class="kpi-box">
-              <span>Saldo Disponível (Peças)</span>
+              <span>Saldo Líquido em Estoque</span>
               <strong>${formatarNumero(totalPecas)} PÇS</strong>
             </div>
           </div>
 
-          <h2>1. Posição Consolidada de Estoque Disponível (Por Lote e Item)</h2>
+          <h2>Posição Consolidada de Saldo em Estoque (Por Lote e Item)</h2>
           <table>
             <thead>
               <tr>
-                <th>Etiqueta</th>
+                <th>Etiqueta (HEX)</th>
                 <th>Cliente</th>
                 <th>Item</th>
                 <th>Descrição do Produto</th>
@@ -2600,7 +3070,7 @@
                 <th style="text-align:right;">Paletes</th>
                 <th style="text-align:right;">Volumes</th>
                 <th style="text-align:right;">Pçs/Vol</th>
-                <th style="text-align:right;">Saldo Total</th>
+                <th style="text-align:right;">Saldo em Estoque</th>
                 <th>Última Entrada</th>
               </tr>
             </thead>
@@ -2609,24 +3079,7 @@
             </tbody>
           </table>
 
-          <h2>2. Histórico de Expedições Rodoviárias (Caminhões Carregados)</h2>
-          <table>
-            <thead>
-              <tr>
-                <th>Romaneio</th>
-                <th>Data/Hora Saída</th>
-                <th>Placa Caminhão</th>
-                <th>Motorista</th>
-                <th>Cliente / Destino</th>
-                <th style="text-align:right;">Paletes</th>
-                <th style="text-align:right;">Volumes</th>
-                <th style="text-align:right;">Peças Expedidas</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${linhasExpedicoesHTML || '<tr><td colspan="8">Nenhuma expedição registrada.</td></tr>'}
-            </tbody>
-          </table>
+          ${secaoExpedicoesHTML}
 
           <script>
             window.onload = function() {
@@ -2642,7 +3095,6 @@
     function imprimirRomaneioIndividual(idExpedicao) {
       const ex = estado.expedicoes.find((x) => Number(x.id) === Number(idExpedicao));
       if (!ex) return;
-
       let itens = [];
       try {
         itens = typeof ex.itens_resumo === 'string' ? JSON.parse(ex.itens_resumo) : ex.itens_resumo || [];
@@ -2656,7 +3108,7 @@
         <html lang="pt-BR">
         <head>
           <meta charset="UTF-8" />
-          <title>Romaneio de Embarque ${escaparHTML(ex.codigo_romaneio)}</title>
+          <title>Romaneio de Expedição ${escaparHTML(ex.codigo_romaneio)}</title>
           <style>
             @page { size: A4 portrait; margin: 14mm; }
             body { font-family: Arial, sans-serif; color: #0f172a; font-size: 12px; }
@@ -2670,13 +3122,11 @@
         </head>
         <body>
           <div class="box">
-            <h1 style="margin:0 0 6px; font-size:18px;">FINART WMS — ROMANEIO DE EXPEDIÇÃO E CARREGAMENTO</h1>
-            <div><strong>ROMANEIO:</strong> ${escaparHTML(ex.codigo_romaneio)} | <strong>DATA/HORA SAÍDA:</strong> ${formatarDataHora(ex.data_hora_saida)}</div>
-            <div style="margin-top:6px;"><strong>PLACA DO CAMINHÃO:</strong> ${escaparHTML(ex.placa_caminhao)} | <strong>MOTORISTA:</strong> ${escaparHTML(ex.motorista || '—')}</div>
+            <h1 style="margin:0 0 6px; font-size:18px;">FINART WMS — ROMANEIO DE EXPEDIÇÃO</h1>
+            <div><strong>ROMANEIO:</strong> ${escaparHTML(ex.codigo_romaneio)} | <strong>SAÍDA:</strong> ${formatarDataHora(ex.data_hora_saida)}</div>
+            <div style="margin-top:6px;"><strong>PLACA:</strong> ${escaparHTML(ex.placa_caminhao)} | <strong>MOTORISTA:</strong> ${escaparHTML(ex.motorista || '—')}</div>
             <div style="margin-top:6px;"><strong>CLIENTE / DESTINO:</strong> ${escaparHTML(ex.cliente_destino || '—')}</div>
-            ${ex.observacoes ? `<div style="margin-top:6px;"><strong>OBSERVAÇÕES:</strong> ${escaparHTML(ex.observacoes)}</div>` : ''}
           </div>
-
           <table>
             <thead>
               <tr>
@@ -2694,7 +3144,7 @@
                 .map(
                   (i) => `
                 <tr>
-                  <td>${escaparHTML(i.cor_etiqueta || 'BRANCA')}</td>
+                  <td>${escaparHTML(normalizarCorHex(i.cor_etiqueta))}</td>
                   <td><strong>${escaparHTML(i.item)}</strong></td>
                   <td><strong>${escaparHTML(i.lote)}</strong></td>
                   <td>${escaparHTML(i.produto)}</td>
@@ -2707,16 +3157,13 @@
                 .join('')}
             </tbody>
           </table>
-
           <div style="margin-top:16px; font-size:13px; font-weight:bold; text-align:right;">
-            TOTAL CARREGADO NO VEÍCULO: ${formatarNumero(ex.total_paletes)} PALETES | ${formatarNumero(ex.total_volumes)} VOLUMES | ${formatarNumero(ex.total_pecas)} PEÇAS
+            TOTAL EXPEDIDO: ${formatarNumero(ex.total_paletes)} PALETES | ${formatarNumero(ex.total_volumes)} VOLUMES | ${formatarNumero(ex.total_pecas)} PEÇAS
           </div>
-
           <div class="assinaturas">
             <div class="linha-ass">Conferente de Expedição (FINART)</div>
-            <div class="linha-ass">Motorista / Transportador (${escaparHTML(ex.placa_caminhao)})</div>
+            <div class="linha-ass">Motorista (${escaparHTML(ex.placa_caminhao)})</div>
           </div>
-
           <script>
             window.onload = function() { setTimeout(function() { window.print(); }, 250); };
           <\/script>
@@ -2728,6 +3175,7 @@
 
     // Inicialização imediata
     window.addEventListener('DOMContentLoaded', () => {
+      inicializarResponsividadeInteligente();
       carregarDashboard();
       iniciarStreamTempoReal();
       setInterval(carregarDashboard, 15000);
